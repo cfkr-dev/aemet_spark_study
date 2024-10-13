@@ -26,3 +26,6 @@ logs/
 Thumbs.db
 ehcache*
 hsperfdata*
+
+# Secrets
+*.key
