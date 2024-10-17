@@ -1,4 +1,5 @@
 import HTTPUtils._
+import EnhancedConsoleLog._
 import sttp.client4.UriContext
 
 object AemetAPIClient {
@@ -26,8 +27,7 @@ object AemetAPIClient {
         })
       )
     )
-
-    println(s"GET -> $uri")
+    EnhancedConsoleLog.Method.printlnGet(uri)
 
     makeRequest(uri).body match {
       case Right(data) =>
@@ -35,18 +35,19 @@ object AemetAPIClient {
 
         dataParsedToJSON("estado").num.toInt match {
           case 200 =>
-
-            println(s"200 OK -> $uri")
+            EnhancedConsoleLog.Response.println200OK(uri)
 
             val subUri = uri"${dataParsedToJSON("datos").str}"
-            println(s"GET -> $subUri")
+            EnhancedConsoleLog.Method.printlnGet(subUri)
 
             makeRequest(subUri).body match {
               case Right(data) =>
-                println(s"200 OK -> $uri")
-
+                EnhancedConsoleLog.Response.println200OK(subUri)
                 Right(Some(ujson.read(data)))
-              case Left(_) => Right(None)
+
+              case Left(_) =>
+                EnhancedConsoleLog.Response.println500ServerError()
+                Right(None)
             }
           case _ => None
         }
