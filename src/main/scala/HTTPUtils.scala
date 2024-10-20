@@ -9,18 +9,14 @@ object HTTPUtils {
       .addParams(uriParams: _*)
   }
 
-  def logRequest(): (Uri) => Response[String] = {
-    makeRequest
-  }
-
   def makeRequest(uri: Uri): Response[String] = {
     val backend = HttpURLConnectionBackend()
 
     quickRequest
       .get(uri)
-      .send(backend)
+      .send()
   }
 
-  def logResponse
+
 
 }
