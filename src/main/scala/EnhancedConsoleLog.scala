@@ -1,5 +1,6 @@
-import sttp.model.Uri
+import sttp.model.{StatusCode, Uri}
 import fansi.{Color, _}
+import sttp.client4.Response
 
 object EnhancedConsoleLog {
   object Method {
@@ -7,8 +8,36 @@ object EnhancedConsoleLog {
   }
 
   object Response {
-    def println200OK(uri: Uri): Unit = println(Color.LightMagenta(uri.toString()).overlay(Underlined.On) ++ " => " ++ Color.Green("200 OK").overlay(Bold.On))
-    def println404NotFound(uri: Uri): Unit = println(Color.LightMagenta(uri.toString()).overlay(Underlined.On) ++ " => " ++ Color.Red("404 NOT FOUND").overlay(Bold.On))
-    def println500ServerError(uri: Uri): Unit = println(Color.LightMagenta(uri.toString()).overlay(Underlined.On) ++ " => " ++ Color.Red("500 INTERNAL SERVER ERROR").overlay(Bold.On))
+    def printlnResponse[T](response: Response[T]): Unit = {
+      val uriEnhancedString = Color.LightMagenta(response.request.uri.toString()).overlay(Underlined.On)
+      val codeEnhancedString = getCodeEnhancedString(response.code)
+      val statusEnhancedString = getStatusEnhancedString(response.code, response.statusText)
+
+      println(uriEnhancedString ++ " => " ++ codeEnhancedString ++ " " ++ statusEnhancedString)
+    }
+
+    private def getStatusEnhancedString(code: StatusCode, statusText: String): Str = {
+      if (code.isSuccess)
+        Color.Green(statusText).overlay(Bold.On)
+      else if (code.isClientError || code.isServerError)
+        Color.Red(statusText).overlay(Bold.On)
+      else
+        Color.Blue(statusText).overlay(Bold.On)
+    }
+
+    private def getCodeEnhancedString(code: StatusCode): Str = {
+      if (code.isSuccess)
+        Color.Green(code.toString()).overlay(Bold.On)
+      else if (code.isClientError || code.isServerError)
+        Color.Red(code.toString()).overlay(Bold.On)
+      else
+        Color.Blue(code.toString()).overlay(Bold.On)
+    }
   }
+
+
+
+
+
+
 }
