@@ -29,7 +29,7 @@ object AemetAPIClient {
     )
     EnhancedConsoleLog.Method.printlnGet(uri)
 
-    makeRequest(uri).body match {
+    sendRequest(uri).code. match {
       case Right(data) =>
         val dataParsedToJSON = ujson.read(data)
 
@@ -40,7 +40,7 @@ object AemetAPIClient {
             val subUri = uri"${dataParsedToJSON("datos").str}"
             EnhancedConsoleLog.Method.printlnGet(subUri)
 
-            makeRequest(subUri).body match {
+            sendRequest(subUri).body match {
               case Right(data) =>
                 EnhancedConsoleLog.Response.println200OK(subUri)
                 Right(Some(ujson.read(data)))

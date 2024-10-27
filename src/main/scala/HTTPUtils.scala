@@ -9,12 +9,18 @@ object HTTPUtils {
       .addParams(uriParams: _*)
   }
 
-  def makeRequest(uri: Uri): Response[String] = {
+  def sendRequest(uri: Uri): Either[Response[String], Response[String]] = {
     val backend = HttpURLConnectionBackend()
 
-    quickRequest
+    EnhancedConsoleLog.Method.printlnGet(uri)
+
+    val response = quickRequest
       .get(uri)
-      .send()
+      .send(backend)
+
+    EnhancedConsoleLog.Response.printlnResponse(response)
+
+    response
   }
 
 
