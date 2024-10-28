@@ -1,28 +1,28 @@
 import sttp.client4.httpurlconnection.HttpURLConnectionBackend
-import sttp.client4.{Response, basicRequest}
+import sttp.client4.{Response, basicRequest, quickRequest}
 import sttp.model.Uri
-import ConsoleUtils._
 
 object HTTPUtils {
-  val getMessage = colorString(ConsoleColor.Green, "GET")
-  val arrowMessage =
-
   def buildUrl(baseUri: Uri, uriPaths: List[String], uriParams: List[(String, String)]): Uri = {
     baseUri
       .addPath(uriPaths)
       .addParams(uriParams: _*)
   }
 
-  def makeRequest(url: Uri): Response[Either[String, String]] = {
+  def sendRequest(uri: Uri): Either[Response[String], Response[String]] = {
     val backend = HttpURLConnectionBackend()
 
-    basicRequest
-      .get(url)
+    EnhancedConsoleLog.Method.printlnGet(uri)
+
+    val response = quickRequest
+      .get(uri)
       .send(backend)
+
+    EnhancedConsoleLog.Response.printlnResponse(response)
+
+    response
   }
 
-  def enhancedMessageGet(uri: Uri): Unit = {
 
-  }
 
 }

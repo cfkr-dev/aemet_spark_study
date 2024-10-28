@@ -19,5 +19,8 @@ libraryDependencies += "com.softwaremill.sttp.client4" %% "core" % "4.0.0-M18"
 // https://mvnrepository.com/artifact/com.lihaoyi/upickle
 libraryDependencies += "com.lihaoyi" %% "upickle" % "4.0.2"
 
+// https://mvnrepository.com/artifact/com.lihaoyi/fansi
+libraryDependencies += "com.lihaoyi" %% "fansi" % "0.5.0"
+
 
 
