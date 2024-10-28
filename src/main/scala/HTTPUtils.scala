@@ -9,7 +9,7 @@ object HTTPUtils {
       .addParams(uriParams: _*)
   }
 
-  def sendRequest(uri: Uri): Either[Response[String], Response[String]] = {
+  def sendRequest(uri: Uri): Either[Exception, Response[String]] = {
     val backend = HttpURLConnectionBackend()
 
     EnhancedConsoleLog.Method.printlnGet(uri)
@@ -20,7 +20,10 @@ object HTTPUtils {
 
     EnhancedConsoleLog.Response.printlnResponse(response)
 
-    response
+    if (response.code.isClientError || response.code.isServerError)
+      Left(new Exception(response.code.toString() + response.statusText))
+    else
+      Right(response)
   }
 
 

@@ -5,53 +5,43 @@ import sttp.client4.UriContext
 object AemetAPIClient {
   private val APIKey = FileUtils.getContentFromPath(Constants.aemetAPIKeyPath)
 
-  def getAllStationsMeteorologicalDataBetweenDates(startDate: String, endDate: String): Either[Exception, Option[ujson.Value]] = {
-    val uri = buildUrl(
-      Constants.aemetURL,
-      List(
-        "valores",
-        "climatologicos",
-        "diarios",
-        "datos",
-        "fechaini",
-        startDate,
-        "fechafin",
-        endDate,
-        "todasestaciones",
-        ""
-      ),
-      List(
-        ("api_key", APIKey match {
-          case Right(apiKey) => apiKey
-          case Left(exception) => return Left(exception)
-        })
+  def getAllStationsMeteorologicalDataBetweenDates(startDate: String, endDate: String): Either[Exception, ujson.Value] = {
+    sendRequest(
+      buildUrl(
+        Constants.aemetURL,
+        List(
+          "valores",
+          "climatologicos",
+          "diarios",
+          "datos",
+          "fechaini",
+          startDate,
+          "fechafin",
+          endDate,
+          "todasestaciones",
+          ""
+        ),
+        List(
+          ("api_key", APIKey match {
+            case Right(apiKey) => apiKey
+            case Left(exception) => return Left(exception)
+          })
+        )
       )
-    )
-    EnhancedConsoleLog.Method.printlnGet(uri)
-
-    sendRequest(uri).code. match {
-      case Right(data) =>
-        val dataParsedToJSON = ujson.read(data)
-
+    ) match {
+      case Right(response) =>
+        val dataParsedToJSON = ujson.read(response.body)
         dataParsedToJSON("estado").num.toInt match {
           case 200 =>
-            EnhancedConsoleLog.Response.println200OK(uri)
-
-            val subUri = uri"${dataParsedToJSON("datos").str}"
-            EnhancedConsoleLog.Method.printlnGet(subUri)
-
-            sendRequest(subUri).body match {
-              case Right(data) =>
-                EnhancedConsoleLog.Response.println200OK(subUri)
-                Right(Some(ujson.read(data)))
-
-              case Left(_) =>
-                EnhancedConsoleLog.Response.println500ServerError()
-                Right(None)
+            sendRequest(uri"${dataParsedToJSON("datos").str}") match {
+              case Right(response) =>
+                Right(ujson.read(response.body))
+              case Left(exception) =>
+                Left(exception)
             }
-          case _ => None
+          case _ => Left(new Exception("Fail on getting data JSON"))
         }
-      case Left(_) => None
+      case Left(exception) => Left(exception)
     }
   }
 }
