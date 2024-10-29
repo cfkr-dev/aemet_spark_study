@@ -16,14 +16,14 @@ object FileUtils {
     Right(content)
   }
 
-  def saveContentToPath[T](path: String, fileName: String, content: T, writer: (File, T) => Either[Exception, String]): Either[Exception, String] = {
+  def saveContentToPath[T](path: String, fileName: String, content: T, appendContent: Boolean, writer: (File, T, Boolean) => Either[Exception, String]): Either[Exception, String] = {
     val dir = new File(path)
 
     if (!dir.exists())
       if (!dir.mkdirs())
         return Left(new Exception("Error in directory creation"))
 
-    writer(new File(dir, fileName), content) match {
+    writer(new File(dir, fileName), content, appendContent) match {
       case Right(filePath: String) => Right(filePath)
       case Left(error: Exception) => Left(error)
     }
