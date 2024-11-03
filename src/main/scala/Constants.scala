@@ -1,19 +1,5 @@
-import sttp.client4.UriContext
-import sttp.model.Uri
-
 import java.nio.file.Paths
 
-//          "valores",
-//          "climatologicos",
-//          "diarios",
-//          "datos",
-//          "fechaini",
-//          startDate,
-//          "fechafin",
-//          endDate,
-//          "todasestaciones",
-//          ""
-//        ),
 object Constants {
   val aemetAPIURL: String = "https://opendata.aemet.es/opendata/api"
   val aemetAllStationsMeteorologicalDataBetweenDatesEndpoint: String = aemetAPIURL + "/valores/climatologicos/diarios/datos/fechaini/%s/fechafin/%s/todasestaciones/"
@@ -32,4 +18,5 @@ object Constants {
     "string" -> ((value: ujson.Value) => ujson.Str(value.str)),
     "float" -> ((value: ujson.Value) => ujson.Num(value.num))
   )
+  val minimumMillisBetweenRequest: Double = 1200
 }

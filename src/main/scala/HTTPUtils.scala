@@ -1,10 +1,10 @@
 import sttp.client4.httpurlconnection.HttpURLConnectionBackend
-import sttp.client4.{Response, basicRequest, quickRequest}
+import sttp.client4.{Response, UriContext, basicRequest, quickRequest}
 import sttp.model.Uri
 
 object HTTPUtils {
   def buildUrl(baseUrl: String, urlSegments: List[String], urlQueryParams: List[(String, String)]): Uri = {
-    Uri(baseUrl.format(urlSegments: _*)).addParams(urlQueryParams: _*)
+    uri"${baseUrl.format(urlSegments: _*)}".addParams(urlQueryParams: _*)
   }
 
   def sendRequest(uri: Uri): Either[Exception, Response[String]] = {
