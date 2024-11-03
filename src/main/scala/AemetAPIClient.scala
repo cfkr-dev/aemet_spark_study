@@ -11,7 +11,7 @@ object AemetAPIClient {
 //  def getAllStationsMeteorologicalDataBetweenDates(startDate: String, endDate: String): Either[Exception, ujson.Value] = {
 //    sendRequest(
 //      buildUrl(
-//        Constants.aemetURL,
+//        Constants.aemetAPIURL,
 //        List(
 //          "valores",
 //          "climatologicos",
@@ -47,6 +47,10 @@ object AemetAPIClient {
 //      case Left(exception) => Left(exception)
 //    }
 //  }
+
+  def getAllStationsMeteorologicalDataBetweenDates(): Either[Exception, ujson.Value] = {
+
+  }
 
   def getAemetAPIResource(uri: Uri, getMetadata: Boolean = false): Either[Exception, (ujson.Value, Either[Exception, Option[ujson.Value]])] = {
     sendRequest(uri) match {

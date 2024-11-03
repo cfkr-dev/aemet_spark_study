@@ -3,9 +3,28 @@ import sttp.model.Uri
 
 import java.nio.file.Paths
 
+//          "valores",
+//          "climatologicos",
+//          "diarios",
+//          "datos",
+//          "fechaini",
+//          startDate,
+//          "fechafin",
+//          endDate,
+//          "todasestaciones",
+//          ""
+//        ),
 object Constants {
-  val aemetURL: Uri = uri"https://opendata.aemet.es/opendata/api"
+  val aemetAPIURL: String = "https://opendata.aemet.es/opendata/api"
+  val aemetAllStationsMeteorologicalDataBetweenDatesEndpoint: String = aemetAPIURL + "/valores/climatologicos/diarios/datos/fechaini/%s/fechafin/%s/todasestaciones/"
+
+  val aemetAPIKeyQueryParamName: String = "api_key"
   val aemetAPIKeyPath: String = Paths.get("aemet_api.key").toString
+
+  val aemetJSONBasePath: String = "./aemet_json/"
+  val aemetJSONAllStationsMeteorologicalDataBetweenDates: String = aemetJSONBasePath + "all_stations_meteorological_data_between_dates/data/"
+  val aemetJSONAllStationsMeteorologicalMetadataBetweenDates: String = aemetJSONBasePath + "all_stations_meteorological_data_between_dates/metadata/"
+
   val startDate: String = "1973-01-01T00:00:00Z"
   val endDate: String = "2023-12-31T23:59:59Z"
 

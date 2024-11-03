@@ -31,4 +31,4 @@ hsperfdata*
 *.key
 
 # Inner
-test_json/
+aemet_json/
