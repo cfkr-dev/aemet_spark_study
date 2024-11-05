@@ -6,5 +6,5 @@ import java.time.format.DateTimeFormatter
 import EnhancedConsoleLog._
 
 object AemetBigDataSparkStudyApp extends App {
-  AemetAPIClient.getAllStationsMeteorologicalDataBetweenDates()
+  AemetAPIClient.saveAllStationsMeteorologicalDataBetweenDates()
 }

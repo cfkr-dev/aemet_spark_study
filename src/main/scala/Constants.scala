@@ -18,5 +18,8 @@ object Constants {
     "string" -> ((value: ujson.Value) => ujson.Str(value.str)),
     "float" -> ((value: ujson.Value) => ujson.Num(value.num))
   )
-  val minimumMillisBetweenRequest: Double = 1200
+  val minimumMillisBetweenRequest: Double = 2600
+  val minimumMillisBetweenRequestMetadata: Double = 3800
+
+  val aemetAllStationsMeteorologicalMetadataBetweenDatesEndpointLastSavedDatesJSON: String = aemetJSONAllStationsMeteorologicalMetadataBetweenDates + "last_saved_dates.json"
 }
