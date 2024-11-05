@@ -6,7 +6,7 @@ object FileUtils {
     val file = new File(path)
 
     if (!file.exists())
-      return Left(new Exception("Error in finding file"))
+      return Left(new Exception(s"Error in finding file (${file.toString})"))
 
     val source = Source.fromFile(file)
     val content = source.getLines().mkString("\n")
@@ -21,13 +21,17 @@ object FileUtils {
 
     if (!dir.exists())
       if (!dir.mkdirs())
-        return Left(new Exception("Error in directory creation"))
+        return Left(new Exception(s"Error in directory creation (${dir.toString})"))
 
     writer(new File(dir, fileName), content, appendContent) match {
       case Right(filePath: String) => Right(filePath)
       case Left(error: Exception) => Left(error)
     }
 
+  }
+
+  def fileExists(path: String): Boolean = {
+    new File(path).exists()
   }
 
 }
