@@ -6,58 +6,34 @@ import ujson.Obj
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import scala.annotation.tailrec
-import scala.util.control.Breaks.break
 
 object AemetAPIClient {
   private val APIKey = FileUtils.getContentFromPath(Constants.aemetAPIKeyPath)
 
   def saveAllStationsMeteorologicalDataBetweenDates(): Unit = {
-    FileUtils.getContentFromPath(Constants.aemetAllStationsMeteorologicalMetadataBetweenDatesEndpointLastSavedDatesJSON) match {
+    val (startDate, endDate) = FileUtils.getContentFromPath(Constants.aemetAllStationsMeteorologicalMetadataBetweenDatesEndpointLastSavedDatesJSON) match {
       case Left(exception: Exception) =>
         println(exception)
 
-        val startDate: ZonedDateTime = ZonedDateTime
-          .parse(Constants.startDate)
-
-        val endDate: ZonedDateTime = ZonedDateTime
-          .parse(Constants.startDate)
-          .plusDays(14)
-          .plusHours(23)
-          .plusMinutes(59)
-          .plusSeconds(59)
-
-        saveAllStationsMeteorologicalDataBetweenDatesAction(startDate, endDate, !FileUtils.fileExists(Constants.aemetJSONAllStationsMeteorologicalMetadataBetweenDates + "metadata.json"), List())
+        (
+          DateUtils.getDate(Constants.startDate),
+          DateUtils.addTime(DateUtils.getDate(Constants.startDate), 14, 23, 59, 59)
+        )
 
       case Right(json) =>
-        val lastSavedDatesJSON = ujson.read(json)
-
-        val startDate: ZonedDateTime = ZonedDateTime
-          .parse(lastSavedDatesJSON("last_end_date").str)
-          .plusSeconds(1)
-
-        val temporalEndDate: ZonedDateTime = startDate
-          .plusDays(14)
-          .plusHours(23)
-          .plusMinutes(59)
-          .plusSeconds(59)
-
-        val endDate = if (temporalEndDate.isAfter(ZonedDateTime.parse(Constants.endDate)))
-          ZonedDateTime.parse(Constants.endDate)
-        else temporalEndDate
-
-        saveAllStationsMeteorologicalDataBetweenDatesAction(startDate, endDate, !FileUtils.fileExists(Constants.aemetJSONAllStationsMeteorologicalMetadataBetweenDates + "metadata.json"), List())
-
+        (
+          DateUtils.addTime(DateUtils.getDate(ujson.read(json)("last_end_date").str), 1),
+          DateUtils.capDate(DateUtils.addTime(startDate, 14, 23, 59, 59), DateUtils.getDate(Constants.endDate))
+        )
     }
+
+    saveAllStationsMeteorologicalDataBetweenDatesAction(startDate, endDate, !FileUtils.fileExists(Constants.aemetJSONAllStationsMeteorologicalMetadataBetweenDates + "metadata.json"))
   }
 
   @scala.annotation.tailrec
-  private def saveAllStationsMeteorologicalDataBetweenDatesAction(startDate: ZonedDateTime, endDate: ZonedDateTime, getMetadata: Boolean, fails: List[(ZonedDateTime, ZonedDateTime, Boolean)]): List[(ZonedDateTime, ZonedDateTime, Boolean)] = {
-    if (!startDate.isBefore(ZonedDateTime.parse(Constants.endDate))) return fails
-
-    val startTime = System.nanoTime()
-
-    val getAndSave: (ZonedDateTime, ZonedDateTime, Boolean) => Boolean = (startDate, endDate, getMetadata) => {
-      val result = getAemetAPIResource(
+  private def saveAllStationsMeteorologicalDataBetweenDatesAction(startDate: ZonedDateTime, endDate: ZonedDateTime, getMetadata: Boolean): Unit = {
+    def getAndSave(startDate: ZonedDateTime, endDate: ZonedDateTime, getMetadata: Boolean): Boolean = {
+      getAemetAPIResource(
         buildUrl(
           Constants.aemetAllStationsMeteorologicalDataBetweenDatesEndpoint,
           List(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'UTC'")), endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'UTC'"))),
@@ -74,12 +50,11 @@ object AemetAPIClient {
           println(exception)
           false
         case Right((json, metadata)) =>
-          val resultMetadata = {
-            if (!getMetadata) true
-            else metadata match {
+          if (getMetadata) {
+            metadata match {
               case Left(exception: Exception) =>
                 println(exception)
-                false
+                return false
               case Right(Some(metadata)) =>
                 FileUtils.saveContentToPath(
                   Constants.aemetJSONAllStationsMeteorologicalMetadataBetweenDates,
@@ -88,14 +63,13 @@ object AemetAPIClient {
                   appendContent = false,
                   JSONUtils.writeJSON
                 )
-                true
             }
           }
 
           FileUtils.saveContentToPath(
             Constants.aemetJSONAllStationsMeteorologicalDataBetweenDates,
             s"${startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}_${endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}_data.json",
-            json,
+            JSONUtils.cast(json),
             appendContent = false,
             JSONUtils.writeJSON
           )
@@ -111,47 +85,29 @@ object AemetAPIClient {
             JSONUtils.writeJSON
           )
 
-          resultMetadata
+          true
       }
-
-      result
     }
 
     @tailrec
     def doWhileWithGetAndSave(startDate: ZonedDateTime, endDate: ZonedDateTime, getMetadata: Boolean): Unit = {
       if (!getAndSave(startDate, endDate, getMetadata)) {
-        Thread.sleep(Constants.minimumMillisBetweenRequestMetadata.toLong)
-        doWhileWithGetAndSave(startDate, endDate, getMetadata)
+        ChronoUtils.awaitAndExecute(Constants.minimumMillisBetweenRequestMetadata) {
+          doWhileWithGetAndSave(startDate, endDate, getMetadata)
+        }
       }
     }
 
-    doWhileWithGetAndSave(startDate, endDate, getMetadata)
+    if (!startDate.isBefore(DateUtils.getDate(Constants.endDate))) return
 
-    val newStartDate: ZonedDateTime = endDate
-      .plusSeconds(1)
-
-    val temporalEndDate: ZonedDateTime = newStartDate
-      .plusDays(14)
-      .plusHours(23)
-      .plusMinutes(59)
-      .plusSeconds(59)
-
-    val newEndDate = if (temporalEndDate.isAfter(ZonedDateTime.parse(Constants.endDate)))
-      ZonedDateTime.parse(Constants.endDate)
-    else temporalEndDate
-
-    val endTime = System.nanoTime()
-    val lapse = (endTime - startTime) / 1e6
-    val minimumMillis = if (getMetadata) Constants.minimumMillisBetweenRequestMetadata else Constants.minimumMillisBetweenRequest
-
-    if (lapse < minimumMillis)
-      Thread.sleep((minimumMillis - lapse).toLong)
+    ChronoUtils.executeAndAwaitIfTimeNotExceedMinimum(if (getMetadata) Constants.minimumMillisBetweenRequestMetadata else Constants.minimumMillisBetweenRequest) {
+      doWhileWithGetAndSave(startDate, endDate, getMetadata)
+    }
 
     saveAllStationsMeteorologicalDataBetweenDatesAction(
-      newStartDate,
-      newEndDate,
-      getMetadata = false,
-      fails
+      DateUtils.addTime(endDate, 1),
+      DateUtils.capDate(DateUtils.addTime(DateUtils.addTime(endDate, 1), 14, 23, 59, 59), DateUtils.getDate(Constants.endDate)),
+      getMetadata = false
     )
   }
 
