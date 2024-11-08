@@ -17,4 +17,9 @@ object JSONUtils {
       case exception: Exception => Left(exception)
     }
   }
+
+  def cast(json: ujson.Value, rules: Map[String, ujson.Value => ujson.Value], metadata: ujson.Value): ujson.Value = {
+
+  }
+
 }
