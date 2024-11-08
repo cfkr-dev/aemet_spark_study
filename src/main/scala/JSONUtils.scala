@@ -4,9 +4,9 @@ import java.io.{BufferedWriter, File, FileWriter}
 
 object JSONUtils {
 
-  def writeJSON(file: File, json: ujson.Value): Either[Exception, String] = {
+  def writeJSON(file: File, json: ujson.Value, append: Boolean = false): Either[Exception, String] = {
     try {
-      val bufferedWriter = new BufferedWriter(new FileWriter(file))
+      val bufferedWriter = new BufferedWriter(new FileWriter(file, append))
 
       bufferedWriter.write(write(json, 2))
       bufferedWriter.flush()
@@ -17,4 +17,9 @@ object JSONUtils {
       case exception: Exception => Left(exception)
     }
   }
+
+  def cast(json: ujson.Value, rules: Map[String, ujson.Value => ujson.Value], metadata: ujson.Value): ujson.Value = {
+
+  }
+
 }

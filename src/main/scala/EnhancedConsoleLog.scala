@@ -2,9 +2,14 @@ import sttp.model.{StatusCode, Uri}
 import fansi._
 import sttp.client4.Response
 
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+
 object EnhancedConsoleLog {
   object Method {
     def printlnGet(uri: Uri): Unit = println(
+      Color.Magenta(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"))).overlay(Bold.On) +
+      " | " +
       Color.Yellow("GET").overlay(Bold.On) +
       " => " +
       uri.toString() +
@@ -15,6 +20,8 @@ object EnhancedConsoleLog {
   object Response {
     def printlnResponse[T](response: Response[T]): Unit =
       println(
+        Color.Magenta(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"))).overlay(Bold.On) +
+        " | " +
         response.request.uri.toString() +
         " => " +
         getCodeAndStatusEnhancedString(response.code, response.statusText) +
