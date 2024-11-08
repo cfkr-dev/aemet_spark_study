@@ -29,3 +29,6 @@ hsperfdata*
 
 # Secrets
 *.key
+
+# Inner
+aemet_json/
