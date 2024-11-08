@@ -11,7 +11,7 @@ object AemetAPIClient {
   private val APIKey = FileUtils.getContentFromPath(Constants.aemetAPIKeyPath)
 
   def saveAllStationsMeteorologicalDataBetweenDates(): Unit = {
-    val (startDate, endDate) = FileUtils.getContentFromPath(Constants.aemetAllStationsMeteorologicalMetadataBetweenDatesEndpointLastSavedDatesJSON) match {
+    val dates: (ZonedDateTime, ZonedDateTime) = FileUtils.getContentFromPath(Constants.aemetAllStationsMeteorologicalMetadataBetweenDatesEndpointLastSavedDatesJSON) match {
       case Left(exception: Exception) =>
         println(exception)
 
@@ -21,13 +21,15 @@ object AemetAPIClient {
         )
 
       case Right(json) =>
+        val endDate = DateUtils.getDate(ujson.read(json)("last_end_date").str)
+
         (
-          DateUtils.addTime(DateUtils.getDate(ujson.read(json)("last_end_date").str), 1),
-          DateUtils.capDate(DateUtils.addTime(startDate, 14, 23, 59, 59), DateUtils.getDate(Constants.endDate))
+          DateUtils.addTime(endDate, 1),
+          DateUtils.capDate(DateUtils.addTime(DateUtils.addTime(endDate, 1), 14, 23, 59, 59), DateUtils.getDate(Constants.endDate))
         )
     }
 
-    saveAllStationsMeteorologicalDataBetweenDatesAction(startDate, endDate, !FileUtils.fileExists(Constants.aemetJSONAllStationsMeteorologicalMetadataBetweenDates + "metadata.json"))
+    saveAllStationsMeteorologicalDataBetweenDatesAction(dates._1, dates._2, !FileUtils.fileExists(Constants.aemetJSONAllStationsMeteorologicalMetadataBetweenDates + "metadata.json"))
   }
 
   @scala.annotation.tailrec
@@ -69,7 +71,12 @@ object AemetAPIClient {
           FileUtils.saveContentToPath(
             Constants.aemetJSONAllStationsMeteorologicalDataBetweenDates,
             s"${startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}_${endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}_data.json",
-            JSONUtils.cast(json),
+            JSONUtils.cast(json, Constants.aemetTypesToJSONCasting, JSONUtils.Aemet.metadataToNamesToTypes(FileUtils.getContentFromPath(Constants.aemetJSONAllStationsMeteorologicalMetadataBetweenDates + "metadata.json") match {
+              case Left(exception: Exception) =>
+                println(exception)
+                return false
+              case Right(json) => json
+            })),
             appendContent = false,
             JSONUtils.writeJSON
           )
@@ -92,9 +99,8 @@ object AemetAPIClient {
     @tailrec
     def doWhileWithGetAndSave(startDate: ZonedDateTime, endDate: ZonedDateTime, getMetadata: Boolean): Unit = {
       if (!getAndSave(startDate, endDate, getMetadata)) {
-        ChronoUtils.awaitAndExecute(Constants.minimumMillisBetweenRequestMetadata) {
-          doWhileWithGetAndSave(startDate, endDate, getMetadata)
-        }
+        ChronoUtils.await(Constants.minimumMillisBetweenRequestMetadata)
+        doWhileWithGetAndSave(startDate, endDate, getMetadata)
       }
     }
 
