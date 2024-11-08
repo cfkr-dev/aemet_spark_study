@@ -18,6 +18,7 @@ object Constants {
     "string" -> ((value: ujson.Value) => ujson.Str(value.str)),
     "float" -> ((value: ujson.Value) => ujson.Num(value.num))
   )
+
   val minimumMillisBetweenRequest: Long = 2600
   val minimumMillisBetweenRequestMetadata: Long = 3800
 
