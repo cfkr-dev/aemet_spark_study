@@ -13,9 +13,7 @@ object ChronoUtils {
     }
   }
 
-  def awaitAndExecute(millis: Long)(execute: => Unit): Unit = {
-    Thread.sleep(Constants.minimumMillisBetweenRequestMetadata)
-
-    execute
+  def await(millis: Long): Unit = {
+    Thread.sleep(millis)
   }
 }
