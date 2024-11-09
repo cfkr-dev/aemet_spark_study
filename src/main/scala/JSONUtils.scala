@@ -31,7 +31,7 @@ object JSONUtils {
     json match {
       case obj: ujson.Obj => ujson.Obj.from(
         obj.value.map {
-          case (key, value) => key -> cast(typesToCaster.get(namesToType.getOrElse(key, identity(key))) match {
+          case (key, value) => key -> cast(typesToCaster.get(namesToType.getOrElse(key.toLowerCase, identity(key))) match {
             case Some(caster) => caster(value)
             case None => value
           }, typesToCaster, namesToType)

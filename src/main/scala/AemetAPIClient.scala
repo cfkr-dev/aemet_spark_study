@@ -75,11 +75,19 @@ object AemetAPIClient {
               case Left(exception: Exception) =>
                 println(exception)
                 return false
-              case Right(json) => json
+              case Right(json) => ujson.read(json)
             })),
             appendContent = false,
             JSONUtils.writeJSON
           )
+
+          /*FileUtils.saveContentToPath(
+            Constants.aemetJSONAllStationsMeteorologicalDataBetweenDates,
+            s"${startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}_${endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}_data.json",
+            json,
+            appendContent = false,
+            JSONUtils.writeJSON
+          )*/
 
           FileUtils.saveContentToPath(
             Constants.aemetJSONAllStationsMeteorologicalMetadataBetweenDates,

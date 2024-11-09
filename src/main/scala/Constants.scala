@@ -16,7 +16,11 @@ object Constants {
 
   val aemetTypesToJSONCasting: Map[String, ujson.Value => ujson.Value] = Map(
     "string" -> ((value: ujson.Value) => ujson.Str(value.str)),
-    "float" -> ((value: ujson.Value) => ujson.Num(value.num))
+    "float" -> ((value: ujson.Value) => value.str match {
+      case "Acum" => ujson.Null
+      case "Ip" => ujson.Num(value.str.replace("Ip", "0,05").replace(',', '.').toDouble)
+      case _ => ujson.Num(value.str.replace(',', '.').toDouble)
+    })
   )
 
   val minimumMillisBetweenRequest: Long = 2600
