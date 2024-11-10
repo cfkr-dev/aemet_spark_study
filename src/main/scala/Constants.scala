@@ -1,31 +1,66 @@
 import java.nio.file.Paths
 
 object Constants {
-  val aemetAPIURL: String = "https://opendata.aemet.es/opendata/api"
-  val aemetAllStationsMeteorologicalDataBetweenDatesEndpoint: String = aemetAPIURL + "/valores/climatologicos/diarios/datos/fechaini/%s/fechafin/%s/todasestaciones/"
 
-  val aemetAPIKeyQueryParamName: String = "api_key"
-  val aemetAPIKeyPath: String = Paths.get("aemet_api.key").toString
+  object AemetAPI {
+    object AllStationsMeteorologicalDataBetweenDates {
+      val dataEndpoint: String = Global.baseURL + "/valores/climatologicos/diarios/datos/fechaini/%s/fechafin/%s/todasestaciones/"
+      val lastSavedDatesLastEndDateParamName: String = "last_end_date"
+    }
 
-  val aemetJSONBasePath: String = "./aemet_json/"
-  val aemetJSONAllStationsMeteorologicalDataBetweenDates: String = aemetJSONBasePath + "all_stations_meteorological_data_between_dates/data/"
-  val aemetJSONAllStationsMeteorologicalMetadataBetweenDates: String = aemetJSONBasePath + "all_stations_meteorological_data_between_dates/metadata/"
+    object AllStationsData {
 
-  val startDate: String = "1973-01-01T00:00:00Z"
-  val endDate: String = "2023-12-31T23:59:59Z"
+    }
 
-  @deprecated
-  val aemetTypesToJSONCasting: Map[String, ujson.Value => ujson.Value] = Map(
-    "string" -> ((value: ujson.Value) => ujson.Str(value.str)),
-    "float" -> ((value: ujson.Value) => value.str match {
-      case "Acum" => ujson.Null
-      case "Ip" => ujson.Num(value.str.replace("Ip", "0,05").replace(',', '.').toDouble)
-      case _ => ujson.Num(value.str.replace(',', '.').toDouble)
-    })
-  )
+    object Global {
+      val baseURL: String = "https://opendata.aemet.es/opendata/api"
+      val apiKeyQueryParamName: String = "api_key"
+    }
+  }
 
-  val minimumMillisBetweenRequest: Long = 2600
-  val minimumMillisBetweenRequestMetadata: Long = 3800
+  object AemetPaths {
+    object AllStationsMeteorologicalDataBetweenDates {
+      val jsonData: String = Global.jsonBase + "all_stations_meteorological_data_between_dates/data/"
+      val jsonDataFilename: String = "%s_%s_data.json"
 
-  val aemetAllStationsMeteorologicalMetadataBetweenDatesEndpointLastSavedDatesJSON: String = aemetJSONAllStationsMeteorologicalMetadataBetweenDates + "last_saved_dates.json"
+      val jsonMetadata: String = Global.jsonBase + "all_stations_meteorological_data_between_dates/metadata/"
+      val jsonMetadataFilename: String = "metadata.json"
+      val jsonMetadataFile: String = jsonMetadata + jsonMetadataFilename
+
+      val jsonLastSavedDatesFilename: String = "last_saved_dates.json"
+      val jsonLastSavedDatesFile: String = jsonMetadata + jsonLastSavedDatesFilename
+
+    }
+
+    object AllStationsData {
+
+    }
+
+    object Global {
+      val jsonBase: String = "./aemet_json/"
+      val secrets: String = "./secrets/"
+      val apiKeyFile: String = secrets + "aemet_api.key"
+    }
+  }
+
+  object Params {
+    object AllStationsMeteorologicalDataBetweenDates {
+      val dateHourFormat: String = "yyyy-MM-dd'T'HH:mm:ss'UTC'"
+      val dateFormat: String = "yyyy-MM-dd"
+
+      val startDate: String = "1973-01-01T00:00:00Z"
+      val endDate: String = "2023-12-31T23:59:59Z"
+    }
+
+    object AllStationsData {
+
+    }
+
+    object Global {
+      val minimumMillisBetweenRequest: Long = 2600
+      val minimumMillisBetweenRequestMetadata: Long = 3800
+    }
+  }
+
+
 }

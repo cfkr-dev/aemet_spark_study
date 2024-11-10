@@ -8,39 +8,67 @@ import java.time.format.DateTimeFormatter
 import scala.annotation.tailrec
 
 object AemetAPIClient {
-  private val APIKey = FileUtils.getContentFromPath(Constants.aemetAPIKeyPath)
+  private val constantsAemetPathsGlobal = Constants.AemetPaths.Global
+  private val constantsParamsGlobal = Constants.Params.Global
+  private val constantsAemetAPIGlobal = Constants.AemetAPI.Global
+  
+  private val APIKey = FileUtils.getContentFromPath(constantsAemetPathsGlobal.apiKeyFile)
 
-  def saveAllStationsMeteorologicalDataBetweenDates(): Unit = {
-    val dates: (ZonedDateTime, ZonedDateTime) = FileUtils.getContentFromPath(Constants.aemetAllStationsMeteorologicalMetadataBetweenDatesEndpointLastSavedDatesJSON) match {
-      case Left(exception: Exception) =>
-        println(exception)
+  object AllStationsMeteorologicalDataBetweenDates {
+    private val constantsAemetPaths = Constants.AemetPaths.AllStationsMeteorologicalDataBetweenDates
+    private val constantsParams = Constants.Params.AllStationsMeteorologicalDataBetweenDates
+    private val constantsAemetAPI = Constants.AemetAPI.AllStationsMeteorologicalDataBetweenDates
+    
+    def saveAllStationsMeteorologicalDataBetweenDates(): Unit = {
+      val dates: (ZonedDateTime, ZonedDateTime) = FileUtils.getContentFromPath(
+        constantsAemetPaths.jsonLastSavedDatesFile
+      ) match {
+        case Left(exception: Exception) =>
+          println(exception)
 
-        (
-          DateUtils.getDate(Constants.startDate),
-          DateUtils.addTime(DateUtils.getDate(Constants.startDate), 14, 23, 59, 59)
-        )
+          (
+            DateUtils.getDate(constantsParams.startDate),
+            DateUtils.addTime(
+              DateUtils.getDate(constantsParams.startDate), 14, 23, 59, 59
+            )
+          )
 
-      case Right(json) =>
-        val endDate = DateUtils.getDate(ujson.read(json)("last_end_date").str)
+        case Right(json) =>
+          val endDate = DateUtils.getDate(
+            ujson.read(json)(
+              constantsAemetAPI.lastSavedDatesLastEndDateParamName
+            ).str
+          )
 
-        (
-          DateUtils.addTime(endDate, 1),
-          DateUtils.capDate(DateUtils.addTime(DateUtils.addTime(endDate, 1), 14, 23, 59, 59), DateUtils.getDate(Constants.endDate))
-        )
+          (
+            DateUtils.addTime(endDate, 1),
+            DateUtils.capDate(DateUtils.addTime(DateUtils.addTime(endDate, 1), 14, 23, 59, 59), DateUtils.getDate(
+              constantsParams.endDate)
+            )
+          )
+      }
+
+      saveAllStationsMeteorologicalDataBetweenDatesAction(
+        dates._1,
+        dates._2,
+        !FileUtils.fileExists(constantsAemetPaths.jsonMetadataFile)
+      )
     }
 
-    saveAllStationsMeteorologicalDataBetweenDatesAction(dates._1, dates._2, !FileUtils.fileExists(Constants.aemetJSONAllStationsMeteorologicalMetadataBetweenDates + "metadata.json"))
-  }
-
-  @scala.annotation.tailrec
-  private def saveAllStationsMeteorologicalDataBetweenDatesAction(startDate: ZonedDateTime, endDate: ZonedDateTime, getMetadata: Boolean): Unit = {
-    def getAndSave(startDate: ZonedDateTime, endDate: ZonedDateTime, getMetadata: Boolean): Boolean = {
+    private def getAndSave(startDate: ZonedDateTime, endDate: ZonedDateTime, getMetadata: Boolean): Boolean = {
       getAemetAPIResource(
         buildUrl(
-          Constants.aemetAllStationsMeteorologicalDataBetweenDatesEndpoint,
-          List(startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'UTC'")), endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'UTC'"))),
+          constantsAemetAPI.dataEndpoint,
           List(
-            ("api_key", APIKey match {
+            startDate.format(
+              DateTimeFormatter.ofPattern(constantsParams.dateHourFormat)
+            ),
+            endDate.format(
+              DateTimeFormatter.ofPattern(constantsParams.dateHourFormat)
+            )
+          ),
+          List(
+            (constantsAemetAPIGlobal.apiKeyQueryParamName, APIKey match {
               case Right(apiKey) => apiKey
               case Left(exception) => throw exception
             })
@@ -59,8 +87,8 @@ object AemetAPIClient {
                 return false
               case Right(Some(metadata)) =>
                 FileUtils.saveContentToPath(
-                  Constants.aemetJSONAllStationsMeteorologicalMetadataBetweenDates,
-                  "metadata.json",
+                  constantsAemetPaths.jsonMetadata,
+                  constantsAemetPaths.jsonMetadataFilename,
                   metadata,
                   appendContent = false,
                   JSONUtils.writeJSON
@@ -69,19 +97,28 @@ object AemetAPIClient {
           }
 
           FileUtils.saveContentToPath(
-            Constants.aemetJSONAllStationsMeteorologicalDataBetweenDates,
-            s"${startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}_${endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))}_data.json",
+            constantsAemetPaths.jsonData,
+            constantsAemetPaths.jsonDataFilename.format(
+              startDate.format(
+                DateTimeFormatter.ofPattern(constantsParams.dateFormat)
+              ),
+              endDate.format(
+                DateTimeFormatter.ofPattern(constantsParams.dateFormat)
+              )
+            ),
             json,
             appendContent = false,
             JSONUtils.writeJSON
           )
 
           FileUtils.saveContentToPath(
-            Constants.aemetJSONAllStationsMeteorologicalMetadataBetweenDates,
-            "last_saved_dates.json",
+            constantsAemetPaths.jsonMetadata,
+            constantsAemetPaths.jsonLastSavedDatesFilename,
             Obj(
-              "last_start_date" -> startDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")),
-              "last_end_date" -> endDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+              constantsAemetAPI.lastSavedDatesLastEndDateParamName ->
+                endDate.format(
+                  DateTimeFormatter.ofPattern(constantsParams.dateHourFormat)
+                )
             ),
             appendContent = false,
             JSONUtils.writeJSON
@@ -92,27 +129,83 @@ object AemetAPIClient {
     }
 
     @tailrec
-    def doWhileWithGetAndSave(startDate: ZonedDateTime, endDate: ZonedDateTime, getMetadata: Boolean): Unit = {
+    private def doWhileWithGetAndSave(startDate: ZonedDateTime, endDate: ZonedDateTime, getMetadata: Boolean): Unit = {
       if (!getAndSave(startDate, endDate, getMetadata)) {
-        ChronoUtils.await(Constants.minimumMillisBetweenRequestMetadata)
+        ChronoUtils.await(constantsParamsGlobal.minimumMillisBetweenRequestMetadata)
         doWhileWithGetAndSave(startDate, endDate, getMetadata)
       }
     }
 
-    if (!startDate.isBefore(DateUtils.getDate(Constants.endDate))) return
+    @tailrec
+    private def saveAllStationsMeteorologicalDataBetweenDatesAction(startDate: ZonedDateTime,
+                                                                    endDate: ZonedDateTime,
+                                                                    getMetadata: Boolean
+                                                                   ): Unit = {
+      if (!startDate.isBefore(DateUtils.getDate(constantsParams.endDate))) return
 
-    ChronoUtils.executeAndAwaitIfTimeNotExceedMinimum(if (getMetadata) Constants.minimumMillisBetweenRequestMetadata else Constants.minimumMillisBetweenRequest) {
-      doWhileWithGetAndSave(startDate, endDate, getMetadata)
+      ChronoUtils.executeAndAwaitIfTimeNotExceedMinimum(
+        if (getMetadata) constantsParamsGlobal.minimumMillisBetweenRequestMetadata
+        else constantsParamsGlobal.minimumMillisBetweenRequest
+      ) {
+        doWhileWithGetAndSave(startDate, endDate, getMetadata)
+      }
+
+      saveAllStationsMeteorologicalDataBetweenDatesAction(
+        DateUtils.addTime(endDate, 1),
+        DateUtils.capDate(
+          DateUtils.addTime(DateUtils.addTime(endDate, 1), 14, 23, 59, 59),
+          DateUtils.getDate(constantsParams.endDate)
+        ),
+        getMetadata = false
+      )
     }
-
-    saveAllStationsMeteorologicalDataBetweenDatesAction(
-      DateUtils.addTime(endDate, 1),
-      DateUtils.capDate(DateUtils.addTime(DateUtils.addTime(endDate, 1), 14, 23, 59, 59), DateUtils.getDate(Constants.endDate)),
-      getMetadata = false
-    )
   }
 
-  private def getAemetAPIResource(uri: Uri, getMetadata: Boolean = false): Either[Exception, (ujson.Value, Either[Exception, Option[ujson.Value]])] = {
+  object AllStationsData {
+    private val constantsAemetPaths = Constants.AemetPaths.AllStationsData
+    private val constantsParams = Constants.Params.AllStationsData
+    private val constantsAemetAPI = Constants.AemetAPI.AllStationsData
+
+    def saveAllStations(): Unit = {
+      getAemetAPIResource(
+        buildUrl(
+          Constants.aemetAllStationsDataEndpoint,
+          List(),
+          List(
+            ("api_key", APIKey match {
+              case Right(apiKey) => apiKey
+              case Left(exception) => throw exception
+            })
+          )
+        ),
+        getMetadata = true
+      ) match {
+        case Left(exception: Exception) => println(exception)
+        case Right((json, metadata)) => metadata match {
+          case Left(exception: Exception) => println(exception) return
+          case Right(Some(metadata)) => FileUtils.saveContentToPath(
+              Constants.Paths.aemetAllStationsMetadata,
+              "metadata.json",
+              metadata,
+              appendContent = false,
+              JSONUtils.writeJSON
+          )
+        }
+          
+        FileUtils.saveContentToPath(
+          Constants.Paths.aemetAllStationsData,
+          "all_stations_data.json",
+          json,
+          appendContent = false,
+          JSONUtils.writeJSON
+        )
+      }
+    }
+  }
+
+  private def getAemetAPIResource(uri: Uri,
+                                  getMetadata: Boolean = false
+                                 ): Either[Exception, (ujson.Value, Either[Exception, Option[ujson.Value]])] = {
     sendRequest(uri) match {
       case Right(response) =>
         val dataParsedToJSON = ujson.read(response.body)

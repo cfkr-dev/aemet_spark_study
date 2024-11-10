@@ -1,5 +1,5 @@
 import sttp.client4.httpurlconnection.HttpURLConnectionBackend
-import sttp.client4.{Response, UriContext, basicRequest, quickRequest}
+import sttp.client4.{Response, UriContext, quickRequest}
 import sttp.model.Uri
 
 object HTTPUtils {
