@@ -13,3 +13,14 @@ libraryDependencies += "org.apache.spark" %% "spark-core" % "3.5.3"
 // https://mvnrepository.com/artifact/org.apache.spark/spark-sql
 libraryDependencies += "org.apache.spark" %% "spark-sql" % "3.5.3" % "provided"
 
+// https://mvnrepository.com/artifact/com.softwaremill.sttp.client4/core
+libraryDependencies += "com.softwaremill.sttp.client4" %% "core" % "4.0.0-M18"
+
+// https://mvnrepository.com/artifact/com.lihaoyi/upickle
+libraryDependencies += "com.lihaoyi" %% "upickle" % "4.0.2"
+
+// https://mvnrepository.com/artifact/com.lihaoyi/fansi
+libraryDependencies += "com.lihaoyi" %% "fansi" % "0.5.0"
+
+
+
