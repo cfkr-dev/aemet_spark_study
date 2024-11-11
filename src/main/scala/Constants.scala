@@ -9,12 +9,16 @@ object Constants {
     }
 
     object AllStationsData {
-
+      val dataEndpoint: String = Global.baseURL + "/valores/climatologicos/inventarioestaciones/todasestaciones/"
     }
 
     object Global {
       val baseURL: String = "https://opendata.aemet.es/opendata/api"
       val apiKeyQueryParamName: String = "api_key"
+
+      val responseStateNumberKey: String = "estado"
+      val responseMetadataKey: String = "metadatos"
+      val responseDataKey: String = "datos"
     }
   }
 
@@ -33,7 +37,11 @@ object Constants {
     }
 
     object AllStationsData {
+      val jsonData: String = Global.jsonBase + "all_stations/data/"
+      val jsonDataFilename: String = "all_stations_data.json"
 
+      val jsonMetadata: String = Global.jsonBase + "all_stations/metadata/"
+      val jsonMetadataFilename: String = "metadata.json"
     }
 
     object Global {
