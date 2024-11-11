@@ -26,3 +26,9 @@ logs/
 Thumbs.db
 ehcache*
 hsperfdata*
+
+# Secrets
+secrets/
+
+# Inner
+aemet_json/
