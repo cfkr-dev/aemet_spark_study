@@ -28,7 +28,7 @@ ehcache*
 hsperfdata*
 
 # Secrets
-*.key
+secrets/
 
 # Inner
 aemet_json/

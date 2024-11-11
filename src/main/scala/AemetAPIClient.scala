@@ -169,10 +169,10 @@ object AemetAPIClient {
     def saveAllStations(): Unit = {
       getAemetAPIResource(
         buildUrl(
-          Constants.aemetAllStationsDataEndpoint,
+          constantsAemetAPI.dataEndpoint,
           List(),
           List(
-            ("api_key", APIKey match {
+            (constantsAemetAPIGlobal.apiKeyQueryParamName, APIKey match {
               case Right(apiKey) => apiKey
               case Left(exception) => throw exception
             })
@@ -182,19 +182,21 @@ object AemetAPIClient {
       ) match {
         case Left(exception: Exception) => println(exception)
         case Right((json, metadata)) => metadata match {
-          case Left(exception: Exception) => println(exception) return
+          case Left(exception: Exception) =>
+            println(exception)
+            return
           case Right(Some(metadata)) => FileUtils.saveContentToPath(
-              Constants.Paths.aemetAllStationsMetadata,
-              "metadata.json",
-              metadata,
-              appendContent = false,
-              JSONUtils.writeJSON
+            constantsAemetPaths.jsonMetadata,
+            constantsAemetPaths.jsonMetadataFilename,
+            metadata,
+            appendContent = false,
+            JSONUtils.writeJSON
           )
         }
           
         FileUtils.saveContentToPath(
-          Constants.Paths.aemetAllStationsData,
-          "all_stations_data.json",
+          constantsAemetPaths.jsonData,
+          constantsAemetPaths.jsonDataFilename,
           json,
           appendContent = false,
           JSONUtils.writeJSON
@@ -209,16 +211,16 @@ object AemetAPIClient {
     sendRequest(uri) match {
       case Right(response) =>
         val dataParsedToJSON = ujson.read(response.body)
-        dataParsedToJSON("estado").num.toInt match {
+        dataParsedToJSON(constantsAemetAPIGlobal.responseStateNumberKey).num.toInt match {
           case 200 =>
-            val metadata = if (getMetadata) sendRequest(uri"${dataParsedToJSON("metadatos").str}") match {
+            val metadata = if (getMetadata) sendRequest(uri"${dataParsedToJSON(constantsAemetAPIGlobal.responseMetadataKey).str}") match {
               case Right(response) =>
                 Right(Some(ujson.read(response.body)))
               case Left(exception) =>
                 Left(exception)
             } else Right(None)
 
-            sendRequest(uri"${dataParsedToJSON("datos").str}") match {
+            sendRequest(uri"${dataParsedToJSON(constantsAemetAPIGlobal.responseDataKey).str}") match {
               case Right(response) =>
                 Right((ujson.read(response.body), metadata))
               case Left(exception) =>

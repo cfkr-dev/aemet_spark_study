@@ -1,5 +1,6 @@
 
 
 object AemetBigDataSparkStudyApp extends App {
-  AemetAPIClient.saveAllStationsMeteorologicalDataBetweenDates()
+  AemetAPIClient.AllStationsData.saveAllStations()
+  AemetAPIClient.AllStationsMeteorologicalDataBetweenDates.saveAllStationsMeteorologicalDataBetweenDates()
 }
