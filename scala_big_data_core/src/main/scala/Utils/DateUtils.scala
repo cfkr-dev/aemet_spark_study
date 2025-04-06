@@ -1,9 +1,15 @@
-import java.time.{Duration, Period, ZonedDateTime}
+package Utils
+
+import java.time.{Duration, LocalDate, Period, ZonedDateTime}
 
 object DateUtils {
 
-  def getDate(date: String): ZonedDateTime = {
+  def getDateZonedDateTime(date: String): ZonedDateTime = {
     ZonedDateTime.parse(date)
+  }
+
+  def getDateLocalDate(date: String): LocalDate = {
+    LocalDate.parse(date)
   }
 
   def addTime(date: ZonedDateTime, seconds: Long): ZonedDateTime = {
