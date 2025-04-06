@@ -1,3 +1,5 @@
+package Utils
+
 object ChronoUtils {
   def executeAndAwaitIfTimeNotExceedMinimum(minimumMillis: Long)(execute: => Unit): Unit = {
     val startTime = System.nanoTime()
