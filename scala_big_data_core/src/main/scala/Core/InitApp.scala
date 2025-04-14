@@ -2,6 +2,7 @@ package Core
 
 //import InitApp.ec
 
+//import Config.ConstantsV2.Spark.Queries.Temperature.tempEvolFromStartForEachState.stationRegistries
 import Core.DataExtraction.Aemet.AemetAPIClient
 import Core.DataExtraction.Ifapa.IfapaAPIClient
 import Core.DataExtraction.Ifapa.IfapaToAemetConverter
@@ -11,8 +12,8 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 object InitApp extends App {
 
   //AemetAPIClient.aemetDataExtraction()
-  IfapaAPIClient.ifapaDataExtraction()
-  IfapaToAemetConverter.ifapaToAemetConversion()
+  //IfapaAPIClient.ifapaDataExtraction()
+//  IfapaToAemetConverter.ifapaToAemetConversion()
 
 //  SparkQueries.Aemet.stationMonthlyAvgTempAndPrecInAYear("7002Y", 2024)
 //  SparkQueries.Aemet.stationInfo("7002Y")
@@ -25,7 +26,230 @@ object InitApp extends App {
 //  SparkQueries.Aemet.stationMonthlyAvgTempAndPrecInAYear("4", 2024)
 //  SparkQueries.Aemet.stationInfo("4")
 
+  //SparkQueries.Climograph.execute()
+
+  //SparkQueries.test("2024", topN = 10, mayores = false).show()
+  //SparkQueries.test("2024", topN = 10, mayores = true).show()
+  //SparkQueries.test("1973-01-01", Some("2024-12-31"), topN = 5, mayores = true).show()
+  //SparkQueries.test("1973-01-01", Some("2024-12-31"), topN = 5, mayores = false).show()
+  //SparkQueries.extraerTemperaturaDiaria("9677", 2024).show(365)
+//  SparkQueries.getTopNClimateParamInALapse("tmed", "2024", endDate = None, topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("tmed", "2024", endDate = None, topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("prec", "2024", endDate = None, topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("prec", "2024", endDate = None, topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("velmedia", "2024", endDate = None, topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("velmedia", "2024", endDate = None, topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("presmax", "2024", endDate = None, topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("presmax", "2024", endDate = None, topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("sol", "2024", endDate = None, topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("sol", "2024", endDate = None, topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("hrmedia", "2024", endDate = None, topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("hrmedia", "2024", endDate = None, topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//
+//
+//  SparkQueries.getTopNClimateParamInALapse("tmed", "2000-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("tmed", "2000-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("prec", "2000-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("prec", "2000-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("velmedia", "2000-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("velmedia", "2000-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("presmax", "2000-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("presmax", "2000-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("sol", "2000-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("sol", "2000-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("hrmedia", "2000-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("hrmedia", "2000-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//
+//
+//  SparkQueries.getTopNClimateParamInALapse("tmed", "1973-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("tmed", "1973-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("prec", "1973-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("prec", "1973-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("velmedia", "1973-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("velmedia", "1973-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("presmax", "1973-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("presmax", "1973-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("sol", "1973-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("sol", "1973-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("hrmedia", "1973-01-01", Some("2024-12-31"), topN = 10) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+//  SparkQueries.getTopNClimateParamInALapse("hrmedia", "1973-01-01", Some("2024-12-31"), topN = 10, highest = false) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+
+
+
+//  SparkQueries.getAllStationsInfoByAvgClimateParamInALapse("tmed", "2024") match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+
+  //SparkQueries.test().show(999, truncate = false)
+
+  //SparkQueries.test().show(999, truncate = false)
+
+
+  // Uso de la función para obtener los períodos de operatividad para una provincia específica
+//  val provincia = "A CORUÑA" // Cambia la provincia que quieras
+//  val result = SparkQueries.getOperativePeriodsForProvince(provincia)
+//
+//  // Mostrar el resultado
+//  result.show(999, truncate = false)
+
+//  // Llamada a la función para obtener todas las estaciones operativas entre 1973-01-01 y 2024-12-31
+//  val operativeStations = SparkQueries.getStationsOperativeBetweenDatesForAllProvincesWithYearCut("1973-01-01", "2024-12-31")
+//  // Mostrar el resultado
+//  operativeStations.show(999, truncate = false)
+
+  //val estacionesMasLongevas = SparkQueries.getLongestOperativeStationsPerProvince("tmed", 3)
+  //estacionesMasLongevas.show(999, truncate = false)
+
+//  SparkQueries.getClimateParamInALapseById("1387","tmed", "1973-01-01", Some("2024-12-31")) match {
+//    case Right(value) => value.show()
+//    case Left(_) => ()
+//  }
+
+  //SparkQueries.test()
+
+  //SparkQueries.trainLinearModelForProvincesAndRank()
+  //SparkQueries.trainAndRankTemperatureModels()
+  //val indicativos = stationRegistries.map(e => e.stationId) // cambia esto por los indicativos que quieras
+  //SparkQueries.getTopNClimateParamIncrementInAYearLapse(indicativos, "prec", 1973, 2024, highest = false).show()
+
+//  SparkQueries.getAllStationsByStatesAvgClimateParamInALapse("tmed", "2024", None, Some(List("SANTA CRUZ DE TENERIFE", "LAS PALMAS"))) match {
+//    case Right(value) => {
+//      println(value.count())
+//      value.show(value.count().toInt)
+//    }
+//    case Left(exception) => throw exception
+//  }
+//
+//  SparkQueries.getAllStationsByStatesAvgClimateParamInALapse("tmed", "2024", None, None) match {
+//    case Right(value) => {
+//      println(value.count())
+//      value.show(value.count().toInt)
+//    }
+//    case Left(exception) => throw exception
+//  }
+
   SparkQueries.Climograph.execute()
+  SparkQueries.Temperature.execute()
+
+
+
+
+
+
+
+
+
+
+
 
 
 
