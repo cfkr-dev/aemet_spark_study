@@ -1,12 +1,16 @@
 package Core.Spark
 
 import Utils.JSONUtils
-import org.apache.spark.sql.expressions.UserDefinedFunction
+import org.apache.spark.sql.expressions.{UserDefinedFunction, Window}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{Column, DataFrame, SparkSession}
+import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.regression.LinearRegression
+import org.apache.spark.ml.linalg.Vectors
 import Config.ConstantsV2._
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
+import org.apache.spark.storage.StorageLevel
 
 object SparkManager {
   private val ctsStorageDataAemetAllStationInfo = Storage.DataAemet.AllStationInfo
@@ -27,18 +31,32 @@ object SparkManager {
       spark.sparkContext
         .setLogLevel(logLevel)
 
+      spark.catalog.clearCache()
+
       spark
     }
 
-    private def createDataframeFromJSON(session: SparkSession,
-                                        sourcePath: String,
-                                        metadataPath: String,
-                                        schemaFunction: ujson.Value => StructType): Either[Exception, DataFrame] = {
+    private def createDataframeFromJSONAndAemetMetadata(session: SparkSession,
+                                                        sourcePath: String,
+                                                        metadataPath: String): Either[Exception, DataFrame] = {
+      def createDataframeSchemaAemet(metadataJSON: ujson.Value): StructType = {
+        val constantsAemetAPIGlobal = Config.Constants.AemetAPI.Global
+        StructType(
+          metadataJSON(constantsAemetAPIGlobal.metadataFields).arr.map(field => {
+            StructField(
+              field(constantsAemetAPIGlobal.metadataFieldsID).str,
+              StringType,
+              !field(constantsAemetAPIGlobal.metadataFieldsRequired).bool
+            )
+          }).toArray
+        )
+      }
+
       Right(session
         .read.format("json")
         .option("multiline", value = true)
         .schema(
-          schemaFunction(
+          createDataframeSchemaAemet(
             JSONUtils.readJSON(
               metadataPath
             ) match {
@@ -48,19 +66,6 @@ object SparkManager {
           )
         )
         .json(sourcePath))
-    }
-
-    private def createDataframeSchemaAemet(metadataJSON: ujson.Value): StructType = {
-      val constantsAemetAPIGlobal = Config.Constants.AemetAPI.Global
-      StructType(
-        metadataJSON(constantsAemetAPIGlobal.metadataFields).arr.map(field => {
-          StructField(
-            field(constantsAemetAPIGlobal.metadataFieldsID).str,
-            StringType,
-            !field(constantsAemetAPIGlobal.metadataFieldsRequired).bool
-          )
-        }).toArray
-      )
     }
 
     def saveDataframeAsParquet(dataframe: DataFrame, path: String): Either[Exception, String] = {
@@ -76,49 +81,263 @@ object SparkManager {
     }
 
     object dataframes {
-      val allMeteoInfo: DataFrame = createDataframeFromJSON(
-        sparkSession,
-        ctsStorageDataAemetAllMeteoInfo.Dirs.dataRegistry,
-        ctsStorageDataAemetAllMeteoInfo.FilePaths.metadata,
-        createDataframeSchemaAemet
-      ) match {
-        case Left(exception) => throw exception
-        case Right(df) => df.union(createDataframeFromJSON(
-          sparkSession,
-          ctsStorageDataIfapaAemetFormatSingleStationMeteoInfo.Dirs.dataRegistry,
-          ctsStorageDataIfapaAemetFormatSingleStationMeteoInfo.FilePaths.metadata,
-          createDataframeSchemaAemet
-        ) match {
-          case Left(exception) => throw exception
-          case Right(df) => df
-        })
+      private def formatAllMeteoInfoDataframe(dataframe: DataFrame): DataFrame = {
+        val ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys
+        val ctsRemoteReqAemetParamsAllMeteoInfoExecFormat = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Execution.Format
+
+        val formatters: Map[String, String => Column] = Map(
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.fechaJKey ->
+            (column => to_date(col(column), ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat)),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.provinciaJKey ->
+            (column => udf((value: String) => Map(
+              "STA. CRUZ DE TENERIFE" -> "SANTA CRUZ DE TENERIFE",
+              "BALEARES" -> "ILLES BALEARS",
+              "ALMERÍA" -> "ALMERIA"
+            ).getOrElse(value, value)).apply(col(column))),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.altitudJKey ->
+            (column => col(column).cast("int")),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey ->
+            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey ->
+            (column => {
+              when(col(column) === "Acum", lit(null).cast("double"))
+                .otherwise(
+                  when(col(column) === "Ip", lit(0.0).cast("double"))
+                    .otherwise(bround(regexp_replace(col(column), ",", ".").cast("double"), 1))
+                )
+            }),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tminJKey ->
+            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatminJKey ->
+            (column => {
+              when(col(column) === "Varias", lit(null).cast("timestamp"))
+                .otherwise(
+                  to_timestamp(
+                    concat_ws(" ", col("fecha"), col(column)),
+                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                  )
+                )
+            }),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmaxJKey ->
+            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatmaxJKey ->
+            (column => {
+              when(col(column) === "Varias", lit(null).cast("timestamp"))
+                .otherwise(
+                  to_timestamp(
+                    concat_ws(" ", col("fecha"), col(column)),
+                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                  )
+                )
+            }),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.dirJKey ->
+            (column => {
+              when(col(column) === "99" || col(column) === "88", lit(null).cast("int"))
+                .otherwise(regexp_replace(col(column), ",", "").cast("int"))
+            }),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey ->
+            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.rachaJKey ->
+            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horarachaJKey ->
+            (column => {
+              when(col(column) === "Varias", lit(null).cast("timestamp"))
+                .otherwise(
+                  to_timestamp(
+                    concat_ws(" ", col("fecha"), col(column)),
+                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                  )
+                )
+            }),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.solJKey ->
+            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.presmaxJKey ->
+            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horapresmaxJKey ->
+            (column => {
+              when(col(column) === "Varias", lit(null).cast("timestamp"))
+                .otherwise(
+                  to_timestamp(
+                    concat_ws(" ", col("fecha"), col(column)),
+                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                  )
+                )
+            }),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.presminJKey ->
+            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horapresminJKey ->
+            (column => {
+              when(col(column) === "Varias", lit(null).cast("timestamp"))
+                .otherwise(
+                  to_timestamp(
+                    concat_ws(" ", col("fecha"), col(column)),
+                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                  )
+                )
+            }),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmediaJKey ->
+            (column => col(column).cast("int")),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmaxJKey ->
+            (column => col(column).cast("int")),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrmaxJKey ->
+            (column => {
+              when(col(column) === "Varias", lit(null).cast("timestamp"))
+                .otherwise(
+                  to_timestamp(
+                    concat_ws(" ", col("fecha"), col(column)),
+                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                  )
+                )
+            }),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrminJKey ->
+            (column => col(column).cast("int")),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrminJKey ->
+            (column => {
+              when(col(column) === "Varias", lit(null).cast("timestamp"))
+                .otherwise(
+                  to_timestamp(
+                    concat_ws(" ", col("fecha"), col(column)),
+                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                  )
+                )
+            }),
+        )
+
+        formatters.foldLeft(dataframe) {
+          case (accumulatedDf, (colName, transformationFunc)) =>
+            accumulatedDf.withColumn(colName, transformationFunc(colName))
+        }
       }
 
-      val allStations: DataFrame = createDataframeFromJSON(
-        sparkSession,
-        ctsStorageDataAemetAllStationInfo.Dirs.dataRegistry,
-        ctsStorageDataAemetAllStationInfo.FilePaths.metadata,
-        createDataframeSchemaAemet
-      ) match {
-        case Left(exception) => throw exception
-        case Right(df) => df.union(createDataframeFromJSON(
-          sparkSession,
-          ctsStorageDataIfapaAemetFormatSingleStationInfo.Dirs.dataRegistry,
-          ctsStorageDataIfapaAemetFormatSingleStationInfo.FilePaths.metadata,
-          createDataframeSchemaAemet
-        ) match {
-          case Left(exception) => throw exception
-          case Right(df) => df
-        })
+      private def formatAllStationsDataframe(dataframe: DataFrame): DataFrame = {
+        val ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys = RemoteRequest.AemetAPI.Params.AllStationInfo.Metadata.DataFieldsJSONKeys
+
+        val formatters: Map[String, String => Column] = Map(
+          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.provinciaJKey ->
+            (column => udf((value: String) => Map(
+              "SANTA CRUZ DE TENERIFE" -> "STA. CRUZ DE TENERIFE",
+              "BALEARES" -> "ILLES BALEARS",
+              "ALMERÍA" -> "ALMERIA"
+            ).getOrElse(value, value)).apply(col(column))),
+          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.altitudJKey ->
+            (column => col(column).cast("int")),
+          "latitud_dec" ->
+            (_ => round(udf((dms: String) => {
+              val degrees = dms.substring(0, 2).toInt
+              val minutes = dms.substring(2, 4).toInt
+              val seconds = dms.substring(4, 6).toInt
+              val direction = dms.last
+              val decimal = degrees + (minutes / 60.0) + (seconds / 3600.0)
+              if (direction == 'S' || direction == 'W') -decimal else decimal
+            }).apply(col(ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.latitudJKey)), 6)),
+          "longitud_dec" ->
+            (_ => round(udf((dms: String) => {
+              val degrees = dms.substring(0, 2).toInt
+              val minutes = dms.substring(2, 4).toInt
+              val seconds = dms.substring(4, 6).toInt
+              val direction = dms.last
+              val decimal = degrees + (minutes / 60.0) + (seconds / 3600.0)
+              if (direction == 'S' || direction == 'W') -decimal else decimal
+            }).apply(col(ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.longitudJKey)), 6)),
+        )
+
+        formatters.foldLeft(dataframe) {
+          case (accumulatedDf, (colName, transformationFunc)) =>
+            accumulatedDf.withColumn(colName, transformationFunc(colName))
+        }
       }
+
+      val allMeteoInfo: DataFrame =
+        formatAllMeteoInfoDataframe(
+          createDataframeFromJSONAndAemetMetadata(
+            sparkSession,
+            ctsStorageDataAemetAllMeteoInfo.Dirs.dataRegistry,
+            ctsStorageDataAemetAllMeteoInfo.FilePaths.metadata
+          ) match {
+            case Left(exception) => throw exception
+            case Right(df) => df.union(createDataframeFromJSONAndAemetMetadata(
+              sparkSession,
+              ctsStorageDataIfapaAemetFormatSingleStationMeteoInfo.Dirs.dataRegistry,
+              ctsStorageDataIfapaAemetFormatSingleStationMeteoInfo.FilePaths.metadata
+            ) match {
+              case Left(exception) => throw exception
+              case Right(df) => df
+            })
+          }
+        ).persist(StorageLevel.MEMORY_AND_DISK_SER)
+
+      val allStations: DataFrame =
+        formatAllStationsDataframe(
+          createDataframeFromJSONAndAemetMetadata(
+            sparkSession,
+            ctsStorageDataAemetAllStationInfo.Dirs.dataRegistry,
+            ctsStorageDataAemetAllStationInfo.FilePaths.metadata
+          ) match {
+            case Left(exception) => throw exception
+            case Right(df) => df.union(createDataframeFromJSONAndAemetMetadata(
+              sparkSession,
+              ctsStorageDataIfapaAemetFormatSingleStationInfo.Dirs.dataRegistry,
+              ctsStorageDataIfapaAemetFormatSingleStationInfo.FilePaths.metadata
+            ) match {
+              case Left(exception) => throw exception
+              case Right(df) => df
+            })
+          }
+        ).persist(StorageLevel.MEMORY_AND_DISK_SER)
     }
   }
 
   object SparkQueries {
+
     import SparkCore.sparkSession.implicits._
 
     private val ctsSparkQueriesGlobal = Spark.Queries.Global
     private val ctsLogsSparkQueriesStudiesGlobal = Logs.SparkQueries.Studies.Global
+
+    private case class FetchAndSaveInfo(dataframe: DataFrame,
+                                        pathToSave: String,
+                                        title: String = "",
+                                        showInfoMessage: String = ctsLogsSparkQueriesStudiesGlobal.showInfo,
+                                        saveInfoMessage: String = ctsLogsSparkQueriesStudiesGlobal.saveInfo
+                                       )
+
+    private def simpleFetchAndSave(queryTitle: String = "",
+                                   queries: Seq[FetchAndSaveInfo],
+                                   encloseHalfLengthStart: Int = 35
+                                  ): Unit = {
+      if (queryTitle != "")
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startQuery.format(
+          queryTitle
+        ), encloseHalfLength = encloseHalfLengthStart)
+
+      queries.foreach(subQuery => {
+        if (subQuery.title != "")
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startSubQuery.format(
+            subQuery.title
+          ), encloseHalfLength = encloseHalfLengthStart + 5)
+
+        printlnConsoleMessage(NotificationType.Information, subQuery.showInfoMessage)
+        subQuery.dataframe.show()
+
+        printlnConsoleMessage(NotificationType.Information, subQuery.saveInfoMessage.format(
+          subQuery.pathToSave
+        ))
+        SparkCore.saveDataframeAsParquet(subQuery.dataframe, subQuery.pathToSave) match {
+          case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+          case Right(_) => ()
+        }
+
+        if (subQuery.title != "")
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endSubQuery.format(
+            subQuery.title
+          ), encloseHalfLength = encloseHalfLengthStart + 5)
+      })
+
+      if (queryTitle != "")
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endQuery.format(
+          queryTitle
+        ), encloseHalfLength = encloseHalfLengthStart)
+    }
 
     object Climograph {
       private val ctsSparkQueriesClimograph = Spark.Queries.Climograph
@@ -126,309 +345,414 @@ object SparkManager {
       private val ctsStorageDataSparkClimograph = Storage.DataSpark.Climograph
 
       def execute(): Unit = {
-        def fetchAndSaveClimate(climateName: String, locationToStationId: Map[String, String], observationYear: Int, locationToPathToSave: Map[String, Map[String,String]]): Unit = {
-          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.startFetchingClimate.format(
-            climateName
-          ), encloseHalfLength = 40)
-
-          case class FetchResult(dfResult: DataFrame, pathToSave: String, infoTextShow: String, infoTextSave: String)
-          case class FetchResultGroup(tempAndPrec: FetchResult, stationInfo: FetchResult)
-
-          val showFetchResultAndSave: (FetchResult => Unit) = { fetchResult =>
-            printlnConsoleMessage(NotificationType.Information, fetchResult.infoTextShow)
-            fetchResult.dfResult.show()
-
-            printlnConsoleMessage(NotificationType.Information, fetchResult.infoTextSave)
-            SparkCore.saveDataframeAsParquet(fetchResult.dfResult, fetchResult.pathToSave) match {
-              case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-              case Right(_) => ()
-            }
-          }
-
-          locationToStationId.map {
-            case (key, value) =>
-              FetchResultGroup(
-                FetchResult(
-                  getStationMonthlyAvgTempAndPrecInAYear(value, observationYear) match {
-                    case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-                      return
-                    case Right(dataFrame: DataFrame) => dataFrame
-                  },
-                  locationToPathToSave(key)(ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id),
-                  ctsLogsSparkQueriesStudiesClimograph.Execution.infoShowDataframeTempAndPrecInfo.format(key.capitalize),
-                  ctsLogsSparkQueriesStudiesClimograph.Execution.infoSaveDataframeTempAndPrecInfo.format(
-                    key.capitalize,
-                    locationToPathToSave(key)(ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id)
-                  ),
-                ),
-                FetchResult(
-                  getStationInfoById(value) match {
-                    case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-                      return
-                    case Right(dataFrame: DataFrame) => dataFrame
-                  },
-                  locationToPathToSave(key)(ctsSparkQueriesGlobal.Methods.GetStationInfoById.id),
-                  ctsLogsSparkQueriesStudiesClimograph.Execution.infoShowDataframeStationInfo.format(key.capitalize),
-                  ctsLogsSparkQueriesStudiesClimograph.Execution.infoSaveDataframeStationInfo.format(
-                    key.capitalize,
-                    locationToPathToSave(key)(ctsSparkQueriesGlobal.Methods.GetStationInfoById.id)
-                  ),
-                )
-              )
-          }.toList.foreach(element => {
-            showFetchResultAndSave(element.tempAndPrec)
-            showFetchResultAndSave(element.stationInfo)
-          })
-
-          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.endFetchingClimate.format(
-            climateName
-          ), encloseHalfLength = 40)
-        }
-
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startStudy.format(
           ctsLogsSparkQueriesStudiesClimograph.studyName
         ))
 
-        // --- Arid climates ---
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.startFetchingClimateGroup.format(
-          ctsSparkQueriesGlobal.Climates.Arid.climateGroupName
-        ), encloseHalfLength = 35)
+        ctsSparkQueriesGlobal.Climates_.climatesStationsRegistries.foreach(climateGroup => {
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.startFetchingClimateGroup.format(
+            climateGroup.climateGroupName
+          ), encloseHalfLength = 35)
 
-        // - BWh -
-        fetchAndSaveClimate(
-          climateName = ctsSparkQueriesGlobal.Climates.Arid.Climates.BWh.climateName,
-          locationToStationId = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> ctsSparkQueriesClimograph.Climates.Arid.BWh.peninsula,
-            ctsSparkQueriesClimograph.Locations.canaryIslands -> ctsSparkQueriesClimograph.Climates.Arid.BWh.canaryIslands,
-          ),
-          observationYear = ctsSparkQueriesClimograph.observationYear,
-          locationToPathToSave = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Arid.BWh.Peninsula.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Arid.BWh.Peninsula.Dirs.stationResult
-            ),
-            ctsSparkQueriesClimograph.Locations.canaryIslands -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Arid.BWh.Canary.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Arid.BWh.Canary.Dirs.stationResult
-            ),
-          )
-        )
-
-        // - BWk -
-        fetchAndSaveClimate(
-          climateName = ctsSparkQueriesGlobal.Climates.Arid.Climates.BWk.climateName,
-          locationToStationId = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> ctsSparkQueriesClimograph.Climates.Arid.BWk.peninsula
-          ),
-          observationYear = ctsSparkQueriesClimograph.observationYear,
-          locationToPathToSave = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Arid.BWk.Peninsula.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Arid.BWk.Peninsula.Dirs.stationResult
+          climateGroup.climates.foreach(climateRegistry => {
+            simpleFetchAndSave(
+              ctsLogsSparkQueriesStudiesClimograph.Execution.fetchingClimate.format(
+                climateRegistry.climateName
+              ),
+              climateRegistry.registries.flatMap(registry => {
+                List(
+                  FetchAndSaveInfo(
+                    getStationInfoById(registry.stationId) match {
+                      case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                        return
+                      case Right(dataFrame: DataFrame) => dataFrame
+                    },
+                    ctsStorageDataSparkClimograph.Dirs.resultStation.format(
+                      climateGroup.climateGroupName,
+                      climateRegistry.climateName,
+                      registry.location.toString.replace(" ", "_")
+                    ),
+                    ctsLogsSparkQueriesStudiesClimograph.Execution.fetchingClimateLocationStation.format(
+                      registry.location.toString.capitalize,
+                    )
+                  ),
+                  FetchAndSaveInfo(
+                    getStationMonthlyAvgTempAndSumPrecInAYear(
+                      registry.stationId,
+                      ctsSparkQueriesGlobal.Climates_.observationYear
+                    ) match {
+                      case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                        return
+                      case Right(dataFrame: DataFrame) => dataFrame
+                    },
+                    ctsStorageDataSparkClimograph.Dirs.resultTempPrec.format(
+                      climateGroup.climateGroupName,
+                      climateRegistry.climateName,
+                      registry.location.toString.replace(" ", "_")
+                    ),
+                    ctsLogsSparkQueriesStudiesClimograph.Execution.fetchingClimateLocationTempPrec.format(
+                      registry.location.toString.capitalize,
+                    )
+                  )
+                )
+              }),
+              encloseHalfLengthStart = 40
             )
-          )
-        )
+          })
 
-        // - BSh -
-        fetchAndSaveClimate(
-          climateName = ctsSparkQueriesGlobal.Climates.Arid.Climates.BSh.climateName,
-          locationToStationId = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> ctsSparkQueriesClimograph.Climates.Arid.BSh.peninsula,
-            ctsSparkQueriesClimograph.Locations.canaryIslands -> ctsSparkQueriesClimograph.Climates.Arid.BSh.canaryIslands,
-            ctsSparkQueriesClimograph.Locations.balearIslands -> ctsSparkQueriesClimograph.Climates.Arid.BSh.balearIslands,
-          ),
-          observationYear = ctsSparkQueriesClimograph.observationYear,
-          locationToPathToSave = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Arid.BSh.Peninsula.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Arid.BSh.Peninsula.Dirs.stationResult
-            ),
-            ctsSparkQueriesClimograph.Locations.canaryIslands -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Arid.BSh.Canary.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Arid.BSh.Canary.Dirs.stationResult
-            ),
-            ctsSparkQueriesClimograph.Locations.balearIslands -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Arid.BSh.Balear.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Arid.BSh.Balear.Dirs.stationResult
-            ),
-          )
-        )
-
-        // - BSk -
-        fetchAndSaveClimate(
-          climateName = ctsSparkQueriesGlobal.Climates.Arid.Climates.BSk.climateName,
-          locationToStationId = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> ctsSparkQueriesClimograph.Climates.Arid.BSk.peninsula,
-            ctsSparkQueriesClimograph.Locations.canaryIslands -> ctsSparkQueriesClimograph.Climates.Arid.BSk.canaryIslands,
-            ctsSparkQueriesClimograph.Locations.balearIslands -> ctsSparkQueriesClimograph.Climates.Arid.BSk.balearIslands,
-          ),
-          observationYear = ctsSparkQueriesClimograph.observationYear,
-          locationToPathToSave = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Arid.BSk.Peninsula.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Arid.BSk.Peninsula.Dirs.stationResult
-            ),
-            ctsSparkQueriesClimograph.Locations.canaryIslands -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Arid.BSk.Canary.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Arid.BSk.Canary.Dirs.stationResult
-            ),
-            ctsSparkQueriesClimograph.Locations.balearIslands -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Arid.BSk.Balear.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Arid.BSk.Balear.Dirs.stationResult
-            ),
-          )
-        )
-
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.endFetchingClimateGroup.format(
-          ctsSparkQueriesGlobal.Climates.Arid.climateGroupName
-        ), encloseHalfLength = 35)
-
-        // --- Warm climates ---
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.startFetchingClimateGroup.format(
-          ctsSparkQueriesGlobal.Climates.Warm.climateGroupName
-        ), encloseHalfLength = 35)
-
-        // - Csa -
-        fetchAndSaveClimate(
-          climateName = ctsSparkQueriesGlobal.Climates.Warm.Climates.Csa.climateName,
-          locationToStationId = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> ctsSparkQueriesClimograph.Climates.Warm.Csa.peninsula,
-            ctsSparkQueriesClimograph.Locations.canaryIslands -> ctsSparkQueriesClimograph.Climates.Warm.Csa.canaryIslands,
-            ctsSparkQueriesClimograph.Locations.balearIslands -> ctsSparkQueriesClimograph.Climates.Warm.Csa.balearIslands,
-          ),
-          observationYear = ctsSparkQueriesClimograph.observationYear,
-          locationToPathToSave = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Warm.Csa.Peninsula.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Warm.Csa.Peninsula.Dirs.stationResult
-            ),
-            ctsSparkQueriesClimograph.Locations.canaryIslands -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Warm.Csa.Canary.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Warm.Csa.Canary.Dirs.stationResult
-            ),
-            ctsSparkQueriesClimograph.Locations.balearIslands -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Warm.Csa.Balear.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Warm.Csa.Balear.Dirs.stationResult
-            ),
-          )
-        )
-        
-        // - Csb -
-        fetchAndSaveClimate(
-          climateName = ctsSparkQueriesGlobal.Climates.Warm.Climates.Csb.climateName,
-          locationToStationId = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> ctsSparkQueriesClimograph.Climates.Warm.Csb.peninsula,
-            ctsSparkQueriesClimograph.Locations.canaryIslands -> ctsSparkQueriesClimograph.Climates.Warm.Csb.canaryIslands,
-            ctsSparkQueriesClimograph.Locations.balearIslands -> ctsSparkQueriesClimograph.Climates.Warm.Csb.balearIslands,
-          ),
-          observationYear = ctsSparkQueriesClimograph.observationYear,
-          locationToPathToSave = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Warm.Csb.Peninsula.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Warm.Csb.Peninsula.Dirs.stationResult
-            ),
-            ctsSparkQueriesClimograph.Locations.canaryIslands -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Warm.Csb.Canary.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Warm.Csb.Canary.Dirs.stationResult
-            ),
-            ctsSparkQueriesClimograph.Locations.balearIslands -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Warm.Csb.Balear.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Warm.Csb.Balear.Dirs.stationResult
-            ),
-          )
-        )
-        
-        // - Cfa -
-        fetchAndSaveClimate(
-          climateName = ctsSparkQueriesGlobal.Climates.Warm.Climates.Cfa.climateName,
-          locationToStationId = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> ctsSparkQueriesClimograph.Climates.Warm.Cfa.peninsula
-          ),
-          observationYear = ctsSparkQueriesClimograph.observationYear,
-          locationToPathToSave = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Warm.Cfa.Peninsula.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Warm.Cfa.Peninsula.Dirs.stationResult
-            )
-          )
-        )
-        
-        // - Cfb -
-        fetchAndSaveClimate(
-          climateName = ctsSparkQueriesGlobal.Climates.Warm.Climates.Cfb.climateName,
-          locationToStationId = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> ctsSparkQueriesClimograph.Climates.Warm.Cfb.peninsula
-          ),
-          observationYear = ctsSparkQueriesClimograph.observationYear,
-          locationToPathToSave = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Warm.Cfb.Peninsula.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Warm.Cfb.Peninsula.Dirs.stationResult
-            )
-          )
-        )
-        
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.endFetchingClimateGroup.format(
-          ctsSparkQueriesGlobal.Climates.Warm.climateGroupName
-        ), encloseHalfLength = 35)
-
-        // --- Cold climates ---
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.startFetchingClimateGroup.format(
-          ctsSparkQueriesGlobal.Climates.Cold.climateGroupName
-        ), encloseHalfLength = 35)
-
-        // - Dsb -
-        fetchAndSaveClimate(
-          climateName = ctsSparkQueriesGlobal.Climates.Cold.Climates.Dsb.climateName,
-          locationToStationId = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> ctsSparkQueriesClimograph.Climates.Cold.Dsb.peninsula
-          ),
-          observationYear = ctsSparkQueriesClimograph.observationYear,
-          locationToPathToSave = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Cold.Dsb.Peninsula.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Cold.Dsb.Peninsula.Dirs.stationResult
-            )
-          )
-        )
-        
-        // - Dfb -
-        fetchAndSaveClimate(
-          climateName = ctsSparkQueriesGlobal.Climates.Cold.Climates.Dfb.climateName,
-          locationToStationId = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> ctsSparkQueriesClimograph.Climates.Cold.Dfb.peninsula
-          ),
-          observationYear = ctsSparkQueriesClimograph.observationYear,
-          locationToPathToSave = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Cold.Dfb.Peninsula.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Cold.Dfb.Peninsula.Dirs.stationResult
-            )
-          )
-        )
-        
-        // - Dfc -
-        fetchAndSaveClimate(
-          climateName = ctsSparkQueriesGlobal.Climates.Cold.Climates.Dfc.climateName,
-          locationToStationId = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> ctsSparkQueriesClimograph.Climates.Cold.Dfc.peninsula
-          ),
-          observationYear = ctsSparkQueriesClimograph.observationYear,
-          locationToPathToSave = Map(
-            ctsSparkQueriesClimograph.Locations.peninsula -> Map(
-              ctsSparkQueriesGlobal.Methods.GetStationMonthlyAvgTempAndPrecInAYear.id -> ctsStorageDataSparkClimograph.Cold.Dfc.Peninsula.Dirs.tempAndPrecResult,
-              ctsSparkQueriesGlobal.Methods.GetStationInfoById.id -> ctsStorageDataSparkClimograph.Cold.Dfc.Peninsula.Dirs.stationResult
-            )
-          )
-        )
-        
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.endFetchingClimateGroup.format(
-          ctsSparkQueriesGlobal.Climates.Cold.climateGroupName
-        ), encloseHalfLength = 35)
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.startFetchingClimateGroup.format(
+            climateGroup.climateGroupName
+          ), encloseHalfLength = 35)
+        })
 
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endStudy.format(
           ctsLogsSparkQueriesStudiesClimograph.studyName
         ))
+      }
+    }
+
+    object Temperature {
+      private val ctsSparkQueriesTemperature = Spark.Queries.Temperature
+      private val ctsLogsSparkQueriesStudiesTemperature = Logs.SparkQueries.Studies.Temperature
+      private val ctsStorageDataSparkTemperature = Storage.DataSpark.Temperature
+      private val ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys
+
+      def execute(): Unit = {
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startStudy.format(
+          ctsLogsSparkQueriesStudiesTemperature.studyName
+        ))
+
+        // Top 10 places with the highest temperatures in 2024
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesTemperature.Execution.top10HighestTemp2024,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
+                startDate = ctsSparkQueriesTemperature.Top10HighestTemp2024.startDate,
+                endDate = None) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkTemperature.Top10Temp.Dirs.resultHighest2024
+            )
+          )
+        )
+
+        // Top 10 places with the highest temperatures in the last decade
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesTemperature.Execution.top10HighestTempDecade,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
+                startDate = ctsSparkQueriesTemperature.Top10HighestTempDecade.startDate,
+                endDate = Some(ctsSparkQueriesTemperature.Top10HighestTempDecade.endDate)) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkTemperature.Top10Temp.Dirs.resultHighestDecade
+            )
+          )
+        )
+
+        // Top 10 places with the highest temperatures from the start of registers
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesTemperature.Execution.top10HighestTempGlobal,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
+                startDate = ctsSparkQueriesTemperature.Top10HighestTempGlobal.startDate,
+                endDate = Some(ctsSparkQueriesTemperature.Top10HighestTempGlobal.endDate)) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkTemperature.Top10Temp.Dirs.resultHighestGlobal
+            )
+          )
+        )
+
+        // Top 10 places with the lowest temperatures in 2024
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesTemperature.Execution.top10LowestTemp2024,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
+                startDate = ctsSparkQueriesTemperature.Top10LowestTemp2024.startDate,
+                endDate = None,
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkTemperature.Top10Temp.Dirs.resultLowest2024
+            )
+          )
+        )
+
+        // Top 10 places with the lowest temperatures in the last decade
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesTemperature.Execution.top10LowestTempDecade,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
+                startDate = ctsSparkQueriesTemperature.Top10LowestTempDecade.startDate,
+                endDate = Some(ctsSparkQueriesTemperature.Top10LowestTempDecade.endDate),
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkTemperature.Top10Temp.Dirs.resultLowestDecade
+            )
+          )
+        )
+
+        // Top 10 places with the lowest temperatures from the start of registers
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesTemperature.Execution.top10LowestTempGlobal,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
+                startDate = ctsSparkQueriesTemperature.Top10LowestTempGlobal.startDate,
+                endDate = Some(ctsSparkQueriesTemperature.Top10LowestTempGlobal.endDate),
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkTemperature.Top10Temp.Dirs.resultLowestGlobal
+            )
+          )
+        )
+
+        // Temperature evolution from the start of registers for each state
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesTemperature.Execution.tempEvolFromStartForEachState,
+          ctsSparkQueriesGlobal.StateRepresentativeStations.stationRegistries.flatMap(registry => {
+            List(
+              FetchAndSaveInfo(
+                getStationInfoById(registry.stationId) match {
+                  case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                    return
+                  case Right(dataFrame: DataFrame) => dataFrame
+                },
+                ctsStorageDataSparkTemperature.TempEvolFromStartForEachState.Dirs.resultStation.format(
+                  registry.stateNameNoSC.replace(" ", "_")
+                ),
+                ctsLogsSparkQueriesStudiesTemperature.Execution.tempEvolFromStartForEachStateStartStation.format(
+                  registry.stateName.capitalize
+                )
+              ),
+              FetchAndSaveInfo(
+                getClimateParamInALapseById(
+                  registry.stationId,
+                  ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
+                  registry.startDate,
+                  Some(registry.endDate)
+                ) match {
+                  case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                    return
+                  case Right(dataFrame: DataFrame) => dataFrame
+                },
+                ctsStorageDataSparkTemperature.TempEvolFromStartForEachState.Dirs.resultEvol.format(
+                  registry.stateNameNoSC.replace(" ", "_")
+                ),
+                ctsLogsSparkQueriesStudiesTemperature.Execution.tempEvolFromStartForEachStateStartEvol.format(
+                  registry.stateName
+                )
+              )
+            )
+          })
+        )
+
+        // Top 5 highest increment of temperature
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesTemperature.Execution.top5HighestIncTemp,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamIncrementInAYearLapse(
+                stationIds = ctsSparkQueriesGlobal.StateRepresentativeStations.stationRegistries.map(registry => registry.stationId),
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
+                startYear = ctsSparkQueriesTemperature.Top5HighestIncTemp.startYear,
+                endYear = ctsSparkQueriesTemperature.Top5HighestIncTemp.endYear
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkTemperature.Top5TempInc.Dirs.resultHighest
+            )
+          )
+        )
+
+        // Top 5 states with the lowest increment of temperature
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesTemperature.Execution.top5LowestIncTemp,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamIncrementInAYearLapse(
+                stationIds = ctsSparkQueriesGlobal.StateRepresentativeStations.stationRegistries.map(registry => registry.stationId),
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
+                startYear = ctsSparkQueriesTemperature.Top5LowestIncTemp.startYear,
+                endYear = ctsSparkQueriesTemperature.Top5LowestIncTemp.endYear,
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkTemperature.Top5TempInc.Dirs.resultLowest
+            )
+          )
+        )
+
+        // Get average temperature in 2024 for all station in the spanish continental territory
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesTemperature.Execution.avgTemp2024AllStationSpainContinental,
+          List(
+            FetchAndSaveInfo(
+              getAllStationsByStatesAvgClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
+                startDate = ctsSparkQueriesTemperature.AvgTemp2024AllStationSpain.startDate
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkTemperature.AvgTemp2024AllStationSpain.Dirs.resultContinental
+            )
+          )
+        )
+
+        // Get average temperature in 2024 for all station in the canary islands territory
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesTemperature.Execution.avgTemp2024AllStationSpainCanary,
+          List(
+            FetchAndSaveInfo(
+              getAllStationsByStatesAvgClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
+                startDate = ctsSparkQueriesTemperature.AvgTemp2024AllStationSpain.startDate,
+                states = Some(ctsSparkQueriesTemperature.AvgTemp2024AllStationSpain.canaryIslandStates),
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkTemperature.AvgTemp2024AllStationSpain.Dirs.resultCanary
+            )
+          )
+        )
+
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endStudy.format(
+          ctsLogsSparkQueriesStudiesTemperature.studyName
+        ))
+      }
+    }
+
+    private def getAllStationsInfo(): Either[Exception, DataFrame] = {
+      try {
+        Right(
+          SparkCore.dataframes.allStations.select(
+            $"indicativo",
+            $"nombre",
+            $"provincia",
+            $"latitud",
+            $"longitud",
+            $"altitud",
+            $"lat_dec",
+            $"long_dec"
+          )
+        )
+      } catch {
+        case exception: Exception => Left(exception)
+      }
+    }
+
+    private def getStationInfoByParam(param: String, value: String): Either[Exception, DataFrame] = {
+      try {
+        val df: DataFrame = SparkCore.dataframes.allStations
+        val dmsToDecimal: String => Double = (dms: String) => {
+          val degrees = dms.substring(0, 2).toInt
+          val minutes = dms.substring(2, 4).toInt
+          val seconds = dms.substring(4, 6).toInt
+          val direction = dms.last
+
+          val decimal = degrees + (minutes / 60.0) + (seconds / 3600.0)
+
+          if (direction == 'S' || direction == 'W') -decimal else decimal
+        }
+        val dmsToDecimalUDF: UserDefinedFunction = udf(dmsToDecimal)
+
+        val resultDf = df.filter(col(param) === value)
+          .withColumn("lat_dec", round(dmsToDecimalUDF($"latitud"), 6))
+          .withColumn("long_dec", round(dmsToDecimalUDF($"longitud"), 6))
+          .select(
+            $"indicativo",
+            $"nombre",
+            $"provincia",
+            $"latitud".alias("lat_dms"),
+            $"longitud".alias("long_dms"),
+            $"lat_dec",
+            $"long_dec",
+            $"altitud"
+          )
+
+        Right(resultDf)
+      } catch {
+        case exception: Exception => Left(exception)
+      }
+    }
+
+    def getAllStationsByClimateParamInALapse(climateParam: String,
+                                              startDate: String,
+                                              endDate: Option[String] = None
+                                            ): Either[Exception, DataFrame] = {
+      try {
+        val meteoDF = SparkCore.dataframes.allMeteoInfo
+        val stationsDF = SparkCore.dataframes.allStations
+
+        // Filtrar por el parámetro climático no nulo
+        val filteredDF = meteoDF.filter(col(climateParam).isNotNull)
+
+        // Filtrar por rango de fechas
+        val dateFilteredDF = endDate match {
+          case Some(end) => filteredDF.filter($"fecha".between(lit(startDate), lit(end)))
+          case None => filteredDF.filter(year($"fecha") === startDate.toInt)
+        }
+
+        // Obtener indicativos únicos que han operado
+        val estacionesOperativas = dateFilteredDF
+          .select($"indicativo")
+          .distinct()
+
+        // Unir con la info de estaciones
+        val resultado = estacionesOperativas
+          .join(stationsDF, Seq("indicativo"), "inner")
+          .select(
+            $"indicativo",
+            $"nombre",
+            $"provincia",
+            $"latitud",
+            $"longitud",
+            $"altitud",
+            $"latitud_dec",
+            $"longitud_dec"
+          )
+
+        Right(resultado)
+      } catch {
+        case ex: Exception => Left(ex)
       }
     }
 
@@ -467,7 +791,7 @@ object SparkManager {
       }
     }
 
-    private def getStationMonthlyAvgTempAndPrecInAYear(stationId: String, observationYear: Int): Either[Exception, DataFrame] = {
+    private def getStationMonthlyAvgTempAndSumPrecInAYear(stationId: String, observationYear: Int): Either[Exception, DataFrame] = {
       try {
         val df: DataFrame = SparkCore.dataframes.allMeteoInfo
 
@@ -480,7 +804,7 @@ object SparkManager {
               $"prec".isNotNull &&
               $"indicativo" === stationId &&
               year($"date") === observationYear
-          ).cache()
+          )
 
         val resultDf = filteredDf
           .groupBy(
@@ -497,5 +821,347 @@ object SparkManager {
         case exception: Exception => Left(exception)
       }
     }
+
+    def getTopNClimateParamInALapse(climateParam: String, startDate: String, endDate: Option[String] = None, topN: Int = 10, highest: Boolean = true): Either[Exception, DataFrame] = {
+      try {
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
+        val stationDf: DataFrame = SparkCore.dataframes.allStations.as("station")
+
+        Right(
+          meteoDf.filter(endDate match {
+              case Some(endDate) => $"fecha".between(lit(startDate), lit(endDate))
+              case None => year($"fecha") === startDate.toInt
+          }).filter(col(climateParam).isNotNull)
+          .groupBy($"indicativo")
+          .agg(avg(col(climateParam)).as(s"${climateParam}_avg"))
+          .join(stationDf, Seq("indicativo"), "inner")
+          .select(
+            $"station.indicativo",
+            $"station.nombre",
+            $"station.provincia",
+            col(s"${climateParam}_avg"),
+            $"station.latitud",
+            $"station.longitud",
+            $"station.altitud"
+          ).limit(topN)
+          .withColumn("top", monotonically_increasing_id() + 1)
+          .orderBy(if (highest) $"top".desc else $"top".asc)
+        )
+      } catch {
+        case exception: Exception => Left(exception)
+      }
+    }
+
+    def getClimateParamInALapseById(stationId: String, climateParam: String, startDate: String, endDate: Option[String] = None): Either[Exception, DataFrame] = {
+      try {
+        val df: DataFrame = SparkCore.dataframes.allMeteoInfo
+
+        val filteredDf = df
+          .withColumn("fecha", to_date($"fecha", "yyyy-MM-dd"))
+          .withColumn(climateParam, regexp_replace(col(climateParam), ",", ".").cast("float"))
+          .filter(col(climateParam).isNotNull)
+          .filter($"indicativo" === stationId)
+
+        val filteredDateDf = endDate match {
+          case Some(endDate) => filteredDf.filter($"fecha".between(lit(startDate), lit(endDate)))
+          case None => filteredDf.filter(year($"fecha") === startDate.toInt)
+        }
+
+        val orderedDf = filteredDateDf
+          .select("fecha", climateParam)
+          .orderBy("fecha")
+
+        Right(orderedDf)
+      } catch {
+        case exception: Exception => Left(exception)
+      }
+    }
+
+    def getAllStationsByStatesAvgClimateParamInALapse(climateParam: String, startDate: String, endDate: Option[String] = None, states: Option[Seq[String]] = None): Either[Exception, DataFrame] = {
+      try {
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
+        val stationDf: DataFrame = SparkCore.dataframes.allStations.as("station")
+
+        Right(
+          meteoDf.filter(endDate match {
+            case Some(end) => $"fecha".between(lit(startDate), lit(end))
+            case None => year($"fecha") === startDate.toInt
+          }).filter(states match {
+            case Some(stateList) => $"provincia".isin(stateList: _*)
+            case None => lit(true)
+          }).filter(col(climateParam).isNotNull)
+          .groupBy($"indicativo")
+          .agg(avg(col(climateParam)).as(s"${climateParam}_avg"))
+          .join(stationDf, Seq("indicativo"), "inner")
+          .select(
+            $"station.nombre",
+            col(s"${climateParam}_avg"),
+            $"station.latitud_dec",
+            $"station.longitud_dec",
+            $"station.altitud",
+          )
+        )
+      } catch {
+        case exception: Exception => Left(exception)
+      }
+    }
+
+    def getAllStationsInfoByAvgClimateParamInALapse(climateParam: String,
+                                                    startDate: String,
+                                                    endDate: Option[String] = None
+                                                   ): Either[Exception, DataFrame] = {
+      try {
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo
+        val stationsDf: DataFrame = SparkCore.dataframes.allStations
+
+        // Normalización de columnas
+        val preparedMeteoDf = meteoDf
+          .withColumn("fecha", to_date(col("fecha"), "yyyy-MM-dd"))
+          .withColumn(climateParam, regexp_replace(col(climateParam), ",", ".").cast("float"))
+          .filter(col(climateParam).isNotNull)
+
+        // Filtrado por fechas
+        val filteredMeteoDf = endDate match {
+          case Some(end) =>
+            preparedMeteoDf.filter(col("fecha").between(lit(startDate), lit(end)))
+          case None =>
+            preparedMeteoDf.filter(year(col("fecha")) === startDate.toInt)
+        }
+
+        // Agrupación por estación y cálculo de media
+        val avgPerStationDf = filteredMeteoDf
+          .groupBy("indicativo")
+          .agg(
+            avg(col(climateParam)).alias(s"avg_$climateParam"),
+            count("*").alias("num_registros")
+          )
+
+        // Join solo con estaciones que tengan datos
+        val resultDf = avgPerStationDf
+          .join(stationsDf, Seq("indicativo"), "inner")
+          .filter(col(s"avg_$climateParam") =!= 0.0)
+          .select(
+            col("indicativo"),
+            col("nombre"),
+            col("provincia"),
+            col("latitud"),
+            col("longitud"),
+            col("altitud"),
+            col(s"avg_$climateParam"),
+            col("num_registros")
+          )
+          .orderBy(desc(s"avg_$climateParam"))
+
+        Right(resultDf)
+
+      } catch {
+        case exception: Exception => Left(exception)
+      }
+    }
+
+    def test(): Unit = {
+      SparkCore.dataframes.allStations.printSchema()
+      SparkCore.dataframes.allMeteoInfo.printSchema()
+    }
+
+    def getTopNClimateParamIncrementInAYearLapse(stationIds: Seq[String],
+                                                 climateParam: String,
+                                                 startYear: Int,
+                                                 endYear: Int,
+                                                 highest: Boolean = true,
+                                                 topN: Int = 5
+                                                ): Either[Exception, DataFrame] = {
+      try {
+        val filteredDf = SparkCore.dataframes.allMeteoInfo
+          .filter($"indicativo".isin(stationIds: _*))
+          .filter(col(climateParam).isNotNull)
+          .withColumn("anio", year($"fecha"))
+          .groupBy("indicativo", "anio")
+          .agg(avg(col(climateParam)).as(climateParam + "_media"))
+          .persist(StorageLevel.MEMORY_AND_DISK_SER)
+
+        val characteristicsVectorAssembler = new VectorAssembler()
+          .setInputCols(Array("anio"))
+          .setOutputCol("features")
+
+        val result = filteredDf
+          .select("indicativo")
+          .distinct()
+          .as[String]
+          .collect()
+          .flatMap { indicativo =>
+            val fittedModel = new LinearRegression().fit(
+              characteristicsVectorAssembler.transform(
+                filteredDf.filter($"indicativo" === indicativo)
+              ).select(
+                $"features", col(climateParam + "_media").as("label")
+              )
+            )
+
+            val predictions = fittedModel.transform(
+                characteristicsVectorAssembler.transform(
+                  Seq(startYear, endYear).toDF("anio")
+                )
+              ).select("anio", "prediction")
+              .as[(Int, Double)]
+              .collect()
+              .toMap
+
+            for {
+              predStartYear <- predictions.get(startYear)
+              predEndYear <- predictions.get(endYear)
+            } yield (indicativo, predEndYear - predStartYear)
+          }
+
+        filteredDf.unpersist(true)
+
+        Right(
+          result
+            .toSeq
+            .toDF("indicativo", "incremento")
+            .join(SparkCore.dataframes.allStations, Seq("indicativo"), "inner")
+            .select(
+              "incremento",
+              "indicativo",
+              "nombre",
+              "provincia",
+              "latitud",
+              "longitud",
+              "altitud",
+              "latitud_dec",
+              "longitud_dec"
+            )
+            .orderBy(if (highest) $"incremento".desc else $"incremento".asc)
+            .limit(topN)
+            .withColumn("top", monotonically_increasing_id() + 1)
+        )
+      } catch {
+        case exception: Exception => Left(exception)
+      }
+    }
+
+    // Definir la función
+    //    def getOperativePeriodsForProvince(provincia: String): DataFrame = {
+    //      val df: DataFrame = SparkCore.dataframes.allMeteoInfo
+    //
+    //      // Filtrar el DataFrame para la provincia específica
+    //      val dfFiltered = df.filter(col("provincia") === provincia)
+    //
+    //      // Asegurarse de que la fecha esté en formato adecuado y extraer el año
+    //      val dfWithDate = dfFiltered.withColumn("fecha", to_date(col("fecha"), "yyyy-MM-dd"))
+    //      val dfWithYear = dfWithDate.withColumn("year", year(col("fecha")))
+    //
+    //      // Definir la ventana para ordenación por "indicativo" y "provincia", ordenado por "fecha"
+    //      val windowSpec = Window.partitionBy("indicativo", "provincia").orderBy("fecha")
+    //
+    //      // Calcular la fecha previa para detectar cortes en las fechas
+    //      val dfOrdered = dfWithYear.withColumn("prev_fecha", lag("fecha", 1).over(windowSpec))
+    //
+    //      // Detectar cortes: Si la diferencia entre la fecha actual y la anterior es mayor a 30 días, hay un corte
+    //      val dfWithCuts = dfOrdered.withColumn("is_cut",
+    //        when(datediff(col("fecha"), col("prev_fecha")) > 30, 1).otherwise(0)
+    //      )
+    //
+    //      // Crear un identificador de segmento de operatividad continua, sumando las cortes detectadas
+    //      val dfWithSegmentId = dfWithCuts.withColumn("segment_id",
+    //        sum(when(col("is_cut") === 1, 1).otherwise(0)).over(windowSpec.rowsBetween(Window.unboundedPreceding, 0))
+    //      )
+    //
+    //      // Agrupar por el segment_id para obtener las fechas de inicio y fin de cada periodo de operatividad continua
+    //      val dfOperativePeriods = dfWithSegmentId
+    //        .groupBy("provincia", "indicativo", "nombre", "segment_id")
+    //        .agg(
+    //          min("fecha").alias("inicio_operativa"),
+    //          max("fecha").alias("fin_operativa")
+    //        )
+    //        .orderBy("indicativo", "nombre", "inicio_operativa")  // Ordenar por estación (indicativo y nombre) y por fecha de inicio
+    //
+    //      // Devolver el resultado
+    //      dfOperativePeriods
+    //    }
+
+    // Función para obtener estaciones operativas entre las fechas dadas para todas las provincias,
+    // considerando un corte si han pasado más de un año entre las fechas.
+    def getStationsOperativeBetweenDatesForAllProvincesWithYearCut(startDate: String, endDate: String): DataFrame = {
+
+      // Obtener el DataFrame global
+      val df: DataFrame = SparkCore.dataframes.allMeteoInfo
+
+      // Asegurarse de que la fecha esté en formato adecuado y extraer el año
+      val dfWithDate = df.withColumn("fecha", to_date(col("fecha"), "yyyy-MM-dd"))
+      val dfWithYear = dfWithDate.withColumn("year", year(col("fecha")))
+
+      // Definir la ventana para ordenación por "indicativo", "provincia" y "nombre", ordenado por "fecha"
+      val windowSpec = Window.partitionBy("indicativo", "provincia", "nombre").orderBy("fecha")
+
+      // Calcular la fecha previa para detectar cortes en las fechas
+      val dfOrdered = dfWithYear.withColumn("prev_fecha", lag("fecha", 1).over(windowSpec))
+
+      // Detectar cortes: Si la diferencia entre la fecha actual y la anterior es mayor a un año, hay un corte
+      val dfWithCuts = dfOrdered.withColumn("is_cut",
+        when(datediff(col("fecha"), col("prev_fecha")) > 365, 1).otherwise(0)
+      )
+
+      // Crear un identificador de segmento de operatividad continua, sumando las cortes detectadas
+      val dfWithSegmentId = dfWithCuts.withColumn("segment_id",
+        sum(when(col("is_cut") === 1, 1).otherwise(0)).over(windowSpec.rowsBetween(Window.unboundedPreceding, 0))
+      )
+
+      // Agrupar por el segment_id para obtener las fechas de inicio y fin de cada periodo de operatividad continua
+      val dfOperativePeriods = dfWithSegmentId
+        .groupBy("provincia", "indicativo", "nombre", "segment_id")
+        .agg(
+          min("fecha").alias("inicio_operativa"),
+          max("fecha").alias("fin_operativa")
+        )
+        .orderBy("provincia", "indicativo", "inicio_operativa")
+
+      // Filtrar estaciones operativas entre las fechas de inicio y fin proporcionadas
+      val dfFilteredByDates = dfOperativePeriods.filter(
+        col("inicio_operativa").leq(lit(startDate)) && col("fin_operativa").geq(lit(endDate))
+      )
+
+      // Devolver el DataFrame con las estaciones operativas entre las fechas
+      dfFilteredByDates
+    }
+
+    //    def getLongestOperativeStationsPerProvince(param: String, maxNullMonths: Int = 3): DataFrame = {
+    //      val df: DataFrame = SparkCore.dataframes.allMeteoInfo
+    //
+    //      // Parsear fecha y extraer año/mes
+    //      val dfParsed = df
+    //        .withColumn("fecha", to_date(col("fecha"), "yyyy-MM-dd"))
+    //        .withColumn("year_month", date_format(col("fecha"), "yyyy-MM"))
+    //
+    //      // Agrupación mensual para contar registros y valores nulos
+    //      val monthlyStats = dfParsed
+    //        .groupBy("provincia", "indicativo", "nombre", "year_month")
+    //        .agg(
+    //          count("*").alias("n_registros"),
+    //          count(when(col(param).isNull, 1)).alias("null_param")
+    //        )
+    //
+    //      // Marcar mes como inactivo si todos los valores del parámetro son nulos o no hay registros
+    //      val inactiveMonths = monthlyStats
+    //        .withColumn("inactive", when(col("n_registros") === 0 || col("null_param") === col("n_registros"), 1).otherwise(0))
+    //
+    //      val window = Window.partitionBy("provincia", "indicativo", "nombre").orderBy("year_month")
+    //
+    //      // Detectar cortes consecutivos
+    //      val dfWithCutFlags = inactiveMonths
+    //        .withColumn("inactive_seq", sum("inactive").over(window.rowsBetween(-maxNullMonths + 1, 0)))
+    //        .withColumn("cut_flag", when(col("inactive_seq") === maxNullMonths, 1).otherwise(0))
+    //
+    //      // Crear segmento de operatividad
+    //      val dfWithSegment = dfWithCutFlags
+    //        .withColumn("segment_id", sum("cut_flag").over(window.rowsBetween(Window.unboundedPreceding, 0)))
+    //
+    //      // Crear tabla con fecha y clave
+    //      val dfDates = dfParsed
+    //        .select("provincia", "indicativo", "nombre", "fecha")
+    //        .distinct()
+    //
+    //      // Aliases para evitar ambig�
+    //    }
   }
 }

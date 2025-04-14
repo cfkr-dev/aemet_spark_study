@@ -73,8 +73,6 @@ object IfapaToAemetConverter {
             ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.velvientomaxJKey),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horarachaJKey ->
             ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.horminvelmaxJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.solJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.radiacionJKey),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmediaJKey ->
             ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.humedadmediaJKey),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmaxJKey ->
@@ -92,9 +90,9 @@ object IfapaToAemetConverter {
         Map(
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.fechaJKey -> (value => value.str),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.indicativoJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.nombreJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.provinciaJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.altitudJKey -> (value => (Math.round(value.num * 10) / 10.0).toInt.toString.replace(".", ",")),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.nombreJKey -> (value => value.str.toUpperCase),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.provinciaJKey -> (value => value.str.toUpperCase),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.altitudJKey -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tminJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
@@ -105,11 +103,10 @@ object IfapaToAemetConverter {
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.rachaJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horarachaJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.solJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmediaJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmaxJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmediaJKey -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmaxJKey -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrmaxJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrminJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
+          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrminJKey -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrminJKey -> (value => value.str)
         )
       }
@@ -203,10 +200,10 @@ object IfapaToAemetConverter {
       def genAemetStationInfoFormatters(): Map[String, ujson.Value => ujson.Value] = {
         Map(
           ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.latitudJKey -> (value => value.str.replaceAll("(\\d{3})([A-Z])$", "$2")),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.provinciaJKey -> (value => value.str),
+          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.provinciaJKey -> (value => value.str.toUpperCase),
           ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.indicativoJKey -> (value => value.str),
           ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.altitudJKey -> (value => (Math.round(value.num * 10) / 10.0).toInt.toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.nombreJKey -> (value => value.str),
+          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.nombreJKey -> (value => value.str.toUpperCase()),
           ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.indsinopJKey -> (value => value.str),
           ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.longitudJKey -> (value => value.str.replaceAll("(\\d{3})([A-Z])$", "$2"))
         )

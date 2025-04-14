@@ -7,18 +7,22 @@ object ConstantsV2 {
         object AllMeteoInfo {
           val dataEndpoint: String = Global.baseURL + "/valores/climatologicos/diarios/datos/fechaini/%s/fechafin/%s/todasestaciones/"
         }
+
         object AllStationInfo {
           val dataEndpoint: String = Global.baseURL + "/valores/climatologicos/inventarioestaciones/todasestaciones/"
         }
+
         object Global {
           val baseURL: String = "https://opendata.aemet.es/opendata/api"
         }
       }
+
       object Params {
         object AllMeteoInfo {
           object LastSavedDatesJSONKeys {
             val lastEndDate: String = "last_end_date"
           }
+
           object Metadata {
             object DataFieldsJSONKeys {
               val fechaJKey: String = "fecha"
@@ -43,10 +47,11 @@ object ConstantsV2 {
               val horapresminJKey: String = "horapresmin"
               val hrmediaJKey: String = "hrmedia"
               val hrmaxJKey: String = "hrmax"
-              val horahrmaxJKey: String = "horaharmax"
+              val horahrmaxJKey: String = "horahrmax"
               val hrminJKey: String = "hrmin"
               val horahrminJKey: String = "horahrmin"
             }
+
             val fields: List[String] = List(
               this.DataFieldsJSONKeys.fechaJKey,
               this.DataFieldsJSONKeys.indicativoJKey,
@@ -75,19 +80,23 @@ object ConstantsV2 {
               this.DataFieldsJSONKeys.horahrminJKey
             )
           }
+
           object Execution {
             object Args {
               val startDate: String = "1973-01-01T00:00:00Z"
               val endDate: String = "2024-12-31T23:59:59Z"
             }
+
             object Format {
               val dateHour: String = "yyyy-MM-dd'T'HH:mm:ss'UTC'"
               val dateHourRaw: String = "yyyy-MM-dd'T'HH:mm:ss'Z'"
               val dateFormat: String = "yyyy-MM-dd"
               val dateFormatFile: String = "yyyy_MM_dd"
+              val hourMinuteFormat: String = "HH:mm"
             }
           }
         }
+
         object AllStationInfo {
           object Metadata {
             object DataFieldsJSONKeys {
@@ -99,6 +108,7 @@ object ConstantsV2 {
               val indsinopJKey: String = "indsinop"
               val longitudJKey: String = "longitud"
             }
+
             val fields: List[String] = List(
               DataFieldsJSONKeys.latitudJKey,
               DataFieldsJSONKeys.provinciaJKey,
@@ -110,24 +120,29 @@ object ConstantsV2 {
             )
           }
         }
+
         object Global {
           object RequestJSONKeys {
             val apiKey: String = "api_key"
           }
+
           object ResponseJSONKeys {
             val stateNumber: String = "estado"
             val metadata: String = "metadatos"
             val data: String = "datos"
           }
+
           object Metadata {
             object SchemaJSONKeys {
               val fieldDefJKey: String = "campos"
+
               object DataFieldsJSONKeys {
                 val idJKey: String = "id"
                 val requiredJKey: String = "requerido"
               }
             }
           }
+
           object Execution {
             object Time {
               val minimumMillisBetweenRequest: Long = 2600
@@ -137,24 +152,30 @@ object ConstantsV2 {
         }
       }
     }
+
     object IfapaAPI {
       object URI {
         object SingleStationMeteoInfo {
           val dataEndpoint: String = Global.baseURL + "/datosdiarios/%s/%s/%s/%s/%s"
         }
+
         object SingleStationInfo {
           val dataEndpoint: String = Global.baseURL + "/estaciones/%s/%s"
         }
+
         object SingleStateInfo {
           val dataEndpoint: String = Global.baseURL + "/provincias/%s"
         }
+
         object AllMetadata {
           val dataEndpoint: String = Global.baseURL + "/v2/api-docs"
         }
+
         object Global {
           val baseURL: String = "https://www.juntadeandalucia.es/agriculturaypesca/ifapa/riaws"
         }
       }
+
       object Params {
         object SingleStationMeteoInfo {
           object Metadata {
@@ -182,6 +203,7 @@ object ConstantsV2 {
               val velvientoJKey: String = "velviento"
               val velvientomaxJKey: String = "velvientomax"
             }
+
             val fields: List[String] = List(
               this.DataFieldsJSONKeys.bateriaJKey,
               this.DataFieldsJSONKeys.diaJKey,
@@ -207,6 +229,7 @@ object ConstantsV2 {
               this.DataFieldsJSONKeys.velvientomaxJKey
             )
           }
+
           object Execution {
             object Args {
               val startDate: String = "2024-01-01"
@@ -216,6 +239,7 @@ object ConstantsV2 {
             }
           }
         }
+
         object SingleStationInfo {
           object Metadata {
             object DataFieldsJSONKeys {
@@ -232,6 +256,7 @@ object ConstantsV2 {
               val xutmJKey: String = "xutm"
               val yutmJKey: String = "yutm"
             }
+
             val fields: List[String] = List(
               this.DataFieldsJSONKeys.activaJKey,
               this.DataFieldsJSONKeys.altitudJKey,
@@ -247,6 +272,7 @@ object ConstantsV2 {
               this.DataFieldsJSONKeys.yutmJKey
             )
           }
+
           object Execution {
             object Args {
               val stateAlmeriaCode: String = "4"
@@ -254,27 +280,32 @@ object ConstantsV2 {
             }
           }
         }
+
         object SingleStateInfo {
           object Metadata {
             object DataFieldsJSONKeys {
               val idJKey: String = "id"
               val nombreJKey: String = "nombre"
             }
+
             val fields: List[String] = List(
               this.DataFieldsJSONKeys.idJKey,
               this.DataFieldsJSONKeys.nombreJKey
             )
           }
+
           object Execution {
             object Args {
               val stateAlmeriaCode: String = "4"
             }
           }
         }
+
         object Global {
           object ResponseJSONKeys {
             val definitions: String = "definitions"
           }
+
           object Metadata {
             object SchemaJSONKeys {
               val singleStationMeteoInfo: String = "DatoDiario"
@@ -282,6 +313,7 @@ object ConstantsV2 {
               val DataField: String = "properties"
             }
           }
+
           object Execution {
             object Time {
               val minimumMillisBetweenRequest: Long = 2600
@@ -291,6 +323,7 @@ object ConstantsV2 {
         }
       }
     }
+
     object Global {
       object Params {
         object Global {
@@ -310,6 +343,7 @@ object ConstantsV2 {
       }
     }
   }
+
   object Storage {
     object DataAemet {
       object AllMeteoInfo {
@@ -318,111 +352,133 @@ object ConstantsV2 {
           val metadata: String = Global.Dirs.base + "all_stations_meteo_info/metadata/"
           val lastSavedDate: String = metadata
         }
+
         object FilePaths {
           val dataRegistry: String = Dirs.dataRegistry + FileNames.dataRegistry
           val metadata: String = Dirs.metadata + FileNames.metadata
           val lastSavedDate: String = Dirs.lastSavedDate + FileNames.lastSavedDate
         }
+
         object FileNames {
           val dataRegistry: String = "%s_%s.json"
           val metadata: String = "metadata.json"
           val lastSavedDate: String = "last_saved_date.json"
         }
       }
+
       object AllStationInfo {
         object Dirs {
           val dataRegistry: String = Global.Dirs.base + "all_stations_info/data/"
           val metadata: String = Global.Dirs.base + "all_stations_info/metadata/"
         }
+
         object FilePaths {
           val dataRegistry: String = Dirs.dataRegistry + FileNames.dataRegistry
           val metadata: String = Dirs.metadata + FileNames.metadata
         }
+
         object FileNames {
           val dataRegistry: String = "all_station.json"
           val metadata: String = "metadata.json"
         }
       }
+
       object Global {
         object Dirs {
           val base: String = Storage.Global.Global.Dirs.base + "source/aemet/"
         }
+
         object FilePaths {
           val apiKey: String = Storage.Global.Global.Dirs.secrets + "aemet_api.key"
         }
 
       }
     }
+
     object DataIfapa {
       object SingleStationMeteoInfo {
         object Dirs {
           val dataRegistry: String = Global.Dirs.base + "single_station_meteo_info/data/"
           val metadata: String = Global.Dirs.base + "single_station_meteo_info/metadata/"
         }
+
         object FilePaths {
           val dataRegistry: String = Dirs.dataRegistry + FileNames.dataRegistry
           val metadata: String = Dirs.metadata + FileNames.metadata
         }
+
         object FileNames {
           val dataRegistry: String = "%s_%s.json"
           val metadata: String = "metadata.json"
         }
       }
+
       object SingleStationInfo {
         object Dirs {
           val dataRegistry: String = Global.Dirs.base + "single_station_info/data/"
           val metadata: String = Global.Dirs.base + "single_station_info/metadata/"
         }
+
         object FilePaths {
           val dataRegistry: String = Dirs.dataRegistry + FileNames.dataRegistry
           val metadata: String = Dirs.metadata + FileNames.metadata
         }
+
         object FileNames {
           val dataRegistry: String = "%s_%s.json"
           val metadata: String = "metadata.json"
         }
       }
+
       object Global {
         object Dirs {
           val base: String = Storage.Global.Global.Dirs.base + "source/ifapa/"
         }
       }
     }
+
     object DataIfapaAemetFormat {
       object SingleStationMeteoInfo {
         object Dirs {
           val dataRegistry: String = Global.Dirs.base + "single_station_meteo_info/data/"
           val metadata: String = Global.Dirs.base + "single_station_meteo_info/metadata/"
         }
+
         object FilePaths {
           val dataRegistry: String = Dirs.dataRegistry + FileNames.dataRegistry
           val metadata: String = Dirs.metadata + FileNames.metadata
         }
+
         object FileNames {
           val dataRegistry: String = "%s_%s.json"
           val metadata: String = "metadata.json"
         }
       }
+
       object SingleStationInfo {
         object Dirs {
           val dataRegistry: String = Global.Dirs.base + "single_station_info/data/"
           val metadata: String = Global.Dirs.base + "single_station_info/metadata/"
         }
+
         object FilePaths {
           val dataRegistry: String = Dirs.dataRegistry + FileNames.dataRegistry
           val metadata: String = Dirs.metadata + FileNames.metadata
         }
+
         object FileNames {
           val dataRegistry: String = "%s_%s.json"
           val metadata: String = "metadata.json"
         }
       }
+
       object Global {
         object Dirs {
           val base: String = Storage.Global.Global.Dirs.base + "source/ifapa_aemet_format/"
         }
       }
     }
+
     object DataSpark {
       object Climograph {
         object Arid {
@@ -432,133 +488,156 @@ object ConstantsV2 {
                 val stationResult: String = Peninsula.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = BWh.Global.Dirs.base + "peninsula/"
                 }
               }
             }
+
             object Canary {
               object Dirs {
                 val stationResult: String = Canary.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Canary.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = BWh.Global.Dirs.base + "canary_islands/"
                 }
               }
             }
+
             object Global {
               object Dirs {
                 val base: String = Arid.Global.Dirs.base + "BWh/"
               }
             }
           }
+
           object BWk {
             object Peninsula {
               object Dirs {
                 val stationResult: String = Peninsula.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = BWk.Global.Dirs.base + "peninsula/"
                 }
               }
             }
+
             object Global {
               object Dirs {
                 val base: String = Arid.Global.Dirs.base + "BWk/"
               }
             }
           }
+
           object BSh {
             object Peninsula {
               object Dirs {
                 val stationResult: String = Peninsula.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = BSh.Global.Dirs.base + "peninsula/"
                 }
               }
             }
+
             object Canary {
               object Dirs {
                 val stationResult: String = Canary.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Canary.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = BSh.Global.Dirs.base + "canary_islands/"
                 }
               }
             }
+
             object Balear {
               object Dirs {
                 val stationResult: String = Balear.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Balear.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = BSh.Global.Dirs.base + "balear_islands/"
                 }
               }
             }
+
             object Global {
               object Dirs {
                 val base: String = Arid.Global.Dirs.base + "BSh/"
               }
             }
           }
+
           object BSk {
             object Peninsula {
               object Dirs {
                 val stationResult: String = Peninsula.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = BSk.Global.Dirs.base + "peninsula/"
                 }
               }
             }
+
             object Canary {
               object Dirs {
                 val stationResult: String = Canary.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Canary.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = BSk.Global.Dirs.base + "canary_islands/"
                 }
               }
             }
+
             object Balear {
               object Dirs {
                 val stationResult: String = Balear.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Balear.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = BSk.Global.Dirs.base + "balear_islands/"
                 }
               }
             }
+
             object Global {
               object Dirs {
                 val base: String = Arid.Global.Dirs.base + "BSk/"
               }
             }
           }
+
           object Global {
             object Dirs {
               val base: String = Climograph.Global.Dirs.base + "arid_climates/"
             }
           }
         }
+
         object Warm {
           object Csa {
             object Peninsula {
@@ -566,122 +645,143 @@ object ConstantsV2 {
                 val stationResult: String = Peninsula.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = Csa.Global.Dirs.base + "peninsula/"
                 }
               }
             }
+
             object Canary {
               object Dirs {
                 val stationResult: String = Canary.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Canary.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = Csa.Global.Dirs.base + "canary_islands/"
                 }
               }
             }
+
             object Balear {
               object Dirs {
                 val stationResult: String = Balear.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Balear.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = Csa.Global.Dirs.base + "balear_islands/"
                 }
               }
             }
+
             object Global {
               object Dirs {
                 val base: String = Warm.Global.Dirs.base + "Csa/"
               }
             }
           }
+
           object Csb {
             object Peninsula {
               object Dirs {
                 val stationResult: String = Peninsula.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = Csb.Global.Dirs.base + "peninsula/"
                 }
               }
             }
+
             object Canary {
               object Dirs {
                 val stationResult: String = Canary.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Canary.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = Csb.Global.Dirs.base + "canary_islands/"
                 }
               }
             }
+
             object Balear {
               object Dirs {
                 val stationResult: String = Balear.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Balear.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = Csb.Global.Dirs.base + "balear_islands/"
                 }
               }
             }
+
             object Global {
               object Dirs {
                 val base: String = Warm.Global.Dirs.base + "Csb/"
               }
             }
           }
+
           object Cfa {
             object Peninsula {
               object Dirs {
                 val stationResult: String = Peninsula.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = Cfa.Global.Dirs.base + "peninsula/"
                 }
               }
             }
+
             object Global {
               object Dirs {
                 val base: String = Warm.Global.Dirs.base + "Cfa/"
               }
             }
           }
+
           object Cfb {
             object Peninsula {
               object Dirs {
                 val stationResult: String = Peninsula.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = Cfb.Global.Dirs.base + "peninsula/"
                 }
               }
             }
+
             object Global {
               object Dirs {
                 val base: String = Warm.Global.Dirs.base + "Cfb/"
               }
             }
           }
+
           object Global {
             object Dirs {
               val base: String = Climograph.Global.Dirs.base + "warm_climates/"
             }
           }
         }
+
         object Cold {
           object Dsb {
             object Peninsula {
@@ -689,72 +789,129 @@ object ConstantsV2 {
                 val stationResult: String = Peninsula.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = Dsb.Global.Dirs.base + "peninsula/"
                 }
               }
             }
+
             object Global {
               object Dirs {
                 val base: String = Cold.Global.Dirs.base + "Dsb/"
               }
             }
           }
+
           object Dfb {
             object Peninsula {
               object Dirs {
                 val stationResult: String = Peninsula.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = Dfb.Global.Dirs.base + "peninsula/"
                 }
               }
             }
+
             object Global {
               object Dirs {
                 val base: String = Cold.Global.Dirs.base + "Dfb/"
               }
             }
           }
+
           object Dfc {
             object Peninsula {
               object Dirs {
                 val stationResult: String = Peninsula.Global.Dirs.base + "station/"
                 val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
               }
+
               object Global {
                 object Dirs {
                   val base: String = Dfc.Global.Dirs.base + "peninsula/"
                 }
               }
             }
+
             object Global {
               object Dirs {
                 val base: String = Cold.Global.Dirs.base + "Dfc/"
               }
             }
           }
+
           object Global {
             object Dirs {
               val base: String = Climograph.Global.Dirs.base + "cold_climates/"
             }
           }
         }
+
+        object Dirs {
+          val resultStation: String = Climograph.Global.Dirs.base + "%s/%s/%s/station"
+          val resultTempPrec: String = Climograph.Global.Dirs.base + "%s/%s/%s/temp_and_prec"
+        }
+
         object Global {
           object Dirs {
             val base: String = DataSpark.Global.Dirs.base + "climograph/"
           }
         }
       }
+
+      object Temperature {
+        object Top10Temp {
+          object Dirs {
+            val resultHighest2024: String = Temperature.Global.Dirs.base + "top_10_temp/highest/2024/"
+            val resultHighestDecade: String = Temperature.Global.Dirs.base + "top_10_temp/highest/decade/"
+            val resultHighestGlobal: String = Temperature.Global.Dirs.base + "top_10_temp/highest/global/"
+            val resultLowest2024: String = Temperature.Global.Dirs.base + "top_10_temp/lowest/2024/"
+            val resultLowestDecade: String = Temperature.Global.Dirs.base + "top_10_temp/lowest/decade/"
+            val resultLowestGlobal: String = Temperature.Global.Dirs.base + "top_10_temp/lowest/global/"
+          }
+        }
+
+        object TempEvolFromStartForEachState {
+          object Dirs {
+            val resultStation: String = Temperature.Global.Dirs.base + "temp_evol/%s/station/"
+            val resultEvol: String = Temperature.Global.Dirs.base + "temp_evol/%s/evolution/"
+          }
+        }
+
+        object Top5TempInc {
+          object Dirs {
+            val resultHighest: String = Temperature.Global.Dirs.base + "top_5_temp_inc/highest/"
+            val resultLowest: String = Temperature.Global.Dirs.base + "top_5_temp_inc/lowest/"
+          }
+        }
+
+        object AvgTemp2024AllStationSpain {
+          object Dirs {
+            val resultContinental: String = Temperature.Global.Dirs.base + "avg_temp_2024_spain/continental/"
+            val resultCanary: String = Temperature.Global.Dirs.base + "avg_temp_2024_spain/canary_islands/"
+          }
+        }
+
+        object Global {
+          object Dirs {
+            val base: String = DataSpark.Global.Dirs.base + "temperature/"
+          }
+        }
+      }
+
       object Global {
         object Dirs {
           val base: String = Storage.Global.Global.Dirs.base + "results/spark/"
         }
       }
     }
+
     object Global {
       object Global {
         object Dirs {
@@ -764,18 +921,22 @@ object ConstantsV2 {
       }
     }
   }
+
   object Logs {
     object Aemet {
       object AllMeteoInfo {
 
       }
+
       object AllStationInfo {
 
       }
+
       object Global {
         object GetAemetResource {
           val failOnGettingJSON: String = "Fail on getting JSON (%s)"
         }
+
         object AemetDataExtraction {
           val allStationInfoStartFetchingMetadata: String = "Fetching metadata from all Aemet stations"
           val allStationInfoEndFetchingMetadata: String = "Completed fetching metadata from all Aemet station"
@@ -788,13 +949,16 @@ object ConstantsV2 {
         }
       }
     }
+
     object Ifapa {
       object SingleStationMeteoInfo {
 
       }
+
       object SingleStationInfo {
 
       }
+
       object Global {
         object IfapaDataExtraction {
           val singleStationInfoStartFetchingMetadata: String = "Fetching metadata from Ifapa Tabernas (Almería) station"
@@ -808,13 +972,16 @@ object ConstantsV2 {
         }
       }
     }
+
     object IfapaAemetFormat {
       object SingleStationMeteoInfo {
 
       }
+
       object SingleStationInfo {
 
       }
+
       object Global {
         object IfapaToAemet {
           val singleStationInfoStartConverting: String = "Converting data from Ifapa Tabernas (Almería) station to Aemet format"
@@ -824,26 +991,61 @@ object ConstantsV2 {
         }
       }
     }
+
     object SparkQueries {
       object Studies {
         object Climograph {
           val studyName: String = "climograph"
+
           object Execution {
             val startFetchingClimateGroup: String = "Fetching %s climates information"
             val endFetchingClimateGroup: String = "Completed fetching %s climates information"
+            val fetchingClimate: String = "%s climate information"
             val startFetchingClimate: String = "Fetching %s climate information"
             val endFetchingClimate: String = "Completed fetching %s climate information"
             val infoShowDataframeTempAndPrecInfo = "Showing a part of monthly average temperature and precipitation sum of %s registers"
             val infoSaveDataframeTempAndPrecInfo = "Saving %s registers of monthly average temperature and precipitation sum (%s)"
             val infoShowDataframeStationInfo = "Showing a part of station information of %s registers"
             val infoSaveDataframeStationInfo = "Saving %s registers of station information (%s)"
+            val fetchingClimateLocationStation = "%s station information"
+            val fetchingClimateLocationTempPrec = "%s temperature and precipitation information"
           }
         }
+
+        object Temperature {
+          val studyName: String = "temperature"
+
+          object Execution {
+            val top10HighestTemp2024: String = "Top 10 places with the highest temperatures in 2024"
+            val top10HighestTempDecade: String = "Top 10 places with the highest temperatures in the last decade"
+            val top10HighestTempGlobal: String = "Top 10 places with the highest temperatures from the start of registers"
+            val top10LowestTemp2024: String = "Top 10 places with the lowest temperatures in 2024"
+            val top10LowestTempDecade: String = "Top 10 places with the lowest temperatures in the last decade"
+            val top10LowestTempGlobal: String = "Top 10 places with the lowest temperatures from the start of registers"
+            val tempEvolFromStartForEachState: String = "Temperature evolution from the start of registries for each state"
+            val tempEvolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
+            val tempEvolFromStartForEachStateEndStation: String = "Completed fetching data from representative %s state station"
+            val tempEvolFromStartForEachStateStartEvol: String = "Fetching data from %s state temperature evolution"
+            val tempEvolFromStartForEachStateEndEvol: String = "Completed fetching data from %s state temperature evolution"
+            val top5HighestIncTemp: String = "Top 5 places with the highest increment of temperatures from the start of registers"
+            val top5LowestIncTemp: String = "Top 5 places with the lowest increment of temperatures from the start of registers"
+            val avgTemp2024AllStationSpainContinental: String = "Average temperature in 2024 for all station in the spanish continental territory"
+            val avgTemp2024AllStationSpainCanary: String = "Average temperature in 2024 for all station in Canary islands"
+          }
+        }
+
         object Global {
           val startStudy: String = "Starting %s study"
           val endStudy: String = "Completed %s study"
+          val startQuery: String = "Stating query (%s)"
+          val endQuery: String = "Completed query (%s)"
+          val showInfo: String = "Showing a part of collected information"
+          val saveInfo: String = "Saving collected information (%s)"
+          val startSubQuery: String = "Stating subquery (%s)"
+          val endSubQuery: String = "Completed subquery (%s)"
         }
       }
+
       object Methods {
         object GetStationInfoById {
           val startFetching: String = "Fetching station (ID: %s) information"
@@ -856,19 +1058,23 @@ object ConstantsV2 {
         }
       }
     }
+
     object Global {
       object EnhancedConsoleLog {
         object format {
           val dateHour: String = "dd-MM-yyyy HH:mm:ss"
         }
+
         object Method {
           val methodGet: String = "GET"
         }
+
         object Message {
           val notificationError: String = "ERR"
           val notificationWarning: String = "WARN"
           val notificationInformation: String = "INFO"
         }
+
         object Decorators {
           val spaceVerticalDividerSpace: String = " | "
           val spaceBigArrowSpace: String = " => "
@@ -876,73 +1082,137 @@ object ConstantsV2 {
           val horizontalCenterLine: String = "-"
         }
       }
+
       object FileUtils {
         val errorInReadingFile: String = "Error in finding file (%s)"
         val errorInDirectoryCreation: String = "Error in directory creation (%s)"
       }
+
       object Global {}
     }
   }
+
   object Spark {
     object Queries {
       object Climograph {
         val observationYear = 2024
+
         object Locations {
           val peninsula: String = "peninsular land"
           val canaryIslands: String = "canary islands"
           val balearIslands: String = "balear islands"
         }
+
         object Climates {
           object Arid {
             object BWh {
               val peninsula: String = "7002Y"
               val canaryIslands: String = "C249I"
             }
+
             object BWk {
               val peninsula: String = "4"
             }
+
             object BSh {
               val peninsula: String = "7012C"
               val canaryIslands: String = "C459Z"
               val balearIslands: String = "B954"
             }
+
             object BSk {
               val peninsula: String = "9434"
               val canaryIslands: String = "C426I"
               val balearIslands: String = "B228"
             }
           }
+
           object Warm {
             object Csa {
               val peninsula: String = "5783"
               val canaryIslands: String = "C426E"
               val balearIslands: String = "B051A"
             }
+
             object Csb {
               val peninsula: String = "1518A"
               val canaryIslands: String = "C611E"
               val balearIslands: String = "B684A"
             }
+
             object Cfa {
               val peninsula: String = "9901X"
             }
+
             object Cfb {
               val peninsula: String = "1082"
             }
           }
+
           object Cold {
             object Dsb {
               val peninsula: String = "2462"
             }
+
             object Dfb {
               val peninsula: String = "9814I"
             }
+
             object Dfc {
               val peninsula: String = "9839V"
             }
           }
         }
       }
+
+      object Temperature {
+        object Top10HighestTemp2024 {
+          val startDate: String = "2024"
+        }
+
+        object Top10HighestTempDecade {
+          val startDate: String = "2014-01-01"
+          val endDate: String = "2024-12-31"
+        }
+
+        object Top10HighestTempGlobal {
+          val startDate: String = "1973-01-01"
+          val endDate: String = "2024-12-31"
+        }
+
+        object Top10LowestTemp2024 {
+          val startDate: String = "2024"
+        }
+
+        object Top10LowestTempDecade {
+          val startDate: String = "2014-01-01"
+          val endDate: String = "2024-12-31"
+        }
+
+        object Top10LowestTempGlobal {
+          val startDate: String = "1973-01-01"
+          val endDate: String = "2024-12-31"
+        }
+
+        object Top5HighestIncTemp {
+          val startYear: Int = 1973
+          val endYear: Int = 2024
+        }
+
+        object Top5LowestIncTemp {
+          val startYear: Int = 1973
+          val endYear: Int = 2024
+        }
+
+        object AvgTemp2024AllStationSpain {
+          val startDate: String = "2024"
+          val canaryIslandStates: List[String] = List(
+            "SANTA CRUZ DE TENERIFE",
+            "LAS PALMAS"
+          )
+        }
+      }
+
       object Global {
         object Climates {
           val ClimateGroupNames: List[String] = List(
@@ -950,6 +1220,7 @@ object ConstantsV2 {
             Warm.climateGroupName,
             Cold.climateGroupName
           )
+
           object Arid {
             val climateGroupName: String = "arid"
             val climateNames: List[String] = List(
@@ -958,21 +1229,26 @@ object ConstantsV2 {
               Climates.BSh.climateName,
               Climates.BSk.climateName
             )
+
             object Climates {
               object BWh {
                 val climateName: String = "BWh"
               }
+
               object BWk {
                 val climateName: String = "BWk"
               }
+
               object BSh {
                 val climateName: String = "BSh"
               }
+
               object BSk {
                 val climateName: String = "BSk"
               }
             }
           }
+
           object Warm {
             val climateGroupName: String = "warm"
             val climateNames: List[String] = List(
@@ -981,21 +1257,26 @@ object ConstantsV2 {
               Climates.Cfa.climateName,
               Climates.Cfb.climateName
             )
+
             object Climates {
               object Csa {
                 val climateName: String = "Csa"
               }
+
               object Csb {
                 val climateName: String = "Csb"
               }
+
               object Cfa {
                 val climateName: String = "Cfa"
               }
+
               object Cfb {
                 val climateName: String = "Cfb"
               }
             }
           }
+
           object Cold {
             val climateGroupName: String = "cold"
             val climateNames: List[String] = List(
@@ -1003,19 +1284,192 @@ object ConstantsV2 {
               Climates.Dfb.climateName,
               Climates.Dfc.climateName
             )
+
             object Climates {
               object Dsb {
                 val climateName: String = "Dsb"
               }
+
               object Dfb {
                 val climateName: String = "Dfb"
               }
+
               object Dfc {
                 val climateName: String = "Dfb"
               }
             }
           }
         }
+
+        object Climates_ {
+          object Location extends Enumeration {
+            type Location = Value
+            val Peninsula: Value = Value("peninsula")
+            val CanaryIslands: Value = Value("canary islands")
+            val BalearIslands: Value = Value("balear islands")
+          }
+          case class RepresentativeStationRegistry(location: Location.Location, stationId: String)
+          case class ClimateRegistry(
+            climateName: String,
+            registries: List[RepresentativeStationRegistry]
+          )
+          case class ClimateGroup(climateGroupName: String, climates: List[ClimateRegistry])
+
+          val observationYear: Int = 2024
+          val climatesStationsRegistries: List[ClimateGroup] = List(
+            ClimateGroup(
+              climateGroupName = "arid",
+              climates = List(
+                ClimateRegistry(
+                  climateName = "BWh",
+                  registries = List(
+                    RepresentativeStationRegistry(
+                      location = Location.Peninsula,
+                      stationId = "7002Y"
+                    ),
+                    RepresentativeStationRegistry(
+                      location = Location.CanaryIslands,
+                      stationId = "C249I"
+                    ),
+                  )
+                ),
+                ClimateRegistry(
+                  climateName = "BWk",
+                  registries = List(
+                    RepresentativeStationRegistry(
+                      location = Location.Peninsula,
+                      stationId = "4"
+                    )
+                  )
+                ),
+                ClimateRegistry(
+                  climateName = "BSh",
+                  registries = List(
+                    RepresentativeStationRegistry(
+                      location = Location.Peninsula,
+                      stationId = "7012C"
+                    ),
+                    RepresentativeStationRegistry(
+                      location = Location.CanaryIslands,
+                      stationId = "C459Z"
+                    ),
+                    RepresentativeStationRegistry(
+                      location = Location.BalearIslands,
+                      stationId = "B954"
+                    )
+                  )
+                ),
+                ClimateRegistry(
+                  climateName = "BSk",
+                  registries = List(
+                    RepresentativeStationRegistry(
+                      location = Location.Peninsula,
+                      stationId = "9434"
+                    ),
+                    RepresentativeStationRegistry(
+                      location = Location.CanaryIslands,
+                      stationId = "C426I"
+                    ),
+                    RepresentativeStationRegistry(
+                      location = Location.BalearIslands,
+                      stationId = "B228"
+                    )
+                  )
+                ),
+              )
+            ),
+            ClimateGroup(
+              climateGroupName = "warm",
+              climates = List(
+                ClimateRegistry(
+                  climateName = "Csa",
+                  registries = List(
+                    RepresentativeStationRegistry(
+                      location = Location.Peninsula,
+                      stationId = "5783"
+                    ),
+                    RepresentativeStationRegistry(
+                      location = Location.CanaryIslands,
+                      stationId = "C426E"
+                    ),
+                    RepresentativeStationRegistry(
+                      location = Location.BalearIslands,
+                      stationId = "B051A"
+                    )
+                  )
+                ),
+                ClimateRegistry(
+                  climateName = "Csb",
+                  registries = List(
+                    RepresentativeStationRegistry(
+                      location = Location.Peninsula,
+                      stationId = "1518A"
+                    ),
+                    RepresentativeStationRegistry(
+                      location = Location.CanaryIslands,
+                      stationId = "C611E"
+                    ),
+                    RepresentativeStationRegistry(
+                      location = Location.BalearIslands,
+                      stationId = "B684A"
+                    )
+                  )
+                ),
+                ClimateRegistry(
+                  climateName = "Cfa",
+                  registries = List(
+                    RepresentativeStationRegistry(
+                      location = Location.Peninsula,
+                      stationId = "9901X"
+                    )
+                  )
+                ),
+                ClimateRegistry(
+                  climateName = "Cfb",
+                  registries = List(
+                    RepresentativeStationRegistry(
+                      location = Location.Peninsula,
+                      stationId = "1082"
+                    )
+                  )
+                ),
+              )
+            ),
+            ClimateGroup(
+              climateGroupName = "cold",
+              climates = List(
+                ClimateRegistry(
+                  climateName = "Dsb",
+                  registries = List(
+                    RepresentativeStationRegistry(
+                      location = Location.Peninsula,
+                      stationId = "2462"
+                    )
+                  )
+                ),
+                ClimateRegistry(
+                  climateName = "Dfb",
+                  registries = List(
+                    RepresentativeStationRegistry(
+                      location = Location.Peninsula,
+                      stationId = "9814I"
+                    )
+                  )
+                ),
+                ClimateRegistry(
+                  climateName = "Dfc",
+                  registries = List(
+                    RepresentativeStationRegistry(
+                      location = Location.Peninsula,
+                      stationId = "9839V"
+                    )
+                  )
+                )
+              )
+            )
+          )
+        }
+
         object Methods {
           object GetStationInfoById {
             val id: String = "getStationInfoById"
@@ -1024,6 +1478,377 @@ object ConstantsV2 {
           object GetStationMonthlyAvgTempAndPrecInAYear {
             val id: String = "getStationMonthlyAvgTempAndPrecInAYear"
           }
+        }
+
+        object StateRepresentativeStations {
+          case class RepresentativeStationRegistry(stateName: String, stateNameNoSC: String, stationId: String, startDate: String, endDate: String)
+
+          val stationRegistries: List[RepresentativeStationRegistry] = List(
+            RepresentativeStationRegistry(
+              stateName = "A CORUÑA",
+              stateNameNoSC = "a coruna",
+              stationId = "1387",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "ALBACETE",
+              stateNameNoSC = "albacete",
+              stationId = "8175",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "ALICANTE",
+              stateNameNoSC = "alicante",
+              stationId = "8025",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "ALMERIA",
+              stateNameNoSC = "almeria",
+              stationId = "6325O",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "ARABA/ALAVA",
+              stateNameNoSC = "araba",
+              stationId = "9091O",
+              startDate = "1976-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "ASTURIAS",
+              stateNameNoSC = "asturias",
+              stationId = "1212E",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "AVILA",
+              stateNameNoSC = "avila",
+              stationId = "2444",
+              startDate = "1983-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "BADAJOZ",
+              stateNameNoSC = "badajoz",
+              stationId = "4452",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "BARCELONA",
+              stateNameNoSC = "barcelona",
+              stationId = "0076",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "BIZKAIA",
+              stateNameNoSC = "bizkaia",
+              stationId = "1082",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "BURGOS",
+              stateNameNoSC = "burgos",
+              stationId = "2331",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "CACERES",
+              stateNameNoSC = "caceres",
+              stationId = "3469A",
+              startDate = "1982-12-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "CADIZ",
+              stateNameNoSC = "cadiz",
+              stationId = "5973",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "CANTABRIA",
+              stateNameNoSC = "cantabria",
+              stationId = "1174I",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "CASTELLON",
+              stateNameNoSC = "castellon",
+              stationId = "8500A",
+              startDate = "1976-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "CEUTA",
+              stateNameNoSC = "ceuta",
+              stationId = "5000C",
+              startDate = "2003-06-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "CIUDAD REAL",
+              stateNameNoSC = "cuidad real",
+              stationId = "4121",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "CORDOBA",
+              stateNameNoSC = "cordoba",
+              stationId = "5402",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "CUENCA",
+              stateNameNoSC = "cuenca",
+              stationId = "8096",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "GIPUZKOA",
+              stateNameNoSC = "gipuzkoa",
+              stationId = "1024E",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "GIRONA",
+              stateNameNoSC = "girona",
+              stationId = "0367",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "GRANADA",
+              stateNameNoSC = "granada",
+              stationId = "5530E",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "GUADALAJARA",
+              stateNameNoSC = "guadalajara",
+              stationId = "3013",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "HUELVA",
+              stateNameNoSC = "huelva",
+              stationId = "4642E",
+              startDate = "1984-06-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "HUESCA",
+              stateNameNoSC = "huesca",
+              stationId = "9898",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "ILLES BALEARS",
+              stateNameNoSC = "illes balears",
+              stationId = "B893",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "JAEN",
+              stateNameNoSC = "jaen",
+              stationId = "5270B",
+              startDate = "1988-08-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "LA RIOJA",
+              stateNameNoSC = "la rioja",
+              stationId = "9170",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "LAS PALMAS",
+              stateNameNoSC = "las palmas",
+              stationId = "C649I",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "LEON",
+              stateNameNoSC = "leon",
+              stationId = "2661",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "LLEIDA",
+              stateNameNoSC = "lleida",
+              stationId = "9771C",
+              startDate = "1983-02-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "LUGO",
+              stateNameNoSC = "lugo",
+              stationId = "1518A",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "MADRID",
+              stateNameNoSC = "madrid",
+              stationId = "3195",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "MALAGA",
+              stateNameNoSC = "malaga",
+              stationId = "6155A",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "MELILLA",
+              stateNameNoSC = "melilla",
+              stationId = "6000A",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "MURCIA",
+              stateNameNoSC = "murcia",
+              stationId = "7031",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "NAVARRA",
+              stateNameNoSC = "navarra",
+              stationId = "9262",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "OURENSE",
+              stateNameNoSC = "ourense",
+              stationId = "1690A",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "PALENCIA",
+              stateNameNoSC = "palencia",
+              stationId = "2235U",
+              startDate = "1986-06-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "PONTEVEDRA",
+              stateNameNoSC = "pontevedra",
+              stationId = "1495",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "SALAMANCA",
+              stateNameNoSC = "salamanca",
+              stationId = "2870",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "SEGOVIA",
+              stateNameNoSC = "segovia",
+              stationId = "2465",
+              startDate = "1988-10-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "SEVILLA",
+              stateNameNoSC = "sevilla",
+              stationId = "5783",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "SORIA",
+              stateNameNoSC = "soria",
+              stationId = "2030",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "SANTA CRUZ DE TENERIFE",
+              stateNameNoSC = "santa cruz de tenerife",
+              stationId = "C449C",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "TARRAGONA",
+              stateNameNoSC = "tarragona",
+              stationId = "9981A",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "TERUEL",
+              stateNameNoSC = "teruel",
+              stationId = "8368U",
+              startDate = "1986-04-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "TOLEDO",
+              stateNameNoSC = "toledo",
+              stationId = "4067",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "VALENCIA",
+              stateNameNoSC = "valencia",
+              stationId = "8416",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "VALLADOLID",
+              stateNameNoSC = "valladolid",
+              stationId = "2539",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "ZAMORA",
+              stateNameNoSC = "zamora",
+              stationId = "2614",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            ),
+            RepresentativeStationRegistry(
+              stateName = "ZARAGOZA",
+              stateNameNoSC = "zaragoza",
+              stationId = "9434",
+              startDate = "1973-01-01",
+              endDate = "2024-12-31"
+            )
+          )
         }
       }
     }
