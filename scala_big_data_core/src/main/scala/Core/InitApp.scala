@@ -206,8 +206,47 @@ object InitApp extends App {
 //  // Mostrar el resultado
 //  operativeStations.show(999, truncate = false)
 
-  //val estacionesMasLongevas = SparkQueries.getLongestOperativeStationsPerProvince("tmed", 3)
-  //estacionesMasLongevas.show(999, truncate = false)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//  SparkQueries.getLongestOperativeStationsPerProvince("tmed", 3).write.option("header", "true").csv("./result/tmed/")
+//  SparkQueries.getLongestOperativeStationsPerProvince("prec", 3).write.option("header", "true").csv("./result/prec/")
+//  SparkQueries.getLongestOperativeStationsPerProvince("velmedia", 3).write.option("header", "true").csv("./result/velmedia/")
+//  SparkQueries.getLongestOperativeStationsPerProvince("presmax", 3).write.option("header", "true").csv("./result/presmax/")
+//  SparkQueries.getLongestOperativeStationsPerProvince("sol", 3).write.option("header", "true").csv("./result/sol/")
+//  SparkQueries.getLongestOperativeStationsPerProvince("hrmedia", 3).write.option("header", "true").csv("./result/hrmedia/")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //  SparkQueries.getClimateParamInALapseById("1387","tmed", "1973-01-01", Some("2024-12-31")) match {
 //    case Right(value) => value.show()
@@ -237,8 +276,13 @@ object InitApp extends App {
 //    case Left(exception) => throw exception
 //  }
 
-  SparkQueries.Climograph.execute()
-  SparkQueries.Temperature.execute()
+  //SparkQueries.Climograph.execute()
+  //SparkQueries.Temperature.execute()
+  //SparkQueries.Precipitation.execute()
+  //SparkQueries.WindVelocity.execute()
+
+  SparkQueries.test()
+
 
 
 
