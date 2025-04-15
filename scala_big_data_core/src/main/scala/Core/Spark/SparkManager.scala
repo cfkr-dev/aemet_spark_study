@@ -12,6 +12,9 @@ import Config.ConstantsV2._
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
 import org.apache.spark.storage.StorageLevel
 
+import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+
 object SparkManager {
   private val ctsStorageDataAemetAllStationInfo = Storage.DataAemet.AllStationInfo
   private val ctsStorageDataAemetAllMeteoInfo = Storage.DataAemet.AllMeteoInfo
@@ -36,9 +39,11 @@ object SparkManager {
       spark
     }
 
-    private def createDataframeFromJSONAndAemetMetadata(session: SparkSession,
-                                                        sourcePath: String,
-                                                        metadataPath: String): Either[Exception, DataFrame] = {
+    private def createDataframeFromJSONAndAemetMetadata(
+      session: SparkSession,
+      sourcePath: String,
+      metadataPath: String
+    ): Either[Exception, DataFrame] = {
       def createDataframeSchemaAemet(metadataJSON: ujson.Value): StructType = {
         val constantsAemetAPIGlobal = Config.Constants.AemetAPI.Global
         StructType(
@@ -294,17 +299,19 @@ object SparkManager {
     private val ctsSparkQueriesGlobal = Spark.Queries.Global
     private val ctsLogsSparkQueriesStudiesGlobal = Logs.SparkQueries.Studies.Global
 
-    private case class FetchAndSaveInfo(dataframe: DataFrame,
-                                        pathToSave: String,
-                                        title: String = "",
-                                        showInfoMessage: String = ctsLogsSparkQueriesStudiesGlobal.showInfo,
-                                        saveInfoMessage: String = ctsLogsSparkQueriesStudiesGlobal.saveInfo
-                                       )
+    private case class FetchAndSaveInfo(
+      dataframe: DataFrame,
+      pathToSave: String,
+      title: String = "",
+      showInfoMessage: String = ctsLogsSparkQueriesStudiesGlobal.showInfo,
+      saveInfoMessage: String = ctsLogsSparkQueriesStudiesGlobal.saveInfo
+    )
 
-    private def simpleFetchAndSave(queryTitle: String = "",
-                                   queries: Seq[FetchAndSaveInfo],
-                                   encloseHalfLengthStart: Int = 35
-                                  ): Unit = {
+    private def simpleFetchAndSave(
+      queryTitle: String = "",
+      queries: Seq[FetchAndSaveInfo],
+      encloseHalfLengthStart: Int = 35
+    ): Unit = {
       if (queryTitle != "")
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startQuery.format(
           queryTitle
@@ -349,7 +356,7 @@ object SparkManager {
           ctsLogsSparkQueriesStudiesClimograph.studyName
         ))
 
-        ctsSparkQueriesGlobal.Climates_.climatesStationsRegistries.foreach(climateGroup => {
+        ctsSparkQueriesClimograph.stationsRegistries.foreach(climateGroup => {
           printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.startFetchingClimateGroup.format(
             climateGroup.climateGroupName
           ), encloseHalfLength = 35)
@@ -379,7 +386,7 @@ object SparkManager {
                   FetchAndSaveInfo(
                     getStationMonthlyAvgTempAndSumPrecInAYear(
                       registry.stationId,
-                      ctsSparkQueriesGlobal.Climates_.observationYear
+                      ctsSparkQueriesClimograph.observationYear
                     ) match {
                       case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                         return
@@ -429,7 +436,7 @@ object SparkManager {
             FetchAndSaveInfo(
               getTopNClimateParamInALapse(
                 climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
-                startDate = ctsSparkQueriesTemperature.Top10HighestTemp2024.startDate,
+                startDate = ctsSparkQueriesTemperature.Execution.Top10HighestTemp2024.startDate,
                 endDate = None) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
@@ -447,8 +454,8 @@ object SparkManager {
             FetchAndSaveInfo(
               getTopNClimateParamInALapse(
                 climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
-                startDate = ctsSparkQueriesTemperature.Top10HighestTempDecade.startDate,
-                endDate = Some(ctsSparkQueriesTemperature.Top10HighestTempDecade.endDate)) match {
+                startDate = ctsSparkQueriesTemperature.Execution.Top10HighestTempDecade.startDate,
+                endDate = Some(ctsSparkQueriesTemperature.Execution.Top10HighestTempDecade.endDate)) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
@@ -465,8 +472,8 @@ object SparkManager {
             FetchAndSaveInfo(
               getTopNClimateParamInALapse(
                 climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
-                startDate = ctsSparkQueriesTemperature.Top10HighestTempGlobal.startDate,
-                endDate = Some(ctsSparkQueriesTemperature.Top10HighestTempGlobal.endDate)) match {
+                startDate = ctsSparkQueriesTemperature.Execution.Top10HighestTempGlobal.startDate,
+                endDate = Some(ctsSparkQueriesTemperature.Execution.Top10HighestTempGlobal.endDate)) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
@@ -483,7 +490,7 @@ object SparkManager {
             FetchAndSaveInfo(
               getTopNClimateParamInALapse(
                 climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
-                startDate = ctsSparkQueriesTemperature.Top10LowestTemp2024.startDate,
+                startDate = ctsSparkQueriesTemperature.Execution.Top10LowestTemp2024.startDate,
                 endDate = None,
                 highest = false
               ) match {
@@ -503,8 +510,8 @@ object SparkManager {
             FetchAndSaveInfo(
               getTopNClimateParamInALapse(
                 climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
-                startDate = ctsSparkQueriesTemperature.Top10LowestTempDecade.startDate,
-                endDate = Some(ctsSparkQueriesTemperature.Top10LowestTempDecade.endDate),
+                startDate = ctsSparkQueriesTemperature.Execution.Top10LowestTempDecade.startDate,
+                endDate = Some(ctsSparkQueriesTemperature.Execution.Top10LowestTempDecade.endDate),
                 highest = false
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
@@ -523,8 +530,8 @@ object SparkManager {
             FetchAndSaveInfo(
               getTopNClimateParamInALapse(
                 climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
-                startDate = ctsSparkQueriesTemperature.Top10LowestTempGlobal.startDate,
-                endDate = Some(ctsSparkQueriesTemperature.Top10LowestTempGlobal.endDate),
+                startDate = ctsSparkQueriesTemperature.Execution.Top10LowestTempGlobal.startDate,
+                endDate = Some(ctsSparkQueriesTemperature.Execution.Top10LowestTempGlobal.endDate),
                 highest = false
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
@@ -539,7 +546,7 @@ object SparkManager {
         // Temperature evolution from the start of registers for each state
         simpleFetchAndSave(
           ctsLogsSparkQueriesStudiesTemperature.Execution.tempEvolFromStartForEachState,
-          ctsSparkQueriesGlobal.StateRepresentativeStations.stationRegistries.flatMap(registry => {
+          ctsSparkQueriesTemperature.stationRegistries.flatMap(registry => {
             List(
               FetchAndSaveInfo(
                 getStationInfoById(registry.stationId) match {
@@ -582,10 +589,10 @@ object SparkManager {
           List(
             FetchAndSaveInfo(
               getTopNClimateParamIncrementInAYearLapse(
-                stationIds = ctsSparkQueriesGlobal.StateRepresentativeStations.stationRegistries.map(registry => registry.stationId),
+                stationIds = ctsSparkQueriesTemperature.stationRegistries.map(registry => registry.stationId),
                 climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
-                startYear = ctsSparkQueriesTemperature.Top5HighestIncTemp.startYear,
-                endYear = ctsSparkQueriesTemperature.Top5HighestIncTemp.endYear
+                startYear = ctsSparkQueriesTemperature.Execution.Top5HighestIncTemp.startYear,
+                endYear = ctsSparkQueriesTemperature.Execution.Top5HighestIncTemp.endYear
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
@@ -596,16 +603,16 @@ object SparkManager {
           )
         )
 
-        // Top 5 states with the lowest increment of temperature
+        // Top 5 lowest increment of temperature
         simpleFetchAndSave(
           ctsLogsSparkQueriesStudiesTemperature.Execution.top5LowestIncTemp,
           List(
             FetchAndSaveInfo(
               getTopNClimateParamIncrementInAYearLapse(
-                stationIds = ctsSparkQueriesGlobal.StateRepresentativeStations.stationRegistries.map(registry => registry.stationId),
+                stationIds = ctsSparkQueriesTemperature.stationRegistries.map(registry => registry.stationId),
                 climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
-                startYear = ctsSparkQueriesTemperature.Top5LowestIncTemp.startYear,
-                endYear = ctsSparkQueriesTemperature.Top5LowestIncTemp.endYear,
+                startYear = ctsSparkQueriesTemperature.Execution.Top5LowestIncTemp.startYear,
+                endYear = ctsSparkQueriesTemperature.Execution.Top5LowestIncTemp.endYear,
                 highest = false
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
@@ -624,7 +631,7 @@ object SparkManager {
             FetchAndSaveInfo(
               getAllStationsByStatesAvgClimateParamInALapse(
                 climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
-                startDate = ctsSparkQueriesTemperature.AvgTemp2024AllStationSpain.startDate
+                startDate = ctsSparkQueriesTemperature.Execution.AvgTemp2024AllStationSpain.startDate
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
@@ -642,8 +649,8 @@ object SparkManager {
             FetchAndSaveInfo(
               getAllStationsByStatesAvgClimateParamInALapse(
                 climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey,
-                startDate = ctsSparkQueriesTemperature.AvgTemp2024AllStationSpain.startDate,
-                states = Some(ctsSparkQueriesTemperature.AvgTemp2024AllStationSpain.canaryIslandStates),
+                startDate = ctsSparkQueriesTemperature.Execution.AvgTemp2024AllStationSpain.startDate,
+                states = Some(ctsSparkQueriesTemperature.Execution.AvgTemp2024AllStationSpain.canaryIslandStates),
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
@@ -656,6 +663,504 @@ object SparkManager {
 
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endStudy.format(
           ctsLogsSparkQueriesStudiesTemperature.studyName
+        ))
+      }
+    }
+
+    object Precipitation {
+      private val ctsSparkQueriesPrecipitation = Spark.Queries.Precipitation
+      private val ctsLogsSparkQueriesStudiesPrecipitation = Logs.SparkQueries.Studies.Precipitation
+      private val ctsStorageDataSparkPrecipitation = Storage.DataSpark.Precipitation
+      private val ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys
+
+      def execute(): Unit = {
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startStudy.format(
+          ctsLogsSparkQueriesStudiesPrecipitation.studyName
+        ))
+
+        // Top 10 places with the highest precipitations in 2024
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesPrecipitation.Execution.top10HighestPrec2024,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
+                startDate = ctsSparkQueriesPrecipitation.Execution.Top10HighestPrec2024.startDate,
+                endDate = None) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkPrecipitation.Top10Prec.Dirs.resultHighest2024
+            )
+          )
+        )
+
+        // Top 10 places with the highest precipitations in the last decade
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesPrecipitation.Execution.top10HighestPrecDecade,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
+                startDate = ctsSparkQueriesPrecipitation.Execution.Top10HighestPrecDecade.startDate,
+                endDate = Some(ctsSparkQueriesPrecipitation.Execution.Top10HighestPrecDecade.endDate)) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkPrecipitation.Top10Prec.Dirs.resultHighestDecade
+            )
+          )
+        )
+
+        // Top 10 places with the highest precipitations from the start of registers
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesPrecipitation.Execution.top10HighestPrecGlobal,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
+                startDate = ctsSparkQueriesPrecipitation.Execution.Top10HighestPrecGlobal.startDate,
+                endDate = Some(ctsSparkQueriesPrecipitation.Execution.Top10HighestPrecGlobal.endDate)) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkPrecipitation.Top10Prec.Dirs.resultHighestGlobal
+            )
+          )
+        )
+
+        // Top 10 places with the lowest precipitations in 2024
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesPrecipitation.Execution.top10LowestPrec2024,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
+                startDate = ctsSparkQueriesPrecipitation.Execution.Top10LowestPrec2024.startDate,
+                endDate = None,
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkPrecipitation.Top10Prec.Dirs.resultLowest2024
+            )
+          )
+        )
+
+        // Top 10 places with the lowest precipitations in the last decade
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesPrecipitation.Execution.top10LowestPrecDecade,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
+                startDate = ctsSparkQueriesPrecipitation.Execution.Top10LowestPrecDecade.startDate,
+                endDate = Some(ctsSparkQueriesPrecipitation.Execution.Top10LowestPrecDecade.endDate),
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkPrecipitation.Top10Prec.Dirs.resultLowestDecade
+            )
+          )
+        )
+
+        // Top 10 places with the lowest precipitations from the start of registers
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesPrecipitation.Execution.top10LowestPrecGlobal,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
+                startDate = ctsSparkQueriesPrecipitation.Execution.Top10LowestPrecGlobal.startDate,
+                endDate = Some(ctsSparkQueriesPrecipitation.Execution.Top10LowestPrecGlobal.endDate),
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkPrecipitation.Top10Prec.Dirs.resultLowestGlobal
+            )
+          )
+        )
+
+        // Precipitation evolution from the start of registers for each state
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesPrecipitation.Execution.precEvolFromStartForEachState,
+          ctsSparkQueriesPrecipitation.stationRegistries.flatMap(registry => {
+            List(
+              FetchAndSaveInfo(
+                getStationInfoById(registry.stationId) match {
+                  case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                    return
+                  case Right(dataFrame: DataFrame) => dataFrame
+                },
+                ctsStorageDataSparkPrecipitation.PrecEvolFromStartForEachState.Dirs.resultStation.format(
+                  registry.stateNameNoSC.replace(" ", "_")
+                ),
+                ctsLogsSparkQueriesStudiesPrecipitation.Execution.precEvolFromStartForEachStateStartStation.format(
+                  registry.stateName.capitalize
+                )
+              ),
+              FetchAndSaveInfo(
+                getClimateParamInALapseById(
+                  registry.stationId,
+                  ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
+                  registry.startDate,
+                  Some(registry.endDate)
+                ) match {
+                  case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                    return
+                  case Right(dataFrame: DataFrame) => dataFrame
+                },
+                ctsStorageDataSparkPrecipitation.PrecEvolFromStartForEachState.Dirs.resultEvol.format(
+                  registry.stateNameNoSC.replace(" ", "_")
+                ),
+                ctsLogsSparkQueriesStudiesPrecipitation.Execution.precEvolFromStartForEachStateStartEvol.format(
+                  registry.stateName
+                )
+              )
+            )
+          })
+        )
+
+        // Top 5 highest increment of precipitation
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesPrecipitation.Execution.top5HighestIncPrec,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamIncrementInAYearLapse(
+                stationIds = ctsSparkQueriesPrecipitation.stationRegistries.map(registry => registry.stationId),
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
+                startYear = ctsSparkQueriesPrecipitation.Execution.Top5HighestIncPrec.startYear,
+                endYear = ctsSparkQueriesPrecipitation.Execution.Top5HighestIncPrec.endYear
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkPrecipitation.Top5PrecInc.Dirs.resultHighest
+            )
+          )
+        )
+
+        // Top 5 lowest increment of precipitation
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesPrecipitation.Execution.top5LowestIncPrec,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamIncrementInAYearLapse(
+                stationIds = ctsSparkQueriesPrecipitation.stationRegistries.map(registry => registry.stationId),
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
+                startYear = ctsSparkQueriesPrecipitation.Execution.Top5LowestIncPrec.startYear,
+                endYear = ctsSparkQueriesPrecipitation.Execution.Top5LowestIncPrec.endYear,
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkPrecipitation.Top5PrecInc.Dirs.resultLowest
+            )
+          )
+        )
+
+        // Get average precipitation in 2024 for all station in the spanish continental territory
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesPrecipitation.Execution.avgPrec2024AllStationSpainContinental,
+          List(
+            FetchAndSaveInfo(
+              getAllStationsByStatesAvgClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
+                startDate = ctsSparkQueriesPrecipitation.Execution.AvgPrec2024AllStationSpain.startDate
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkPrecipitation.AvgPrec2024AllStationSpain.Dirs.resultContinental
+            )
+          )
+        )
+
+        // Get average precipitation in 2024 for all station in the canary islands territory
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesPrecipitation.Execution.avgPrec2024AllStationSpainCanary,
+          List(
+            FetchAndSaveInfo(
+              getAllStationsByStatesAvgClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
+                startDate = ctsSparkQueriesPrecipitation.Execution.AvgPrec2024AllStationSpain.startDate,
+                states = Some(ctsSparkQueriesPrecipitation.Execution.AvgPrec2024AllStationSpain.canaryIslandStates),
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkPrecipitation.AvgPrec2024AllStationSpain.Dirs.resultCanary
+            )
+          )
+        )
+
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endStudy.format(
+          ctsLogsSparkQueriesStudiesPrecipitation.studyName
+        ))
+      }
+    }
+
+    object WindVelocity {
+      private val ctsSparkQueriesWindVelocity = Spark.Queries.WindVelocity
+      private val ctsLogsSparkQueriesStudiesWindVelocity = Logs.SparkQueries.Studies.WindVelocity
+      private val ctsStorageDataSparkWindVelocity = Storage.DataSpark.WindVelocity
+      private val ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys
+
+      def execute(): Unit = {
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startStudy.format(
+          ctsLogsSparkQueriesStudiesWindVelocity.studyName
+        ))
+
+        // Top 10 places with the highest wind velocity in 2024
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesWindVelocity.Execution.top10HighestWindVelocity2024,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey,
+                startDate = ctsSparkQueriesWindVelocity.Execution.Top10HighestWindVelocity2024.startDate,
+                endDate = None) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkWindVelocity.Top10WindVelocity.Dirs.resultHighest2024
+            )
+          )
+        )
+
+        // Top 10 places with the highest wind velocity in the last decade
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesWindVelocity.Execution.top10HighestWindVelocityDecade,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey,
+                startDate = ctsSparkQueriesWindVelocity.Execution.Top10HighestWindVelocityDecade.startDate,
+                endDate = Some(ctsSparkQueriesWindVelocity.Execution.Top10HighestWindVelocityDecade.endDate)) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkWindVelocity.Top10WindVelocity.Dirs.resultHighestDecade
+            )
+          )
+        )
+
+        // Top 10 places with the highest wind velocity from the start of registers
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesWindVelocity.Execution.top10HighestWindVelocityGlobal,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey,
+                startDate = ctsSparkQueriesWindVelocity.Execution.Top10HighestWindVelocityGlobal.startDate,
+                endDate = Some(ctsSparkQueriesWindVelocity.Execution.Top10HighestWindVelocityGlobal.endDate)) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkWindVelocity.Top10WindVelocity.Dirs.resultHighestGlobal
+            )
+          )
+        )
+
+        // Top 10 places with the lowest wind velocity in 2024
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesWindVelocity.Execution.top10LowestWindVelocity2024,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey,
+                startDate = ctsSparkQueriesWindVelocity.Execution.Top10LowestWindVelocity2024.startDate,
+                endDate = None,
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkWindVelocity.Top10WindVelocity.Dirs.resultLowest2024
+            )
+          )
+        )
+
+        // Top 10 places with the lowest wind velocity in the last decade
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesWindVelocity.Execution.top10LowestWindVelocityDecade,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey,
+                startDate = ctsSparkQueriesWindVelocity.Execution.Top10LowestWindVelocityDecade.startDate,
+                endDate = Some(ctsSparkQueriesWindVelocity.Execution.Top10LowestWindVelocityDecade.endDate),
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkWindVelocity.Top10WindVelocity.Dirs.resultLowestDecade
+            )
+          )
+        )
+
+        // Top 10 places with the lowest wind velocity from the start of registers
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesWindVelocity.Execution.top10LowestWindVelocityGlobal,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey,
+                startDate = ctsSparkQueriesWindVelocity.Execution.Top10LowestWindVelocityGlobal.startDate,
+                endDate = Some(ctsSparkQueriesWindVelocity.Execution.Top10LowestWindVelocityGlobal.endDate),
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkWindVelocity.Top10WindVelocity.Dirs.resultLowestGlobal
+            )
+          )
+        )
+
+        // Wind velocity evolution from the start of registers for each state
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesWindVelocity.Execution.windVelocityEvolFromStartForEachState,
+          ctsSparkQueriesWindVelocity.stationRegistries.flatMap(registry => {
+            List(
+              FetchAndSaveInfo(
+                getStationInfoById(registry.stationId) match {
+                  case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                    return
+                  case Right(dataFrame: DataFrame) => dataFrame
+                },
+                ctsStorageDataSparkWindVelocity.WindVelocityEvolFromStartForEachState.Dirs.resultStation.format(
+                  registry.stateNameNoSC.replace(" ", "_")
+                ),
+                ctsLogsSparkQueriesStudiesWindVelocity.Execution.windVelocityEvolFromStartForEachStateStartStation.format(
+                  registry.stateName.capitalize
+                )
+              ),
+              FetchAndSaveInfo(
+                getClimateParamInALapseById(
+                  registry.stationId,
+                  ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey,
+                  registry.startDate,
+                  Some(registry.endDate)
+                ) match {
+                  case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                    return
+                  case Right(dataFrame: DataFrame) => dataFrame
+                },
+                ctsStorageDataSparkWindVelocity.WindVelocityEvolFromStartForEachState.Dirs.resultEvol.format(
+                  registry.stateNameNoSC.replace(" ", "_")
+                ),
+                ctsLogsSparkQueriesStudiesWindVelocity.Execution.windVelocityEvolFromStartForEachStateStartEvol.format(
+                  registry.stateName
+                )
+              )
+            )
+          })
+        )
+
+        // Top 5 highest increment of wind velocity
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesWindVelocity.Execution.top5HighestIncWindVelocity,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamIncrementInAYearLapse(
+                stationIds = ctsSparkQueriesWindVelocity.stationRegistries.map(registry => registry.stationId),
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey,
+                startYear = ctsSparkQueriesWindVelocity.Execution.Top5HighestIncWindVelocity.startYear,
+                endYear = ctsSparkQueriesWindVelocity.Execution.Top5HighestIncWindVelocity.endYear
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkWindVelocity.Top5WindVelocityInc.Dirs.resultHighest
+            )
+          )
+        )
+
+        // Top 5 lowest increment of wind velocity
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesWindVelocity.Execution.top5LowestIncWindVelocity,
+          List(
+            FetchAndSaveInfo(
+              getTopNClimateParamIncrementInAYearLapse(
+                stationIds = ctsSparkQueriesWindVelocity.stationRegistries.map(registry => registry.stationId),
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey,
+                startYear = ctsSparkQueriesWindVelocity.Execution.Top5LowestIncWindVelocity.startYear,
+                endYear = ctsSparkQueriesWindVelocity.Execution.Top5LowestIncWindVelocity.endYear,
+                highest = false
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkWindVelocity.Top5WindVelocityInc.Dirs.resultLowest
+            )
+          )
+        )
+
+        // Get average wind velocity in 2024 for all station in the spanish continental territory
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesWindVelocity.Execution.avgWindVelocity2024AllStationSpainContinental,
+          List(
+            FetchAndSaveInfo(
+              getAllStationsByStatesAvgClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey,
+                startDate = ctsSparkQueriesWindVelocity.Execution.AvgWindVelocity2024AllStationSpain.startDate
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkWindVelocity.AvgWindVelocity2024AllStationSpain.Dirs.resultContinental
+            )
+          )
+        )
+
+        // Get average wind velocity in 2024 for all station in the canary islands territory
+        simpleFetchAndSave(
+          ctsLogsSparkQueriesStudiesWindVelocity.Execution.avgWindVelocity2024AllStationSpainCanary,
+          List(
+            FetchAndSaveInfo(
+              getAllStationsByStatesAvgClimateParamInALapse(
+                climateParam = ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey,
+                startDate = ctsSparkQueriesWindVelocity.Execution.AvgWindVelocity2024AllStationSpain.startDate,
+                states = Some(ctsSparkQueriesWindVelocity.Execution.AvgWindVelocity2024AllStationSpain.canaryIslandStates),
+              ) match {
+                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                  return
+                case Right(dataFrame: DataFrame) => dataFrame
+              },
+              ctsStorageDataSparkWindVelocity.AvgWindVelocity2024AllStationSpain.Dirs.resultCanary
+            )
+          )
+        )
+
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endStudy.format(
+          ctsLogsSparkQueriesStudiesWindVelocity.studyName
         ))
       }
     }
@@ -714,10 +1219,11 @@ object SparkManager {
       }
     }
 
-    def getAllStationsByClimateParamInALapse(climateParam: String,
-                                              startDate: String,
-                                              endDate: Option[String] = None
-                                            ): Either[Exception, DataFrame] = {
+    def getAllStationsByClimateParamInALapse(
+      climateParam: String,
+      startDate: String,
+      endDate: Option[String] = None
+    ): Either[Exception, DataFrame] = {
       try {
         val meteoDF = SparkCore.dataframes.allMeteoInfo
         val stationsDF = SparkCore.dataframes.allStations
@@ -791,7 +1297,10 @@ object SparkManager {
       }
     }
 
-    private def getStationMonthlyAvgTempAndSumPrecInAYear(stationId: String, observationYear: Int): Either[Exception, DataFrame] = {
+    private def getStationMonthlyAvgTempAndSumPrecInAYear(
+      stationId: String,
+      observationYear: Int
+    ): Either[Exception, DataFrame] = {
       try {
         val df: DataFrame = SparkCore.dataframes.allMeteoInfo
 
@@ -822,7 +1331,47 @@ object SparkManager {
       }
     }
 
-    def getTopNClimateParamInALapse(climateParam: String, startDate: String, endDate: Option[String] = None, topN: Int = 10, highest: Boolean = true): Either[Exception, DataFrame] = {
+    def test(): Unit = {
+      val df: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
+
+      val dfWithStormConditions = df.filter(
+        col("tmed") > 20 &&
+        col("hrmax") > 70 &&
+        col("presmax") < 1010 &&
+        col("prec") > 0.0 &&
+        col("sol") > 3
+      )
+
+      // Agrupar por estación y contar los días que cumplen con las condiciones
+      val dfGroupedByStation = dfWithStormConditions
+        .groupBy("indicativo", "nombre", "provincia") // Añadir las columnas de nombre y provincia
+        .agg(countDistinct("fecha").alias("dias_con_condiciones"))
+
+      // Agrupar por provincia y sumar los días con condiciones
+//      val dfGroupedByProvince = dfGroupedByStation
+//        .groupBy("provincia")
+//        .agg(sum("dias_con_condiciones").alias("total_dias_con_condiciones"))
+
+      // Ordenar por la suma de los días con condiciones de menor a mayor
+//      val dfSortedByProvince = dfGroupedByProvince
+//        .orderBy($"total_dias_con_condiciones".desc)
+
+//      // Mostrar el resultado
+//      dfSortedByProvince.show()
+
+      val sorted = dfGroupedByStation
+        .orderBy($"dias_con_condiciones".desc)
+
+      sorted.show()
+    }
+
+    def getTopNClimateParamInALapse(
+      climateParam: String,
+      startDate: String,
+      endDate: Option[String] = None,
+      topN: Int = 10,
+      highest: Boolean = true
+    ): Either[Exception, DataFrame] = {
       try {
         val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
         val stationDf: DataFrame = SparkCore.dataframes.allStations.as("station")
@@ -831,28 +1380,33 @@ object SparkManager {
           meteoDf.filter(endDate match {
               case Some(endDate) => $"fecha".between(lit(startDate), lit(endDate))
               case None => year($"fecha") === startDate.toInt
-          }).filter(col(climateParam).isNotNull)
-          .groupBy($"indicativo")
-          .agg(avg(col(climateParam)).as(s"${climateParam}_avg"))
-          .join(stationDf, Seq("indicativo"), "inner")
-          .select(
-            $"station.indicativo",
-            $"station.nombre",
-            $"station.provincia",
-            col(s"${climateParam}_avg"),
-            $"station.latitud",
-            $"station.longitud",
-            $"station.altitud"
-          ).limit(topN)
-          .withColumn("top", monotonically_increasing_id() + 1)
-          .orderBy(if (highest) $"top".desc else $"top".asc)
+            }).filter(col(climateParam).isNotNull)
+            .groupBy($"indicativo")
+            .agg(avg(col(climateParam)).as(s"${climateParam}_avg"))
+            .join(stationDf, Seq("indicativo"), "inner")
+            .select(
+              $"station.indicativo",
+              $"station.nombre",
+              $"station.provincia",
+              col(s"${climateParam}_avg"),
+              $"station.latitud",
+              $"station.longitud",
+              $"station.altitud"
+            ).orderBy(if (highest) col(s"${climateParam}_avg").desc else col(s"${climateParam}_avg").asc)
+            .limit(topN)
+            .withColumn("top", monotonically_increasing_id() + 1)
         )
       } catch {
         case exception: Exception => Left(exception)
       }
     }
 
-    def getClimateParamInALapseById(stationId: String, climateParam: String, startDate: String, endDate: Option[String] = None): Either[Exception, DataFrame] = {
+    def getClimateParamInALapseById(
+      stationId: String,
+      climateParam: String,
+      startDate: String,
+      endDate: Option[String] = None
+    ): Either[Exception, DataFrame] = {
       try {
         val df: DataFrame = SparkCore.dataframes.allMeteoInfo
 
@@ -877,39 +1431,45 @@ object SparkManager {
       }
     }
 
-    def getAllStationsByStatesAvgClimateParamInALapse(climateParam: String, startDate: String, endDate: Option[String] = None, states: Option[Seq[String]] = None): Either[Exception, DataFrame] = {
+    def getAllStationsByStatesAvgClimateParamInALapse(
+      climateParam: String,
+      startDate: String,
+      endDate: Option[String] = None,
+      states: Option[Seq[String]] = None
+    ): Either[Exception, DataFrame] = {
       try {
         val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
         val stationDf: DataFrame = SparkCore.dataframes.allStations.as("station")
 
         Right(
           meteoDf.filter(endDate match {
-            case Some(end) => $"fecha".between(lit(startDate), lit(end))
-            case None => year($"fecha") === startDate.toInt
-          }).filter(states match {
-            case Some(stateList) => $"provincia".isin(stateList: _*)
-            case None => lit(true)
-          }).filter(col(climateParam).isNotNull)
-          .groupBy($"indicativo")
-          .agg(avg(col(climateParam)).as(s"${climateParam}_avg"))
-          .join(stationDf, Seq("indicativo"), "inner")
-          .select(
-            $"station.nombre",
-            col(s"${climateParam}_avg"),
-            $"station.latitud_dec",
-            $"station.longitud_dec",
-            $"station.altitud",
-          )
+              case Some(end) => $"fecha".between(lit(startDate), lit(end))
+              case None => year($"fecha") === startDate.toInt
+            }).filter(states match {
+              case Some(stateList) => $"provincia".isin(stateList: _*)
+              case None => lit(true)
+            }).filter(col(climateParam).isNotNull)
+            .groupBy($"indicativo")
+            .agg(avg(col(climateParam)).as(s"${climateParam}_avg"))
+            .join(stationDf, Seq("indicativo"), "inner")
+            .select(
+              $"station.nombre",
+              col(s"${climateParam}_avg"),
+              $"station.latitud_dec",
+              $"station.longitud_dec",
+              $"station.altitud",
+            )
         )
       } catch {
         case exception: Exception => Left(exception)
       }
     }
 
-    def getAllStationsInfoByAvgClimateParamInALapse(climateParam: String,
-                                                    startDate: String,
-                                                    endDate: Option[String] = None
-                                                   ): Either[Exception, DataFrame] = {
+    def getAllStationsInfoByAvgClimateParamInALapse(
+      climateParam: String,
+      startDate: String,
+      endDate: Option[String] = None
+    ): Either[Exception, DataFrame] = {
       try {
         val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo
         val stationsDf: DataFrame = SparkCore.dataframes.allStations
@@ -959,18 +1519,14 @@ object SparkManager {
       }
     }
 
-    def test(): Unit = {
-      SparkCore.dataframes.allStations.printSchema()
-      SparkCore.dataframes.allMeteoInfo.printSchema()
-    }
-
-    def getTopNClimateParamIncrementInAYearLapse(stationIds: Seq[String],
-                                                 climateParam: String,
-                                                 startYear: Int,
-                                                 endYear: Int,
-                                                 highest: Boolean = true,
-                                                 topN: Int = 5
-                                                ): Either[Exception, DataFrame] = {
+    def getTopNClimateParamIncrementInAYearLapse(
+      stationIds: Seq[String],
+      climateParam: String,
+      startYear: Int,
+      endYear: Int,
+      highest: Boolean = true,
+      topN: Int = 5
+    ): Either[Exception, DataFrame] = {
       try {
         val filteredDf = SparkCore.dataframes.allMeteoInfo
           .filter($"indicativo".isin(stationIds: _*))
@@ -1013,15 +1569,27 @@ object SparkManager {
             } yield (indicativo, predEndYear - predStartYear)
           }
 
+        val mediaDiariaPorIndicativo = filteredDf
+          .filter($"anio".between(startYear, endYear))
+          .groupBy("indicativo")
+          .agg(avg(col(climateParam + "_media")).as(climateParam + "_diario_media"))
+
         filteredDf.unpersist(true)
 
         Right(
           result
             .toSeq
             .toDF("indicativo", "incremento")
+            .join(mediaDiariaPorIndicativo, Seq("indicativo"), "inner")
             .join(SparkCore.dataframes.allStations, Seq("indicativo"), "inner")
+            .withColumn(
+              "porcentaje_incremento",
+              ($"incremento" / col(climateParam + "_diario_media")) * 100
+            )
             .select(
               "incremento",
+              "porcentaje_incremento",
+              climateParam + "_diario_media",
               "indicativo",
               "nombre",
               "provincia",
@@ -1040,128 +1608,59 @@ object SparkManager {
       }
     }
 
-    // Definir la función
-    //    def getOperativePeriodsForProvince(provincia: String): DataFrame = {
-    //      val df: DataFrame = SparkCore.dataframes.allMeteoInfo
-    //
-    //      // Filtrar el DataFrame para la provincia específica
-    //      val dfFiltered = df.filter(col("provincia") === provincia)
-    //
-    //      // Asegurarse de que la fecha esté en formato adecuado y extraer el año
-    //      val dfWithDate = dfFiltered.withColumn("fecha", to_date(col("fecha"), "yyyy-MM-dd"))
-    //      val dfWithYear = dfWithDate.withColumn("year", year(col("fecha")))
-    //
-    //      // Definir la ventana para ordenación por "indicativo" y "provincia", ordenado por "fecha"
-    //      val windowSpec = Window.partitionBy("indicativo", "provincia").orderBy("fecha")
-    //
-    //      // Calcular la fecha previa para detectar cortes en las fechas
-    //      val dfOrdered = dfWithYear.withColumn("prev_fecha", lag("fecha", 1).over(windowSpec))
-    //
-    //      // Detectar cortes: Si la diferencia entre la fecha actual y la anterior es mayor a 30 días, hay un corte
-    //      val dfWithCuts = dfOrdered.withColumn("is_cut",
-    //        when(datediff(col("fecha"), col("prev_fecha")) > 30, 1).otherwise(0)
-    //      )
-    //
-    //      // Crear un identificador de segmento de operatividad continua, sumando las cortes detectadas
-    //      val dfWithSegmentId = dfWithCuts.withColumn("segment_id",
-    //        sum(when(col("is_cut") === 1, 1).otherwise(0)).over(windowSpec.rowsBetween(Window.unboundedPreceding, 0))
-    //      )
-    //
-    //      // Agrupar por el segment_id para obtener las fechas de inicio y fin de cada periodo de operatividad continua
-    //      val dfOperativePeriods = dfWithSegmentId
-    //        .groupBy("provincia", "indicativo", "nombre", "segment_id")
-    //        .agg(
-    //          min("fecha").alias("inicio_operativa"),
-    //          max("fecha").alias("fin_operativa")
-    //        )
-    //        .orderBy("indicativo", "nombre", "inicio_operativa")  // Ordenar por estación (indicativo y nombre) y por fecha de inicio
-    //
-    //      // Devolver el resultado
-    //      dfOperativePeriods
-    //    }
-
-    // Función para obtener estaciones operativas entre las fechas dadas para todas las provincias,
-    // considerando un corte si han pasado más de un año entre las fechas.
-    def getStationsOperativeBetweenDatesForAllProvincesWithYearCut(startDate: String, endDate: String): DataFrame = {
-
-      // Obtener el DataFrame global
+    def getLongestOperativeStationsPerProvince(param: String, maxNullMonths: Int = 3): DataFrame = {
       val df: DataFrame = SparkCore.dataframes.allMeteoInfo
 
-      // Asegurarse de que la fecha esté en formato adecuado y extraer el año
-      val dfWithDate = df.withColumn("fecha", to_date(col("fecha"), "yyyy-MM-dd"))
-      val dfWithYear = dfWithDate.withColumn("year", year(col("fecha")))
+      val dfParsed = df
+        .withColumn("fecha", to_date(col("fecha"), "yyyy-MM-dd"))
+        .withColumn("year_month", date_format(col("fecha"), "yyyy-MM"))
 
-      // Definir la ventana para ordenación por "indicativo", "provincia" y "nombre", ordenado por "fecha"
-      val windowSpec = Window.partitionBy("indicativo", "provincia", "nombre").orderBy("fecha")
+      val monthlyStats = dfParsed
+        .groupBy("provincia", "indicativo", "nombre", "year_month")
+        .agg(
+          count("*").alias("n_registros"),
+          count(when(col(param).isNull, 1)).alias("null_param")
+        )
 
-      // Calcular la fecha previa para detectar cortes en las fechas
-      val dfOrdered = dfWithYear.withColumn("prev_fecha", lag("fecha", 1).over(windowSpec))
+      val inactiveMonths = monthlyStats
+        .withColumn("inactive", when(col("n_registros") === 0 || col("null_param") === col("n_registros"), 1).otherwise(0))
 
-      // Detectar cortes: Si la diferencia entre la fecha actual y la anterior es mayor a un año, hay un corte
-      val dfWithCuts = dfOrdered.withColumn("is_cut",
-        when(datediff(col("fecha"), col("prev_fecha")) > 365, 1).otherwise(0)
-      )
+      val window = Window.partitionBy("provincia", "indicativo", "nombre").orderBy("year_month")
 
-      // Crear un identificador de segmento de operatividad continua, sumando las cortes detectadas
-      val dfWithSegmentId = dfWithCuts.withColumn("segment_id",
-        sum(when(col("is_cut") === 1, 1).otherwise(0)).over(windowSpec.rowsBetween(Window.unboundedPreceding, 0))
-      )
+      val withCutFlag = inactiveMonths
+        .withColumn("inactive_seq", sum("inactive").over(window.rowsBetween(-maxNullMonths + 1, 0)))
+        .withColumn("cut_flag", when(col("inactive_seq") === maxNullMonths, 1).otherwise(0))
 
-      // Agrupar por el segment_id para obtener las fechas de inicio y fin de cada periodo de operatividad continua
-      val dfOperativePeriods = dfWithSegmentId
+      val withSegment = withCutFlag
+        .withColumn("segment_id", sum("cut_flag").over(window.rowsBetween(Window.unboundedPreceding, 0)))
+
+      // Volver a unir con fechas completas
+      val fullDates = dfParsed
+        .select("provincia", "indicativo", "nombre", "fecha")
+        .withColumn("year_month", date_format(col("fecha"), "yyyy-MM"))
+
+      val joinedWithDates = withSegment
+        .join(fullDates, Seq("provincia", "indicativo", "nombre", "year_month"))
+
+      val activePeriods = joinedWithDates
+        .filter(col("inactive") === 0)
         .groupBy("provincia", "indicativo", "nombre", "segment_id")
         .agg(
-          min("fecha").alias("inicio_operativa"),
-          max("fecha").alias("fin_operativa")
+          count("*").alias("active_months"),
+          min("fecha").alias("start_date"),
+          max("fecha").alias("end_date")
         )
-        .orderBy("provincia", "indicativo", "inicio_operativa")
 
-      // Filtrar estaciones operativas entre las fechas de inicio y fin proporcionadas
-      val dfFilteredByDates = dfOperativePeriods.filter(
-        col("inicio_operativa").leq(lit(startDate)) && col("fin_operativa").geq(lit(endDate))
-      )
+      val maxDurations = activePeriods
+        .groupBy("provincia")
+        .agg(max("active_months").alias("max_months"))
 
-      // Devolver el DataFrame con las estaciones operativas entre las fechas
-      dfFilteredByDates
+      val longestStations = activePeriods
+        .join(maxDurations, Seq("provincia"))
+        .filter(col("active_months") === col("max_months"))
+        .drop("max_months")
+
+      longestStations.orderBy("provincia", "start_date")
     }
-
-    //    def getLongestOperativeStationsPerProvince(param: String, maxNullMonths: Int = 3): DataFrame = {
-    //      val df: DataFrame = SparkCore.dataframes.allMeteoInfo
-    //
-    //      // Parsear fecha y extraer año/mes
-    //      val dfParsed = df
-    //        .withColumn("fecha", to_date(col("fecha"), "yyyy-MM-dd"))
-    //        .withColumn("year_month", date_format(col("fecha"), "yyyy-MM"))
-    //
-    //      // Agrupación mensual para contar registros y valores nulos
-    //      val monthlyStats = dfParsed
-    //        .groupBy("provincia", "indicativo", "nombre", "year_month")
-    //        .agg(
-    //          count("*").alias("n_registros"),
-    //          count(when(col(param).isNull, 1)).alias("null_param")
-    //        )
-    //
-    //      // Marcar mes como inactivo si todos los valores del parámetro son nulos o no hay registros
-    //      val inactiveMonths = monthlyStats
-    //        .withColumn("inactive", when(col("n_registros") === 0 || col("null_param") === col("n_registros"), 1).otherwise(0))
-    //
-    //      val window = Window.partitionBy("provincia", "indicativo", "nombre").orderBy("year_month")
-    //
-    //      // Detectar cortes consecutivos
-    //      val dfWithCutFlags = inactiveMonths
-    //        .withColumn("inactive_seq", sum("inactive").over(window.rowsBetween(-maxNullMonths + 1, 0)))
-    //        .withColumn("cut_flag", when(col("inactive_seq") === maxNullMonths, 1).otherwise(0))
-    //
-    //      // Crear segmento de operatividad
-    //      val dfWithSegment = dfWithCutFlags
-    //        .withColumn("segment_id", sum("cut_flag").over(window.rowsBetween(Window.unboundedPreceding, 0)))
-    //
-    //      // Crear tabla con fecha y clave
-    //      val dfDates = dfParsed
-    //        .select("provincia", "indicativo", "nombre", "fecha")
-    //        .distinct()
-    //
-    //      // Aliases para evitar ambig�
-    //    }
   }
 }
