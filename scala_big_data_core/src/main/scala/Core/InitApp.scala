@@ -227,6 +227,41 @@ object InitApp extends App {
 //  SparkQueries.getLongestOperativeStationsPerProvince("presmax", 3).write.option("header", "true").csv("./result/presmax/")
 //  SparkQueries.getLongestOperativeStationsPerProvince("sol", 3).write.option("header", "true").csv("./result/sol/")
 //  SparkQueries.getLongestOperativeStationsPerProvince("hrmedia", 3).write.option("header", "true").csv("./result/hrmedia/")
+  //SparkQueries.getLongestOperativeStationsPerProvince(List("prec", "presmax"), 3).write.option("header", "true").csv("./result/prec_presmax/")
+
+
+
+
+
+
+//  SparkQueries.getTopNClimateConditionsInALapse(
+//    List(
+//      ("tmed", 20, Float.PositiveInfinity),
+//      ("hrmax", 70, Float.PositiveInfinity),
+//      ("presmax", Float.NegativeInfinity, 1010),
+//      ("prec", 0.0, Float.PositiveInfinity),
+//      ("sol", 3, Float.PositiveInfinity)
+//    ),
+//    "2014-01-01",
+//    Some("2024-12-31"),
+//    groupByState = true
+//  ) match {
+//    case Right(value) => value.show()
+//    case Left(exception) => throw exception
+//  }
+
+//  SparkQueries.getTopNClimateConditionsInALapse(
+//    List(
+//      ("tmed", 15, 25),
+//      ("prec", 5, 10)
+//    ),
+//    "2014-01-01",
+//    Some("2024-12-31"),
+//    groupByState = true
+//  ) match {
+//    case Right(value) => value.show()
+//    case Left(exception) => throw exception
+//  }
 
 
 
@@ -276,12 +311,16 @@ object InitApp extends App {
 //    case Left(exception) => throw exception
 //  }
 
-  //SparkQueries.Climograph.execute()
-  //SparkQueries.Temperature.execute()
-  //SparkQueries.Precipitation.execute()
-  //SparkQueries.WindVelocity.execute()
+//  SparkQueries.Climograph.execute()
+//  SparkQueries.Temperature.execute()
+//  SparkQueries.Precipitation.execute()
+//  SparkQueries.WindVelocity.execute()
+//  SparkQueries.Pressure.execute()
+//  SparkQueries.SunRadiation.execute()
+//  SparkQueries.RelativeHumidity.execute()
+  SparkQueries.InterestingStudies.execute()
 
-  SparkQueries.test()
+  //SparkQueries.test()
 
 
 

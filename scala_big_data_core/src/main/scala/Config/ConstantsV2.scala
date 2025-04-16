@@ -985,6 +985,155 @@ object ConstantsV2 {
         }
       }
 
+      object Pressure {
+        object Top10Pressure {
+          object Dirs {
+            val resultHighest2024: String = Pressure.Global.Dirs.base + "top_10_pressure/highest/2024/"
+            val resultHighestDecade: String = Pressure.Global.Dirs.base + "top_10_pressure/highest/decade/"
+            val resultHighestGlobal: String = Pressure.Global.Dirs.base + "top_10_pressure/highest/global/"
+            val resultLowest2024: String = Pressure.Global.Dirs.base + "top_10_pressure/lowest/2024/"
+            val resultLowestDecade: String = Pressure.Global.Dirs.base + "top_10_pressure/lowest/decade/"
+            val resultLowestGlobal: String = Pressure.Global.Dirs.base + "top_10_pressure/lowest/global/"
+          }
+        }
+
+        object PressureEvolFromStartForEachState {
+          object Dirs {
+            val resultStation: String = Pressure.Global.Dirs.base + "pressure_evol/%s/station/"
+            val resultEvol: String = Pressure.Global.Dirs.base + "pressure_evol/%s/evolution/"
+          }
+        }
+
+        object Top5PressureInc {
+          object Dirs {
+            val resultHighest: String = Pressure.Global.Dirs.base + "top_5_pressure_inc/highest/"
+            val resultLowest: String = Pressure.Global.Dirs.base + "top_5_pressure_inc/lowest/"
+          }
+        }
+
+        object AvgPressure2024AllStationSpain {
+          object Dirs {
+            val resultContinental: String = Pressure.Global.Dirs.base + "avg_pressure_2024_spain/continental/"
+            val resultCanary: String = Pressure.Global.Dirs.base + "avg_pressure_2024_spain/canary_islands/"
+          }
+        }
+
+        object Global {
+          object Dirs {
+            val base: String = DataSpark.Global.Dirs.base + "pressure/"
+          }
+        }
+      }
+
+      object SunRadiation {
+        object Top10SunRadiation {
+          object Dirs {
+            val resultHighest2024: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/highest/2024/"
+            val resultHighestDecade: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/highest/decade/"
+            val resultHighestGlobal: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/highest/global/"
+            val resultLowest2024: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/lowest/2024/"
+            val resultLowestDecade: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/lowest/decade/"
+            val resultLowestGlobal: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/lowest/global/"
+          }
+        }
+
+        object SunRadiationEvolFromStartForEachState {
+          object Dirs {
+            val resultStation: String = SunRadiation.Global.Dirs.base + "sun_radiation_evol/%s/station/"
+            val resultEvol: String = SunRadiation.Global.Dirs.base + "sun_radiation_evol/%s/evolution/"
+          }
+        }
+
+        object Top5SunRadiationInc {
+          object Dirs {
+            val resultHighest: String = SunRadiation.Global.Dirs.base + "top_5_sun_radiation_inc/highest/"
+            val resultLowest: String = SunRadiation.Global.Dirs.base + "top_5_sun_radiation_inc/lowest/"
+          }
+        }
+
+        object AvgSunRadiation2024AllStationSpain {
+          object Dirs {
+            val resultContinental: String = SunRadiation.Global.Dirs.base + "avg_sun_radiation_2024_spain/continental/"
+            val resultCanary: String = SunRadiation.Global.Dirs.base + "avg_sun_radiation_2024_spain/canary_islands/"
+          }
+        }
+
+        object Global {
+          object Dirs {
+            val base: String = DataSpark.Global.Dirs.base + "sun_radiation/"
+          }
+        }
+      }
+
+      object RelativeHumidity {
+        object Top10RelativeHumidity {
+          object Dirs {
+            val resultHighest2024: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/highest/2024/"
+            val resultHighestDecade: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/highest/decade/"
+            val resultHighestGlobal: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/highest/global/"
+            val resultLowest2024: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/lowest/2024/"
+            val resultLowestDecade: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/lowest/decade/"
+            val resultLowestGlobal: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/lowest/global/"
+          }
+        }
+
+        object RelativeHumidityEvolFromStartForEachState {
+          object Dirs {
+            val resultStation: String = RelativeHumidity.Global.Dirs.base + "relative_humidity_evol/%s/station/"
+            val resultEvol: String = RelativeHumidity.Global.Dirs.base + "relative_humidity_evol/%s/evolution/"
+          }
+        }
+
+        object Top5RelativeHumidityInc {
+          object Dirs {
+            val resultHighest: String = RelativeHumidity.Global.Dirs.base + "top_5_relative_humidity_inc/highest/"
+            val resultLowest: String = RelativeHumidity.Global.Dirs.base + "top_5_relative_humidity_inc/lowest/"
+          }
+        }
+
+        object AvgRelativeHumidity2024AllStationSpain {
+          object Dirs {
+            val resultContinental: String = RelativeHumidity.Global.Dirs.base + "avg_relative_humidity_2024_spain/continental/"
+            val resultCanary: String = RelativeHumidity.Global.Dirs.base + "avg_relative_humidity_2024_spain/canary_islands/"
+          }
+        }
+
+        object Global {
+          object Dirs {
+            val base: String = DataSpark.Global.Dirs.base + "relative_humidity/"
+          }
+        }
+      }
+
+      object InterestingStudies {
+        object Top10InterestingStudies {
+          object Dirs {
+            val resultBetterWindPower: String = InterestingStudies.Global.Dirs.base + "top_10_better_wind_power/"
+            val resultBetterSunPower: String = InterestingStudies.Global.Dirs.base + "top_10_better_sun_power/"
+            val resultTorrentialRains: String = InterestingStudies.Global.Dirs.base + "top_10_torrential_rains/"
+            val resultStorms: String = InterestingStudies.Global.Dirs.base + "top_10_storms/"
+            val resultAgriculture: String = InterestingStudies.Global.Dirs.base + "top_10_agriculture/"
+            val resultDroughts: String = InterestingStudies.Global.Dirs.base + "top_10_droughts/"
+            val resultFires: String = InterestingStudies.Global.Dirs.base + "top_10_fires/"
+            val resultHeatWaves: String = InterestingStudies.Global.Dirs.base + "top_10_heat_waves/"
+            val resultFrosts: String = InterestingStudies.Global.Dirs.base + "top_10_frosts/"
+          }
+        }
+
+        object PrecAndPressionEvolFromStartForEachState {
+          object Dirs {
+            val resultStation: String = InterestingStudies.Global.Dirs.base + "prec_and_pression_evol/%s/station/"
+            val resultEvol: String = InterestingStudies.Global.Dirs.base + "prec_and_pression_evol/%s/evolution/"
+          }
+        }
+
+        object Global {
+          object Dirs {
+            val base: String = DataSpark.Global.Dirs.base + "interesting_studies/"
+          }
+        }
+      }
+
       object Global {
         object Dirs {
           val base: String = Storage.Global.Global.Dirs.base + "results/spark/"
@@ -1153,6 +1302,89 @@ object ConstantsV2 {
             val top5LowestIncWindVelocity: String = "Top 5 places with the lowest increment of wind velocity from the start of registers"
             val avgWindVelocity2024AllStationSpainContinental: String = "Average wind velocity in 2024 for all station in the spanish continental territory"
             val avgWindVelocity2024AllStationSpainCanary: String = "Average wind velocity in 2024 for all station in Canary islands"
+          }
+        }
+
+        object Pressure {
+          val studyName: String = "pressure"
+
+          object Execution {
+            val top10HighestPressure2024: String = "Top 10 places with the highest pressure in 2024"
+            val top10HighestPressureDecade: String = "Top 10 places with the highest pressure in the last decade"
+            val top10HighestPressureGlobal: String = "Top 10 places with the highest pressure from the start of registers"
+            val top10LowestPressure2024: String = "Top 10 places with the lowest pressure in 2024"
+            val top10LowestPressureDecade: String = "Top 10 places with the lowest pressure in the last decade"
+            val top10LowestPressureGlobal: String = "Top 10 places with the lowest pressure from the start of registers"
+            val pressureEvolFromStartForEachState: String = "Pressure evolution from the start of registries for each state"
+            val pressureEvolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
+            val pressureEvolFromStartForEachStateEndStation: String = "Completed fetching data from representative %s state station"
+            val pressureEvolFromStartForEachStateStartEvol: String = "Fetching data from %s state pressure evolution"
+            val pressureEvolFromStartForEachStateEndEvol: String = "Completed fetching data from %s state pressure evolution"
+            val top5HighestIncPressure: String = "Top 5 places with the highest increment of pressure from the start of registers"
+            val top5LowestIncPressure: String = "Top 5 places with the lowest increment of pressure from the start of registers"
+            val avgPressure2024AllStationSpainContinental: String = "Average pressure in 2024 for all station in the spanish continental territory"
+            val avgPressure2024AllStationSpainCanary: String = "Average pressure in 2024 for all station in Canary islands"
+          }
+        }
+
+        object SunRadiation {
+          val studyName: String = "sun radiation"
+
+          object Execution {
+            val top10HighestSunRadiation2024: String = "Top 10 places with the highest sun radiation in 2024"
+            val top10HighestSunRadiationDecade: String = "Top 10 places with the highest sun radiation in the last decade"
+            val top10HighestSunRadiationGlobal: String = "Top 10 places with the highest sun radiation from the start of registers"
+            val top10LowestSunRadiation2024: String = "Top 10 places with the lowest sun radiation in 2024"
+            val top10LowestSunRadiationDecade: String = "Top 10 places with the lowest sun radiation in the last decade"
+            val top10LowestSunRadiationGlobal: String = "Top 10 places with the lowest sun radiation from the start of registers"
+            val sunRadiationEvolFromStartForEachState: String = "SunRadiation evolution from the start of registries for each state"
+            val sunRadiationEvolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
+            val sunRadiationEvolFromStartForEachStateEndStation: String = "Completed fetching data from representative %s state station"
+            val sunRadiationEvolFromStartForEachStateStartEvol: String = "Fetching data from %s state sun radiation evolution"
+            val sunRadiationEvolFromStartForEachStateEndEvol: String = "Completed fetching data from %s state sun radiation evolution"
+            val top5HighestIncSunRadiation: String = "Top 5 places with the highest increment of sun radiation from the start of registers"
+            val top5LowestIncSunRadiation: String = "Top 5 places with the lowest increment of sun radiation from the start of registers"
+            val avgSunRadiation2024AllStationSpainContinental: String = "Average sun radiation in 2024 for all station in the spanish continental territory"
+            val avgSunRadiation2024AllStationSpainCanary: String = "Average sun radiation in 2024 for all station in Canary islands"
+          }
+        }
+
+        object RelativeHumidity {
+          val studyName: String = "relative humidity"
+
+          object Execution {
+            val top10HighestRelativeHumidity2024: String = "Top 10 places with the highest relative humidity in 2024"
+            val top10HighestRelativeHumidityDecade: String = "Top 10 places with the highest relative humidity in the last decade"
+            val top10HighestRelativeHumidityGlobal: String = "Top 10 places with the highest relative humidity from the start of registers"
+            val top10LowestRelativeHumidity2024: String = "Top 10 places with the lowest relative humidity in 2024"
+            val top10LowestRelativeHumidityDecade: String = "Top 10 places with the lowest relative humidity in the last decade"
+            val top10LowestRelativeHumidityGlobal: String = "Top 10 places with the lowest relative humidity from the start of registers"
+            val relativeHumidityEvolFromStartForEachState: String = "Relative humidity evolution from the start of registries for each state"
+            val relativeHumidityEvolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
+            val relativeHumidityEvolFromStartForEachStateStartEvol: String = "Fetching data from %s state relative humidity evolution"
+            val top5HighestIncRelativeHumidity: String = "Top 5 places with the highest increment of relative humidity from the start of registers"
+            val top5LowestIncRelativeHumidity: String = "Top 5 places with the lowest increment of relative humidity from the start of registers"
+            val avgRelativeHumidity2024AllStationSpainContinental: String = "Average relative humidity in 2024 for all station in the spanish continental territory"
+            val avgRelativeHumidity2024AllStationSpainCanary: String = "Average relative humidity in 2024 for all station in Canary islands"
+          }
+        }
+
+        object InterestingStudies {
+          val studyName: String = "interesting studies"
+
+          object Execution {
+            val precAndPressureEvolFromStartForEachState: String = "Precipitation and pressure evolution from the start of registries for each state"
+            val precAndPressureEvolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
+            val precAndPressureEvolFromStartForEachStateStartEvol: String = "Fetching data from %s state precipitation and pressure evolution"
+            val top10BetterWindPower: String = "Top 10 better places for wind power generation in the last decade"
+            val top10BetterSunPower: String = "Top 10 better places for sun power generation in the last decade"
+            val top10TorrentialRains: String = "Top 10 places with the highest incidence of torrential rains in the last decade"
+            val top10Storms: String = "Top 10 the highest incidence of storms in the last decade"
+            val top10Agriculture: String = "Top 10 better places for agriculture in the last decade"
+            val top10Droughts: String = "Top 10 the highest incidence of droughts in the last decade"
+            val top10Fires: String = "Top 10 the highest incidence of fires in the last decade"
+            val top10HeatWaves: String = "Top 10 the highest incidence of heat waves in the last decade"
+            val top10Frosts: String = "Top 10 the highest incidence of frosts in the last decade"
           }
         }
 
@@ -2999,45 +3231,45 @@ object ConstantsV2 {
           ),
         )
         object Execution {
-          object Top10HighestPrec2024 {
+          object Top10HighestPressure2024 {
             val startDate: String = "2024"
           }
 
-          object Top10HighestPrecDecade {
+          object Top10HighestPressureDecade {
             val startDate: String = "2014-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10HighestPrecGlobal {
+          object Top10HighestPressureGlobal {
             val startDate: String = "1973-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10LowestPrec2024 {
+          object Top10LowestPressure2024 {
             val startDate: String = "2024"
           }
 
-          object Top10LowestPrecDecade {
+          object Top10LowestPressureDecade {
             val startDate: String = "2014-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10LowestPrecGlobal {
+          object Top10LowestPressureGlobal {
             val startDate: String = "1973-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top5HighestIncPrec {
+          object Top5HighestIncPressure {
             val startYear: Int = 1973
             val endYear: Int = 2024
           }
 
-          object Top5LowestIncPrec {
+          object Top5LowestIncPressure {
             val startYear: Int = 1973
             val endYear: Int = 2024
           }
 
-          object AvgPrec2024AllStationSpain {
+          object AvgPressure2024AllStationSpain {
             val startDate: String = "2024"
             val canaryIslandStates: List[String] = List(
               "SANTA CRUZ DE TENERIFE",
@@ -3415,45 +3647,45 @@ object ConstantsV2 {
           )
         )
         object Execution {
-          object Top10HighestPrec2024 {
+          object Top10HighestSunRadiation2024 {
             val startDate: String = "2024"
           }
 
-          object Top10HighestPrecDecade {
+          object Top10HighestSunRadiationDecade {
             val startDate: String = "2014-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10HighestPrecGlobal {
+          object Top10HighestSunRadiationGlobal {
             val startDate: String = "1973-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10LowestPrec2024 {
+          object Top10LowestSunRadiation2024 {
             val startDate: String = "2024"
           }
 
-          object Top10LowestPrecDecade {
+          object Top10LowestSunRadiationDecade {
             val startDate: String = "2014-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10LowestPrecGlobal {
+          object Top10LowestSunRadiationGlobal {
             val startDate: String = "1973-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top5HighestIncPrec {
+          object Top5HighestIncSunRadiation {
             val startYear: Int = 1973
             val endYear: Int = 2024
           }
 
-          object Top5LowestIncPrec {
+          object Top5LowestIncSunRadiation {
             val startYear: Int = 1973
             val endYear: Int = 2024
           }
 
-          object AvgPrec2024AllStationSpain {
+          object AvgSunRadiation2024AllStationSpain {
             val startDate: String = "2024"
             val canaryIslandStates: List[String] = List(
               "SANTA CRUZ DE TENERIFE",
@@ -3831,50 +4063,502 @@ object ConstantsV2 {
           )
         )
         object Execution {
-          object Top10HighestPrec2024 {
+          object Top10HighestRelativeHumidity2024 {
             val startDate: String = "2024"
           }
 
-          object Top10HighestPrecDecade {
+          object Top10HighestRelativeHumidityDecade {
             val startDate: String = "2014-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10HighestPrecGlobal {
+          object Top10HighestRelativeHumidityGlobal {
             val startDate: String = "1973-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10LowestPrec2024 {
+          object Top10LowestRelativeHumidity2024 {
             val startDate: String = "2024"
           }
 
-          object Top10LowestPrecDecade {
+          object Top10LowestRelativeHumidityDecade {
             val startDate: String = "2014-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10LowestPrecGlobal {
+          object Top10LowestRelativeHumidityGlobal {
             val startDate: String = "1973-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top5HighestIncPrec {
+          object Top5HighestIncRelativeHumidity {
             val startYear: Int = 1973
             val endYear: Int = 2024
           }
 
-          object Top5LowestIncPrec {
+          object Top5LowestIncRelativeHumidity {
             val startYear: Int = 1973
             val endYear: Int = 2024
           }
 
-          object AvgPrec2024AllStationSpain {
+          object AvgRelativeHumidity2024AllStationSpain {
             val startDate: String = "2024"
             val canaryIslandStates: List[String] = List(
               "SANTA CRUZ DE TENERIFE",
               "LAS PALMAS"
             )
+          }
+        }
+      }
+      object InterestingStudies {
+        case class RepresentativeStationRegistry(stateName: String, stateNameNoSC: String, stationId: String, startDate: String, endDate: String)
+        val stationRegistries: List[RepresentativeStationRegistry] = List(
+          RepresentativeStationRegistry(
+            stateName = "A CORUÑA",
+            stateNameNoSC = "a coruna",
+            stationId = "1387",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "ALBACETE",
+            stateNameNoSC = "albacete",
+            stationId = "8175",
+            startDate = "1988-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "ALICANTE",
+            stateNameNoSC = "alicante",
+            stationId = "8025",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "ALMERIA",
+            stateNameNoSC = "almeria",
+            stationId = "6325O",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "ARABA/ALAVA",
+            stateNameNoSC = "araba",
+            stationId = "9091O",
+            startDate = "1980-02-16",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "ASTURIAS",
+            stateNameNoSC = "asturias",
+            stationId = "1212E",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "AVILA",
+            stateNameNoSC = "avila",
+            stationId = "2444",
+            startDate = "1983-02-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "BADAJOZ",
+            stateNameNoSC = "badajoz",
+            stationId = "4452",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "BARCELONA",
+            stateNameNoSC = "barcelona",
+            stationId = "0076",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "BIZKAIA",
+            stateNameNoSC = "bizkaia",
+            stationId = "1082",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "BURGOS",
+            stateNameNoSC = "burgos",
+            stationId = "2331",
+            startDate = "1978-05-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "CACERES",
+            stateNameNoSC = "caceres",
+            stationId = "3469A",
+            startDate = "1982-12-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "CADIZ",
+            stateNameNoSC = "cadiz",
+            stationId = "5960",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "CANTABRIA",
+            stateNameNoSC = "cantabria",
+            stationId = "1109",
+            startDate = "1973-01-01",
+            endDate = "2024-05-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "CASTELLON",
+            stateNameNoSC = "castellon",
+            stationId = "8500A",
+            startDate = "1976-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "CEUTA",
+            stateNameNoSC = "ceuta",
+            stationId = "5000C",
+            startDate = "2005-12-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "CIUDAD REAL",
+            stateNameNoSC = "cuidad real",
+            stationId = "4121",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "CORDOBA",
+            stateNameNoSC = "cordoba",
+            stationId = "5402",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "CUENCA",
+            stateNameNoSC = "cuenca",
+            stationId = "8096",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "GIPUZKOA",
+            stateNameNoSC = "gipuzkoa",
+            stationId = "1024E",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "GIRONA",
+            stateNameNoSC = "girona",
+            stationId = "0367",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "GRANADA",
+            stateNameNoSC = "granada",
+            stationId = "5530E",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "GUADALAJARA",
+            stateNameNoSC = "guadalajara",
+            stationId = "3013",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "HUELVA",
+            stateNameNoSC = "huelva",
+            stationId = "4642E",
+            startDate = "1984-06-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "HUESCA",
+            stateNameNoSC = "huesca",
+            stationId = "9898",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "ILLES BALEARS",
+            stateNameNoSC = "illes balears",
+            stationId = "B893",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "JAEN",
+            stateNameNoSC = "jaen",
+            stationId = "5270B",
+            startDate = "1994-06-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "LA RIOJA",
+            stateNameNoSC = "la rioja",
+            stationId = "9170",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "LAS PALMAS",
+            stateNameNoSC = "las palmas",
+            stationId = "C029O",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "LEON",
+            stateNameNoSC = "leon",
+            stationId = "1549",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "LLEIDA",
+            stateNameNoSC = "lleida",
+            stationId = "9771C",
+            startDate = "1983-02-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "LUGO",
+            stateNameNoSC = "lugo",
+            stationId = "1505",
+            startDate = "1985-05-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "MADRID",
+            stateNameNoSC = "madrid",
+            stationId = "3200",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "MALAGA",
+            stateNameNoSC = "malaga",
+            stationId = "6155A",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "MELILLA",
+            stateNameNoSC = "melilla",
+            stationId = "6000A",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "MURCIA",
+            stateNameNoSC = "murcia",
+            stationId = "7228",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "NAVARRA",
+            stateNameNoSC = "navarra",
+            stationId = "9263D",
+            startDate = "1975-02-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "OURENSE",
+            stateNameNoSC = "ourense",
+            stationId = "1690A",
+            startDate = "1974-01-01",
+            endDate = "2022-09-08"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "PALENCIA",
+            stateNameNoSC = "palencia",
+            stationId = "2400E",
+            startDate = "1989-06-01",
+            endDate = "2008-03-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "PONTEVEDRA",
+            stateNameNoSC = "pontevedra",
+            stationId = "1495",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "SALAMANCA",
+            stateNameNoSC = "salamanca",
+            stationId = "2867",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "SEGOVIA",
+            stateNameNoSC = "segovia",
+            stationId = "2465",
+            startDate = "1988-10-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "SEVILLA",
+            stateNameNoSC = "sevilla",
+            stationId = "5783",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "SORIA",
+            stateNameNoSC = "soria",
+            stationId = "2030",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "SANTA CRUZ DE TENERIFE",
+            stateNameNoSC = "santa cruz de tenerife",
+            stationId = "C449C",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "TARRAGONA",
+            stateNameNoSC = "tarragona",
+            stationId = "9981A",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "TERUEL",
+            stateNameNoSC = "teruel",
+            stationId = "8368U",
+            startDate = "1986-04-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "TOLEDO",
+            stateNameNoSC = "toledo",
+            stationId = "3260B",
+            startDate = "1982-02-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "VALENCIA",
+            stateNameNoSC = "valencia",
+            stationId = "8414A",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "VALLADOLID",
+            stateNameNoSC = "valladolid",
+            stationId = "2539",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "ZAMORA",
+            stateNameNoSC = "zamora",
+            stationId = "2614",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          ),
+          RepresentativeStationRegistry(
+            stateName = "ZARAGOZA",
+            stateNameNoSC = "zaragoza",
+            stationId = "9434",
+            startDate = "1973-01-01",
+            endDate = "2024-12-31"
+          )
+        )
+        object Execution {
+          object Top10BetterWindPower {
+            val climateParams: List[(String, Double, Double)] = List(
+              ("velmedia", 6, 9),
+              ("hrmedia", 0, 70),
+            )
+            val startDate: String = "2014-01-01"
+            val endDate: String = "2024-12-31"
+          }
+          object Top10BetterSunPower {
+            val climateParams: List[(String, Double, Double)] = List(
+              ("sol", 5, Double.PositiveInfinity),
+              ("tmax", Double.NegativeInfinity, 30),
+              ("prec", 0, 1.5)
+            )
+            val startDate: String = "2014-01-01"
+            val endDate: String = "2024-12-31"
+          }
+          object Top10TorrentialRains {
+            val climateParams: List[(String, Double, Double)] = List(
+              ("prec", 100, Double.PositiveInfinity),
+            )
+            val startDate: String = "2014-01-01"
+            val endDate: String = "2024-12-31"
+          }
+          object Top10Storms {
+            val climateParams: List[(String, Double, Double)] = List(
+              ("tmax", 20, Double.PositiveInfinity),
+              ("hrmax", 60, 100),
+              ("presmin", Float.NegativeInfinity, 1010),
+              ("prec", 1, Float.PositiveInfinity)
+            )
+            val startDate: String = "2014-01-01"
+            val endDate: String = "2024-12-31"
+          }
+          object Top10Agriculture {
+            val climateParams: List[(String, Double, Double)] = List(
+              ("tmed", 15, 25),
+              ("prec", 5, 10)
+            )
+            val startDate: String = "2014-01-01"
+            val endDate: String = "2024-12-31"
+          }
+          object Top10Droughts {
+            val climateParams: List[(String, Double, Double)] = List(
+              ("tmax", 28, Double.PositiveInfinity),
+              ("prec", 0, 0),
+              ("sol", 10, Double.PositiveInfinity)
+            )
+            val startDate: String = "2014-01-01"
+            val endDate: String = "2024-12-31"
+          }
+          object Top10Fires {
+            val climateParams: List[(String, Double, Double)] = List(
+              ("tmax", 30, Double.PositiveInfinity),
+              ("hrmedia", 0, 30),
+              ("velmedia", 5.5, Double.PositiveInfinity),
+              ("prec", 0, 0),
+              ("sol", 10, Double.PositiveInfinity)
+            )
+            val startDate: String = "2014-01-01"
+            val endDate: String = "2024-12-31"
+          }
+          object Top10HeatWaves {
+            val climateParams: List[(String, Double, Double)] = List(
+              ("tmax", 35, Double.PositiveInfinity),
+              ("hrmedia", 0, 40),
+              ("prec", 0, 0),
+              ("presmax", 1015, Double.PositiveInfinity),
+              ("sol", 10, Double.PositiveInfinity),
+              ("velmedia", Double.NegativeInfinity, 3)
+            )
+            val startDate: String = "2014-01-01"
+            val endDate: String = "2024-12-31"
+          }
+          object Top10Frosts {
+            val climateParams: List[(String, Double, Double)] = List(
+              ("tmax", Double.NegativeInfinity, 0),
+            )
+            val startDate: String = "2014-01-01"
+            val endDate: String = "2024-12-31"
           }
         }
       }
