@@ -480,6 +480,28 @@ object ConstantsV2 {
     }
 
     object DataSpark {
+      object Stations {
+        object StationCountEvolFromStart {
+          object Dirs {
+            val result: String = Stations.Global.Dirs.base + "count_evol/"
+          }
+        }
+        object StationCountByState2024 {
+          object Dirs {
+            val result: String = Stations.Global.Dirs.base + "count_by_state_2024/"
+          }
+        }
+        object StationCountByAltitude2024 {
+          object Dirs {
+            val result: String = Stations.Global.Dirs.base + "count_by_altitude_2024/"
+          }
+        }
+        object Global {
+          object Dirs {
+            val base: String = DataSpark.Global.Dirs.base + "stations/"
+          }
+        }
+      }
       object Climograph {
         object Arid {
           object BWh {
@@ -864,247 +886,45 @@ object ConstantsV2 {
           }
         }
       }
-
-      object Temperature {
-        object Top10Temp {
+      object SingleParamStudies {
+        object Top10 {
           object Dirs {
-            val resultHighest2024: String = Temperature.Global.Dirs.base + "top_10_temp/highest/2024/"
-            val resultHighestDecade: String = Temperature.Global.Dirs.base + "top_10_temp/highest/decade/"
-            val resultHighestGlobal: String = Temperature.Global.Dirs.base + "top_10_temp/highest/global/"
-            val resultLowest2024: String = Temperature.Global.Dirs.base + "top_10_temp/lowest/2024/"
-            val resultLowestDecade: String = Temperature.Global.Dirs.base + "top_10_temp/lowest/decade/"
-            val resultLowestGlobal: String = Temperature.Global.Dirs.base + "top_10_temp/lowest/global/"
+            val resultHighest2024: String = Global.Dirs.base + "top_10/highest/2024/"
+            val resultHighestDecade: String = Global.Dirs.base + "top_10/highest/decade/"
+            val resultHighestGlobal: String = Global.Dirs.base + "top_10/highest/global/"
+            val resultLowest2024: String = Global.Dirs.base + "top_10/lowest/2024/"
+            val resultLowestDecade: String = Global.Dirs.base + "top_10/lowest/decade/"
+            val resultLowestGlobal: String = Global.Dirs.base + "top_10/lowest/global/"
           }
         }
 
-        object TempEvolFromStartForEachState {
+        object EvolFromStartForEachState {
           object Dirs {
-            val resultStation: String = Temperature.Global.Dirs.base + "temp_evol/%s/station/"
-            val resultEvol: String = Temperature.Global.Dirs.base + "temp_evol/%s/evolution/"
+            val resultStation: String = Global.Dirs.base + "evol/%s/station/"
+            val resultEvol: String = Global.Dirs.base + "evol/%s/evolution/"
           }
         }
 
-        object Top5TempInc {
+        object Top5Inc {
           object Dirs {
-            val resultHighest: String = Temperature.Global.Dirs.base + "top_5_temp_inc/highest/"
-            val resultLowest: String = Temperature.Global.Dirs.base + "top_5_temp_inc/lowest/"
+            val resultHighest: String = Global.Dirs.base + "top_5_inc/highest/"
+            val resultLowest: String = Global.Dirs.base + "top_5_inc/lowest/"
           }
         }
 
-        object AvgTemp2024AllStationSpain {
+        object Avg2024AllStationSpain {
           object Dirs {
-            val resultContinental: String = Temperature.Global.Dirs.base + "avg_temp_2024_spain/continental/"
-            val resultCanary: String = Temperature.Global.Dirs.base + "avg_temp_2024_spain/canary_islands/"
-          }
-        }
-
-        object Global {
-          object Dirs {
-            val base: String = DataSpark.Global.Dirs.base + "temperature/"
-          }
-        }
-      }
-
-      object Precipitation {
-        object Top10Prec {
-          object Dirs {
-            val resultHighest2024: String = Precipitation.Global.Dirs.base + "top_10_prec/highest/2024/"
-            val resultHighestDecade: String = Precipitation.Global.Dirs.base + "top_10_prec/highest/decade/"
-            val resultHighestGlobal: String = Precipitation.Global.Dirs.base + "top_10_prec/highest/global/"
-            val resultLowest2024: String = Precipitation.Global.Dirs.base + "top_10_prec/lowest/2024/"
-            val resultLowestDecade: String = Precipitation.Global.Dirs.base + "top_10_prec/lowest/decade/"
-            val resultLowestGlobal: String = Precipitation.Global.Dirs.base + "top_10_prec/lowest/global/"
-          }
-        }
-
-        object PrecEvolFromStartForEachState {
-          object Dirs {
-            val resultStation: String = Precipitation.Global.Dirs.base + "prec_evol/%s/station/"
-            val resultEvol: String = Precipitation.Global.Dirs.base + "prec_evol/%s/evolution/"
-          }
-        }
-
-        object Top5PrecInc {
-          object Dirs {
-            val resultHighest: String = Precipitation.Global.Dirs.base + "top_5_prec_inc/highest/"
-            val resultLowest: String = Precipitation.Global.Dirs.base + "top_5_prec_inc/lowest/"
-          }
-        }
-
-        object AvgPrec2024AllStationSpain {
-          object Dirs {
-            val resultContinental: String = Precipitation.Global.Dirs.base + "avg_prec_2024_spain/continental/"
-            val resultCanary: String = Precipitation.Global.Dirs.base + "avg_prec_2024_spain/canary_islands/"
+            val resultContinental: String = Global.Dirs.base + "avg_2024_spain/continental/"
+            val resultCanary: String = Global.Dirs.base + "avg_2024_spain/canary_islands/"
           }
         }
 
         object Global {
           object Dirs {
-            val base: String = DataSpark.Global.Dirs.base + "precipitation/"
+            val base: String = DataSpark.Global.Dirs.base + "%s/"
           }
         }
       }
-
-      object WindVelocity {
-        object Top10WindVelocity {
-          object Dirs {
-            val resultHighest2024: String = WindVelocity.Global.Dirs.base + "top_10_wind_velocity/highest/2024/"
-            val resultHighestDecade: String = WindVelocity.Global.Dirs.base + "top_10_wind_velocity/highest/decade/"
-            val resultHighestGlobal: String = WindVelocity.Global.Dirs.base + "top_10_wind_velocity/highest/global/"
-            val resultLowest2024: String = WindVelocity.Global.Dirs.base + "top_10_wind_velocity/lowest/2024/"
-            val resultLowestDecade: String = WindVelocity.Global.Dirs.base + "top_10_wind_velocity/lowest/decade/"
-            val resultLowestGlobal: String = WindVelocity.Global.Dirs.base + "top_10_wind_velocity/lowest/global/"
-          }
-        }
-
-        object WindVelocityEvolFromStartForEachState {
-          object Dirs {
-            val resultStation: String = WindVelocity.Global.Dirs.base + "wind_velocity_evol/%s/station/"
-            val resultEvol: String = WindVelocity.Global.Dirs.base + "wind_velocity_evol/%s/evolution/"
-          }
-        }
-
-        object Top5WindVelocityInc {
-          object Dirs {
-            val resultHighest: String = WindVelocity.Global.Dirs.base + "top_5_wind_velocity_inc/highest/"
-            val resultLowest: String = WindVelocity.Global.Dirs.base + "top_5_wind_velocity_inc/lowest/"
-          }
-        }
-
-        object AvgWindVelocity2024AllStationSpain {
-          object Dirs {
-            val resultContinental: String = WindVelocity.Global.Dirs.base + "avg_wind_velocity_2024_spain/continental/"
-            val resultCanary: String = WindVelocity.Global.Dirs.base + "avg_wind_velocity_2024_spain/canary_islands/"
-          }
-        }
-
-        object Global {
-          object Dirs {
-            val base: String = DataSpark.Global.Dirs.base + "wind_velocity/"
-          }
-        }
-      }
-
-      object Pressure {
-        object Top10Pressure {
-          object Dirs {
-            val resultHighest2024: String = Pressure.Global.Dirs.base + "top_10_pressure/highest/2024/"
-            val resultHighestDecade: String = Pressure.Global.Dirs.base + "top_10_pressure/highest/decade/"
-            val resultHighestGlobal: String = Pressure.Global.Dirs.base + "top_10_pressure/highest/global/"
-            val resultLowest2024: String = Pressure.Global.Dirs.base + "top_10_pressure/lowest/2024/"
-            val resultLowestDecade: String = Pressure.Global.Dirs.base + "top_10_pressure/lowest/decade/"
-            val resultLowestGlobal: String = Pressure.Global.Dirs.base + "top_10_pressure/lowest/global/"
-          }
-        }
-
-        object PressureEvolFromStartForEachState {
-          object Dirs {
-            val resultStation: String = Pressure.Global.Dirs.base + "pressure_evol/%s/station/"
-            val resultEvol: String = Pressure.Global.Dirs.base + "pressure_evol/%s/evolution/"
-          }
-        }
-
-        object Top5PressureInc {
-          object Dirs {
-            val resultHighest: String = Pressure.Global.Dirs.base + "top_5_pressure_inc/highest/"
-            val resultLowest: String = Pressure.Global.Dirs.base + "top_5_pressure_inc/lowest/"
-          }
-        }
-
-        object AvgPressure2024AllStationSpain {
-          object Dirs {
-            val resultContinental: String = Pressure.Global.Dirs.base + "avg_pressure_2024_spain/continental/"
-            val resultCanary: String = Pressure.Global.Dirs.base + "avg_pressure_2024_spain/canary_islands/"
-          }
-        }
-
-        object Global {
-          object Dirs {
-            val base: String = DataSpark.Global.Dirs.base + "pressure/"
-          }
-        }
-      }
-
-      object SunRadiation {
-        object Top10SunRadiation {
-          object Dirs {
-            val resultHighest2024: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/highest/2024/"
-            val resultHighestDecade: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/highest/decade/"
-            val resultHighestGlobal: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/highest/global/"
-            val resultLowest2024: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/lowest/2024/"
-            val resultLowestDecade: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/lowest/decade/"
-            val resultLowestGlobal: String = SunRadiation.Global.Dirs.base + "top_10_sun_radiation/lowest/global/"
-          }
-        }
-
-        object SunRadiationEvolFromStartForEachState {
-          object Dirs {
-            val resultStation: String = SunRadiation.Global.Dirs.base + "sun_radiation_evol/%s/station/"
-            val resultEvol: String = SunRadiation.Global.Dirs.base + "sun_radiation_evol/%s/evolution/"
-          }
-        }
-
-        object Top5SunRadiationInc {
-          object Dirs {
-            val resultHighest: String = SunRadiation.Global.Dirs.base + "top_5_sun_radiation_inc/highest/"
-            val resultLowest: String = SunRadiation.Global.Dirs.base + "top_5_sun_radiation_inc/lowest/"
-          }
-        }
-
-        object AvgSunRadiation2024AllStationSpain {
-          object Dirs {
-            val resultContinental: String = SunRadiation.Global.Dirs.base + "avg_sun_radiation_2024_spain/continental/"
-            val resultCanary: String = SunRadiation.Global.Dirs.base + "avg_sun_radiation_2024_spain/canary_islands/"
-          }
-        }
-
-        object Global {
-          object Dirs {
-            val base: String = DataSpark.Global.Dirs.base + "sun_radiation/"
-          }
-        }
-      }
-
-      object RelativeHumidity {
-        object Top10RelativeHumidity {
-          object Dirs {
-            val resultHighest2024: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/highest/2024/"
-            val resultHighestDecade: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/highest/decade/"
-            val resultHighestGlobal: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/highest/global/"
-            val resultLowest2024: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/lowest/2024/"
-            val resultLowestDecade: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/lowest/decade/"
-            val resultLowestGlobal: String = RelativeHumidity.Global.Dirs.base + "top_10_relative_humidity/lowest/global/"
-          }
-        }
-
-        object RelativeHumidityEvolFromStartForEachState {
-          object Dirs {
-            val resultStation: String = RelativeHumidity.Global.Dirs.base + "relative_humidity_evol/%s/station/"
-            val resultEvol: String = RelativeHumidity.Global.Dirs.base + "relative_humidity_evol/%s/evolution/"
-          }
-        }
-
-        object Top5RelativeHumidityInc {
-          object Dirs {
-            val resultHighest: String = RelativeHumidity.Global.Dirs.base + "top_5_relative_humidity_inc/highest/"
-            val resultLowest: String = RelativeHumidity.Global.Dirs.base + "top_5_relative_humidity_inc/lowest/"
-          }
-        }
-
-        object AvgRelativeHumidity2024AllStationSpain {
-          object Dirs {
-            val resultContinental: String = RelativeHumidity.Global.Dirs.base + "avg_relative_humidity_2024_spain/continental/"
-            val resultCanary: String = RelativeHumidity.Global.Dirs.base + "avg_relative_humidity_2024_spain/canary_islands/"
-          }
-        }
-
-        object Global {
-          object Dirs {
-            val base: String = DataSpark.Global.Dirs.base + "relative_humidity/"
-          }
-        }
-      }
-
       object InterestingStudies {
         object Top10InterestingStudies {
           object Dirs {
@@ -1133,7 +953,6 @@ object ConstantsV2 {
           }
         }
       }
-
       object Global {
         object Dirs {
           val base: String = Storage.Global.Global.Dirs.base + "results/spark/"
@@ -1223,149 +1042,43 @@ object ConstantsV2 {
 
     object SparkQueries {
       object Studies {
+        object Stations {
+          val studyName: String = "stations"
+
+          object Execution {
+            val stationCountEvolFromStart: String = "Station count evolution from the start of registers"
+            val stationCountByState2024: String = "Station count by state in 2024"
+            val stationCountByAltitude2024: String = "Station count by altitude in 2024"
+
+          }
+        }
+
         object Climograph {
           val studyName: String = "climograph"
 
           object Execution {
             val startFetchingClimateGroup: String = "Fetching %s climates information"
-            val endFetchingClimateGroup: String = "Completed fetching %s climates information"
             val fetchingClimate: String = "%s climate information"
-            val startFetchingClimate: String = "Fetching %s climate information"
-            val endFetchingClimate: String = "Completed fetching %s climate information"
-            val infoShowDataframeTempAndPrecInfo = "Showing a part of monthly average temperature and precipitation sum of %s registers"
-            val infoSaveDataframeTempAndPrecInfo = "Saving %s registers of monthly average temperature and precipitation sum (%s)"
-            val infoShowDataframeStationInfo = "Showing a part of station information of %s registers"
-            val infoSaveDataframeStationInfo = "Saving %s registers of station information (%s)"
             val fetchingClimateLocationStation = "%s station information"
             val fetchingClimateLocationTempPrec = "%s temperature and precipitation information"
           }
         }
 
-        object Temperature {
-          val studyName: String = "temperature"
-
+        object SingleParamStudies {
           object Execution {
-            val top10HighestTemp2024: String = "Top 10 places with the highest temperatures in 2024"
-            val top10HighestTempDecade: String = "Top 10 places with the highest temperatures in the last decade"
-            val top10HighestTempGlobal: String = "Top 10 places with the highest temperatures from the start of registers"
-            val top10LowestTemp2024: String = "Top 10 places with the lowest temperatures in 2024"
-            val top10LowestTempDecade: String = "Top 10 places with the lowest temperatures in the last decade"
-            val top10LowestTempGlobal: String = "Top 10 places with the lowest temperatures from the start of registers"
-            val tempEvolFromStartForEachState: String = "Temperature evolution from the start of registries for each state"
-            val tempEvolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
-            val tempEvolFromStartForEachStateStartEvol: String = "Fetching data from %s state temperature evolution"
-            val top5HighestIncTemp: String = "Top 5 places with the highest increment of temperatures from the start of registers"
-            val top5LowestIncTemp: String = "Top 5 places with the lowest increment of temperatures from the start of registers"
-            val avgTemp2024AllStationSpainContinental: String = "Average temperature in 2024 for all station in the spanish continental territory"
-            val avgTemp2024AllStationSpainCanary: String = "Average temperature in 2024 for all station in Canary islands"
-          }
-        }
-
-        object Precipitation {
-          val studyName: String = "precipitation"
-
-          object Execution {
-            val top10HighestPrec2024: String = "Top 10 places with the highest precipitations in 2024"
-            val top10HighestPrecDecade: String = "Top 10 places with the highest precipitations in the last decade"
-            val top10HighestPrecGlobal: String = "Top 10 places with the highest precipitations from the start of registers"
-            val top10LowestPrec2024: String = "Top 10 places with the lowest precipitations in 2024"
-            val top10LowestPrecDecade: String = "Top 10 places with the lowest precipitations in the last decade"
-            val top10LowestPrecGlobal: String = "Top 10 places with the lowest precipitations from the start of registers"
-            val precEvolFromStartForEachState: String = "Precipitation evolution from the start of registries for each state"
-            val precEvolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
-            val precEvolFromStartForEachStateEndStation: String = "Completed fetching data from representative %s state station"
-            val precEvolFromStartForEachStateStartEvol: String = "Fetching data from %s state precipitation evolution"
-            val precEvolFromStartForEachStateEndEvol: String = "Completed fetching data from %s state precipitation evolution"
-            val top5HighestIncPrec: String = "Top 5 places with the highest increment of precipitations from the start of registers"
-            val top5LowestIncPrec: String = "Top 5 places with the lowest increment of precipitations from the start of registers"
-            val avgPrec2024AllStationSpainContinental: String = "Average precipitation in 2024 for all station in the spanish continental territory"
-            val avgPrec2024AllStationSpainCanary: String = "Average precipitation in 2024 for all station in Canary islands"
-          }
-        }
-
-        object WindVelocity {
-          val studyName: String = "wind velocity"
-
-          object Execution {
-            val top10HighestWindVelocity2024: String = "Top 10 places with the highest wind velocity in 2024"
-            val top10HighestWindVelocityDecade: String = "Top 10 places with the highest wind velocity in the last decade"
-            val top10HighestWindVelocityGlobal: String = "Top 10 places with the highest wind velocity from the start of registers"
-            val top10LowestWindVelocity2024: String = "Top 10 places with the lowest wind velocity in 2024"
-            val top10LowestWindVelocityDecade: String = "Top 10 places with the lowest wind velocity in the last decade"
-            val top10LowestWindVelocityGlobal: String = "Top 10 places with the lowest wind velocity from the start of registers"
-            val windVelocityEvolFromStartForEachState: String = "Wind Velocity evolution from the start of registries for each state"
-            val windVelocityEvolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
-            val windVelocityEvolFromStartForEachStateEndStation: String = "Completed fetching data from representative %s state station"
-            val windVelocityEvolFromStartForEachStateStartEvol: String = "Fetching data from %s state wind velocity evolution"
-            val windVelocityEvolFromStartForEachStateEndEvol: String = "Completed fetching data from %s state wind velocity evolution"
-            val top5HighestIncWindVelocity: String = "Top 5 places with the highest increment of wind velocity from the start of registers"
-            val top5LowestIncWindVelocity: String = "Top 5 places with the lowest increment of wind velocity from the start of registers"
-            val avgWindVelocity2024AllStationSpainContinental: String = "Average wind velocity in 2024 for all station in the spanish continental territory"
-            val avgWindVelocity2024AllStationSpainCanary: String = "Average wind velocity in 2024 for all station in Canary islands"
-          }
-        }
-
-        object Pressure {
-          val studyName: String = "pressure"
-
-          object Execution {
-            val top10HighestPressure2024: String = "Top 10 places with the highest pressure in 2024"
-            val top10HighestPressureDecade: String = "Top 10 places with the highest pressure in the last decade"
-            val top10HighestPressureGlobal: String = "Top 10 places with the highest pressure from the start of registers"
-            val top10LowestPressure2024: String = "Top 10 places with the lowest pressure in 2024"
-            val top10LowestPressureDecade: String = "Top 10 places with the lowest pressure in the last decade"
-            val top10LowestPressureGlobal: String = "Top 10 places with the lowest pressure from the start of registers"
-            val pressureEvolFromStartForEachState: String = "Pressure evolution from the start of registries for each state"
-            val pressureEvolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
-            val pressureEvolFromStartForEachStateEndStation: String = "Completed fetching data from representative %s state station"
-            val pressureEvolFromStartForEachStateStartEvol: String = "Fetching data from %s state pressure evolution"
-            val pressureEvolFromStartForEachStateEndEvol: String = "Completed fetching data from %s state pressure evolution"
-            val top5HighestIncPressure: String = "Top 5 places with the highest increment of pressure from the start of registers"
-            val top5LowestIncPressure: String = "Top 5 places with the lowest increment of pressure from the start of registers"
-            val avgPressure2024AllStationSpainContinental: String = "Average pressure in 2024 for all station in the spanish continental territory"
-            val avgPressure2024AllStationSpainCanary: String = "Average pressure in 2024 for all station in Canary islands"
-          }
-        }
-
-        object SunRadiation {
-          val studyName: String = "sun radiation"
-
-          object Execution {
-            val top10HighestSunRadiation2024: String = "Top 10 places with the highest sun radiation in 2024"
-            val top10HighestSunRadiationDecade: String = "Top 10 places with the highest sun radiation in the last decade"
-            val top10HighestSunRadiationGlobal: String = "Top 10 places with the highest sun radiation from the start of registers"
-            val top10LowestSunRadiation2024: String = "Top 10 places with the lowest sun radiation in 2024"
-            val top10LowestSunRadiationDecade: String = "Top 10 places with the lowest sun radiation in the last decade"
-            val top10LowestSunRadiationGlobal: String = "Top 10 places with the lowest sun radiation from the start of registers"
-            val sunRadiationEvolFromStartForEachState: String = "SunRadiation evolution from the start of registries for each state"
-            val sunRadiationEvolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
-            val sunRadiationEvolFromStartForEachStateEndStation: String = "Completed fetching data from representative %s state station"
-            val sunRadiationEvolFromStartForEachStateStartEvol: String = "Fetching data from %s state sun radiation evolution"
-            val sunRadiationEvolFromStartForEachStateEndEvol: String = "Completed fetching data from %s state sun radiation evolution"
-            val top5HighestIncSunRadiation: String = "Top 5 places with the highest increment of sun radiation from the start of registers"
-            val top5LowestIncSunRadiation: String = "Top 5 places with the lowest increment of sun radiation from the start of registers"
-            val avgSunRadiation2024AllStationSpainContinental: String = "Average sun radiation in 2024 for all station in the spanish continental territory"
-            val avgSunRadiation2024AllStationSpainCanary: String = "Average sun radiation in 2024 for all station in Canary islands"
-          }
-        }
-
-        object RelativeHumidity {
-          val studyName: String = "relative humidity"
-
-          object Execution {
-            val top10HighestRelativeHumidity2024: String = "Top 10 places with the highest relative humidity in 2024"
-            val top10HighestRelativeHumidityDecade: String = "Top 10 places with the highest relative humidity in the last decade"
-            val top10HighestRelativeHumidityGlobal: String = "Top 10 places with the highest relative humidity from the start of registers"
-            val top10LowestRelativeHumidity2024: String = "Top 10 places with the lowest relative humidity in 2024"
-            val top10LowestRelativeHumidityDecade: String = "Top 10 places with the lowest relative humidity in the last decade"
-            val top10LowestRelativeHumidityGlobal: String = "Top 10 places with the lowest relative humidity from the start of registers"
-            val relativeHumidityEvolFromStartForEachState: String = "Relative humidity evolution from the start of registries for each state"
-            val relativeHumidityEvolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
-            val relativeHumidityEvolFromStartForEachStateStartEvol: String = "Fetching data from %s state relative humidity evolution"
-            val top5HighestIncRelativeHumidity: String = "Top 5 places with the highest increment of relative humidity from the start of registers"
-            val top5LowestIncRelativeHumidity: String = "Top 5 places with the lowest increment of relative humidity from the start of registers"
-            val avgRelativeHumidity2024AllStationSpainContinental: String = "Average relative humidity in 2024 for all station in the spanish continental territory"
-            val avgRelativeHumidity2024AllStationSpainCanary: String = "Average relative humidity in 2024 for all station in Canary islands"
+            val top10Highest2024: String = "Top 10 places with the highest %s in 2024"
+            val top10HighestDecade: String = "Top 10 places with the highest %s in the last decade"
+            val top10HighestGlobal: String = "Top 10 places with the highest %s from the start of registers"
+            val top10Lowest2024: String = "Top 10 places with the lowest %s in 2024"
+            val top10LowestDecade: String = "Top 10 places with the lowest %s in the last decade"
+            val top10LowestGlobal: String = "Top 10 places with the lowest %s from the start of registers"
+            val evolFromStartForEachState: String = "%s evolution from the start of registries for each state"
+            val evolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
+            val evolFromStartForEachStateStart: String = "Fetching data from %s state %s evolution"
+            val top5HighestInc: String = "Top 5 places with the highest increment of %s from the start of registers"
+            val top5LowestInc: String = "Top 5 places with the lowest increment of %s from the start of registers"
+            val avg2024AllStationSpainContinental: String = "Average %s in 2024 for all station in the spanish continental territory"
+            val avg2024AllStationSpainCanary: String = "Average %s in 2024 for all station in Canary islands"
           }
         }
 
@@ -1397,18 +1110,6 @@ object ConstantsV2 {
           val saveInfo: String = "Saving collected information (%s)"
           val startSubQuery: String = "Stating subquery (%s)"
           val endSubQuery: String = "Completed subquery (%s)"
-        }
-      }
-
-      object Methods {
-        object GetStationInfoById {
-          val startFetching: String = "Fetching station (ID: %s) information"
-          val endFetching: String = "Completed fetching station (ID: %s) information"
-        }
-
-        object GetStationMonthlyAvgTempAndPrecInAYear {
-          val startFetching: String = "Fetching station (ID: %s) monthly average temperature and precipitation sum in %s"
-          val endFetching: String = "Completed fetching station (ID: %s) monthly average temperature and precipitation sum in %s"
         }
       }
     }
@@ -1448,6 +1149,30 @@ object ConstantsV2 {
 
   object Spark {
     object Queries {
+      object Stations {
+        object Execution {
+          object CountEvolFromStart {
+            val startDate: String = "1973-01-01"
+            val endDate: String = "2024-12-31"
+            val param: String = "fecha"
+            val paramGroupName: String = "year"
+          }
+          object StationCountByState2024 {
+            val startDate: String = "2024"
+          }
+          object StationCountByAltitude2024 {
+            val startDate: String = "2024"
+            val intervals: List[(String, Double, Double)] = List(
+              ("altitud", 0, 500),
+              ("altitud", 500, 1000),
+              ("altitud", 1000, 1500),
+              ("altitud", 1500, 2000),
+              ("altitud", 2000, 2500),
+              ("altitud", 2500, Double.PositiveInfinity)
+            )
+          }
+        }
+      }
       object Climograph {
         val observationYear = 2024
         object Location extends Enumeration {
@@ -1612,2496 +1337,2309 @@ object ConstantsV2 {
           )
         )
       }
-      object Temperature {
-        case class RepresentativeStationRegistry(stateName: String, stateNameNoSC: String, stationId: String, startDate: String, endDate: String)
-
-        val stationRegistries: List[RepresentativeStationRegistry] = List(
-          RepresentativeStationRegistry(
-            stateName = "A CORUÑA",
-            stateNameNoSC = "a coruna",
-            stationId = "1387",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALBACETE",
-            stateNameNoSC = "albacete",
-            stationId = "8175",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALICANTE",
-            stateNameNoSC = "alicante",
-            stationId = "8025",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALMERIA",
-            stateNameNoSC = "almeria",
-            stationId = "6325O",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ARABA/ALAVA",
-            stateNameNoSC = "araba",
-            stationId = "9091O",
-            startDate = "1976-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ASTURIAS",
-            stateNameNoSC = "asturias",
-            stationId = "1212E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "AVILA",
-            stateNameNoSC = "avila",
-            stationId = "2444",
-            startDate = "1983-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BADAJOZ",
-            stateNameNoSC = "badajoz",
-            stationId = "4452",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BARCELONA",
-            stateNameNoSC = "barcelona",
-            stationId = "0076",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BIZKAIA",
-            stateNameNoSC = "bizkaia",
-            stationId = "1082",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BURGOS",
-            stateNameNoSC = "burgos",
-            stationId = "2331",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CACERES",
-            stateNameNoSC = "caceres",
-            stationId = "3469A",
-            startDate = "1982-12-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CADIZ",
-            stateNameNoSC = "cadiz",
-            stationId = "5960",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CANTABRIA",
-            stateNameNoSC = "cantabria",
-            stationId = "1174I",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CASTELLON",
-            stateNameNoSC = "castellon",
-            stationId = "8500A",
-            startDate = "1976-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CEUTA",
-            stateNameNoSC = "ceuta",
-            stationId = "5000C",
-            startDate = "2003-06-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CIUDAD REAL",
-            stateNameNoSC = "cuidad real",
-            stationId = "4121",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CORDOBA",
-            stateNameNoSC = "cordoba",
-            stationId = "5402",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CUENCA",
-            stateNameNoSC = "cuenca",
-            stationId = "8096",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIPUZKOA",
-            stateNameNoSC = "gipuzkoa",
-            stationId = "1014",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIRONA",
-            stateNameNoSC = "girona",
-            stationId = "0367",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GRANADA",
-            stateNameNoSC = "granada",
-            stationId = "5530E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GUADALAJARA",
-            stateNameNoSC = "guadalajara",
-            stationId = "3013",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUELVA",
-            stateNameNoSC = "huelva",
-            stationId = "4642E",
-            startDate = "1984-06-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUESCA",
-            stateNameNoSC = "huesca",
-            stationId = "9898",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ILLES BALEARS",
-            stateNameNoSC = "illes balears",
-            stationId = "B893",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "JAEN",
-            stateNameNoSC = "jaen",
-            stationId = "5270B",
-            startDate = "1988-09-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LA RIOJA",
-            stateNameNoSC = "la rioja",
-            stationId = "9170",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LAS PALMAS",
-            stateNameNoSC = "las palmas",
-            stationId = "C029O",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LEON",
-            stateNameNoSC = "leon",
-            stationId = "2661",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LLEIDA",
-            stateNameNoSC = "lleida",
-            stationId = "9771C",
-            startDate = "1983-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LUGO",
-            stateNameNoSC = "lugo",
-            stationId = "1518A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MADRID",
-            stateNameNoSC = "madrid",
-            stationId = "3200",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MALAGA",
-            stateNameNoSC = "malaga",
-            stationId = "6155A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MELILLA",
-            stateNameNoSC = "melilla",
-            stationId = "6000A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MURCIA",
-            stateNameNoSC = "murcia",
-            stationId = "7031",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "NAVARRA",
-            stateNameNoSC = "navarra",
-            stationId = "9262",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "OURENSE",
-            stateNameNoSC = "ourense",
-            stationId = "1690A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PALENCIA",
-            stateNameNoSC = "palencia",
-            stationId = "2400E",
-            startDate = "1989-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PONTEVEDRA",
-            stateNameNoSC = "pontevedra",
-            stationId = "1495",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SALAMANCA",
-            stateNameNoSC = "salamanca",
-            stationId = "2867",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEGOVIA",
-            stateNameNoSC = "segovia",
-            stationId = "2465",
-            startDate = "1988-10-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEVILLA",
-            stateNameNoSC = "sevilla",
-            stationId = "5783",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SORIA",
-            stateNameNoSC = "soria",
-            stationId = "2030",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SANTA CRUZ DE TENERIFE",
-            stateNameNoSC = "santa cruz de tenerife",
-            stationId = "C447A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TARRAGONA",
-            stateNameNoSC = "tarragona",
-            stationId = "9981A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TERUEL",
-            stateNameNoSC = "teruel",
-            stationId = "8368U",
-            startDate = "1986-04-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TOLEDO",
-            stateNameNoSC = "toledo",
-            stationId = "4067",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALENCIA",
-            stateNameNoSC = "valencia",
-            stationId = "8414A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALLADOLID",
-            stateNameNoSC = "valladolid",
-            stationId = "2539",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZAMORA",
-            stateNameNoSC = "zamora",
-            stationId = "2614",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZARAGOZA",
-            stateNameNoSC = "zaragoza",
-            stationId = "9390",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          )
+      object SingleParamStudies {
+        case class RepresentativeStationRegistry(
+          stateName: String,
+          stateNameNoSC: String,
+          stationId: String,
+          startDate: String,
+          endDate: String
         )
 
-        object Execution {
-          object Top10HighestTemp2024 {
-            val startDate: String = "2024"
-          }
+        case class SingleParamStudyValues(
+          studyParam: String,
+          studyParamAbbrev: String,
+          dataframeColName: String,
+          reprStationRegs: List[RepresentativeStationRegistry]
+        )
 
-          object Top10HighestTempDecade {
-            val startDate: String = "2014-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10HighestTempGlobal {
-            val startDate: String = "1973-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10LowestTemp2024 {
-            val startDate: String = "2024"
-          }
-
-          object Top10LowestTempDecade {
-            val startDate: String = "2014-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10LowestTempGlobal {
-            val startDate: String = "1973-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top5HighestIncTemp {
-            val startYear: Int = 1973
-            val endYear: Int = 2024
-          }
-
-          object Top5LowestIncTemp {
-            val startYear: Int = 1973
-            val endYear: Int = 2024
-          }
-
-          object AvgTemp2024AllStationSpain {
-            val startDate: String = "2024"
-            val canaryIslandStates: List[String] = List(
-              "SANTA CRUZ DE TENERIFE",
-              "LAS PALMAS"
-            )
-          }
+        private object StudyParamNames {
+          val temperature: String = "temperature"
+          val precipitation: String = "precipitation"
+          val windVelocity: String = "wind velocity"
+          val pressure: String = "pressure"
+          val sunRadiation: String = "sun radiation"
+          val relativeHumidity: String = "relative humidity"
         }
-      }
-      object Precipitation {
-        case class RepresentativeStationRegistry(stateName: String, stateNameNoSC: String, stationId: String, startDate: String, endDate: String)
-        val stationRegistries: List[RepresentativeStationRegistry] = List(
-          RepresentativeStationRegistry(
-            stateName = "A CORUÑA",
-            stateNameNoSC = "a coruna",
-            stationId = "1387",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALBACETE",
-            stateNameNoSC = "albacete",
-            stationId = "8175",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALICANTE",
-            stateNameNoSC = "alicante",
-            stationId = "8025",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALMERIA",
-            stateNameNoSC = "almeria",
-            stationId = "6325O",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ARABA/ALAVA",
-            stateNameNoSC = "araba",
-            stationId = "9091O",
-            startDate = "1977-07-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ASTURIAS",
-            stateNameNoSC = "asturias",
-            stationId = "1212E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "AVILA",
-            stateNameNoSC = "avila",
-            stationId = "2444",
-            startDate = "1983-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BADAJOZ",
-            stateNameNoSC = "badajoz",
-            stationId = "4452",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BARCELONA",
-            stateNameNoSC = "barcelona",
-            stationId = "0200E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BIZKAIA",
-            stateNameNoSC = "bizkaia",
-            stationId = "1082",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BURGOS",
-            stateNameNoSC = "burgos",
-            stationId = "2331",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CACERES",
-            stateNameNoSC = "caceres",
-            stationId = "3469A",
-            startDate = "1982-12-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CADIZ",
-            stateNameNoSC = "cadiz",
-            stationId = "5960",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CANTABRIA",
-            stateNameNoSC = "cantabria",
-            stationId = "1109",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CASTELLON",
-            stateNameNoSC = "castellon",
-            stationId = "8500A",
-            startDate = "1976-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CEUTA",
-            stateNameNoSC = "ceuta",
-            stationId = "5000C",
-            startDate = "2003-06-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CIUDAD REAL",
-            stateNameNoSC = "cuidad real",
-            stationId = "4121",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CORDOBA",
-            stateNameNoSC = "cordoba",
-            stationId = "5402",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CUENCA",
-            stateNameNoSC = "cuenca",
-            stationId = "8096",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIPUZKOA",
-            stateNameNoSC = "gipuzkoa",
-            stationId = "1014",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIRONA",
-            stateNameNoSC = "girona",
-            stationId = "0367",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GRANADA",
-            stateNameNoSC = "granada",
-            stationId = "5514",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GUADALAJARA",
-            stateNameNoSC = "guadalajara",
-            stationId = "3013",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUELVA",
-            stateNameNoSC = "huelva",
-            stationId = "4642E",
-            startDate = "1984-06-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUESCA",
-            stateNameNoSC = "huesca",
-            stationId = "9898",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ILLES BALEARS",
-            stateNameNoSC = "illes balears",
-            stationId = "B278",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "JAEN",
-            stateNameNoSC = "jaen",
-            stationId = "5270B",
-            startDate = "1983-08-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LA RIOJA",
-            stateNameNoSC = "la rioja",
-            stationId = "9170",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LAS PALMAS",
-            stateNameNoSC = "las palmas",
-            stationId = "C029O",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LEON",
-            stateNameNoSC = "leon",
-            stationId = "2661",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LLEIDA",
-            stateNameNoSC = "lleida",
-            stationId = "9771C",
-            startDate = "1983-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LUGO",
-            stateNameNoSC = "lugo",
-            stationId = "1658",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MADRID",
-            stateNameNoSC = "madrid",
-            stationId = "3200",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MALAGA",
-            stateNameNoSC = "malaga",
-            stationId = "6155A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MELILLA",
-            stateNameNoSC = "melilla",
-            stationId = "6000A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MURCIA",
-            stateNameNoSC = "murcia",
-            stationId = "7031",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "NAVARRA",
-            stateNameNoSC = "navarra",
-            stationId = "9263D",
-            startDate = "1975-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "OURENSE",
-            stateNameNoSC = "ourense",
-            stationId = "1690A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PALENCIA",
-            stateNameNoSC = "palencia",
-            stationId = "2374X",
-            startDate = "1988-12-03",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PONTEVEDRA",
-            stateNameNoSC = "pontevedra",
-            stationId = "1495",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SALAMANCA",
-            stateNameNoSC = "salamanca",
-            stationId = "2867",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEGOVIA",
-            stateNameNoSC = "segovia",
-            stationId = "2465",
-            startDate = "1988-10-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEVILLA",
-            stateNameNoSC = "sevilla",
-            stationId = "5783",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SORIA",
-            stateNameNoSC = "soria",
-            stationId = "2030",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SANTA CRUZ DE TENERIFE",
-            stateNameNoSC = "santa cruz de tenerife",
-            stationId = "C447A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TARRAGONA",
-            stateNameNoSC = "tarragona",
-            stationId = "9981A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TERUEL",
-            stateNameNoSC = "teruel",
-            stationId = "8368U",
-            startDate = "1986-04-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TOLEDO",
-            stateNameNoSC = "toledo",
-            stationId = "3260B",
-            startDate = "1982-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALENCIA",
-            stateNameNoSC = "valencia",
-            stationId = "8414A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALLADOLID",
-            stateNameNoSC = "valladolid",
-            stationId = "2539",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZAMORA",
-            stateNameNoSC = "zamora",
-            stationId = "2614",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZARAGOZA",
-            stateNameNoSC = "zaragoza",
-            stationId = "9390",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          )
-        )
-        object Execution {
-          object Top10HighestPrec2024 {
-            val startDate: String = "2024"
-          }
 
-          object Top10HighestPrecDecade {
-            val startDate: String = "2014-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10HighestPrecGlobal {
-            val startDate: String = "1973-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10LowestPrec2024 {
-            val startDate: String = "2024"
-          }
-
-          object Top10LowestPrecDecade {
-            val startDate: String = "2014-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10LowestPrecGlobal {
-            val startDate: String = "1973-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top5HighestIncPrec {
-            val startYear: Int = 1973
-            val endYear: Int = 2024
-          }
-
-          object Top5LowestIncPrec {
-            val startYear: Int = 1973
-            val endYear: Int = 2024
-          }
-
-          object AvgPrec2024AllStationSpain {
-            val startDate: String = "2024"
-            val canaryIslandStates: List[String] = List(
-              "SANTA CRUZ DE TENERIFE",
-              "LAS PALMAS"
-            )
-          }
+        private object StudyParamAbbrev {
+          val temperature: String = "temp"
+          val precipitation: String = "prec"
+          val windVelocity: String = "wind_vel"
+          val pressure: String = "press"
+          val sunRadiation: String = "sun_rad"
+          val relativeHumidity: String = "rel_hum"
         }
-      }
-      object WindVelocity {
-        case class RepresentativeStationRegistry(stateName: String, stateNameNoSC: String, stationId: String, startDate: String, endDate: String)
-        val stationRegistries: List[RepresentativeStationRegistry] = List(
-          RepresentativeStationRegistry(
-            stateName = "A CORUÑA",
-            stateNameNoSC = "a coruna",
-            stationId = "1387",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALBACETE",
-            stateNameNoSC = "albacete",
-            stationId = "8175",
-            startDate = "1999-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALICANTE",
-            stateNameNoSC = "alicante",
-            stationId = "8025",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALMERIA",
-            stateNameNoSC = "almeria",
-            stationId = "6325O",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ARABA/ALAVA",
-            stateNameNoSC = "araba",
-            stationId = "9091O",
-            startDate = "1977-07-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ASTURIAS",
-            stateNameNoSC = "asturias",
-            stationId = "1212E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "AVILA",
-            stateNameNoSC = "avila",
-            stationId = "2444",
-            startDate = "1988-08-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BADAJOZ",
-            stateNameNoSC = "badajoz",
-            stationId = "4452",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BARCELONA",
-            stateNameNoSC = "barcelona",
-            stationId = "0076",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BIZKAIA",
-            stateNameNoSC = "bizkaia",
-            stationId = "1082",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BURGOS",
-            stateNameNoSC = "burgos",
-            stationId = "2331",
-            startDate = "1986-07-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CACERES",
-            stateNameNoSC = "caceres",
-            stationId = "3469A",
-            startDate = "1982-12-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CADIZ",
-            stateNameNoSC = "cadiz",
-            stationId = "5960",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CANTABRIA",
-            stateNameNoSC = "cantabria",
-            stationId = "1109",
-            startDate = "1977-09-01",
-            endDate = "2006-04-30"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CASTELLON",
-            stateNameNoSC = "castellon",
-            stationId = "8500A",
-            startDate = "1976-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CEUTA",
-            stateNameNoSC = "ceuta",
-            stationId = "5000C",
-            startDate = "2003-06-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CIUDAD REAL",
-            stateNameNoSC = "cuidad real",
-            stationId = "4121",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CORDOBA",
-            stateNameNoSC = "cordoba",
-            stationId = "5402",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CUENCA",
-            stateNameNoSC = "cuenca",
-            stationId = "8096",
-            startDate = "1995-10-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIPUZKOA",
-            stateNameNoSC = "gipuzkoa",
-            stationId = "1014",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIRONA",
-            stateNameNoSC = "girona",
-            stationId = "0367",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GRANADA",
-            stateNameNoSC = "granada",
-            stationId = "5530E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GUADALAJARA",
-            stateNameNoSC = "guadalajara",
-            stationId = "3013",
-            startDate = "1973-01-01",
-            endDate = "1997-01-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUELVA",
-            stateNameNoSC = "huelva",
-            stationId = "4642E",
-            startDate = "1984-06-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUESCA",
-            stateNameNoSC = "huesca",
-            stationId = "9898",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ILLES BALEARS",
-            stateNameNoSC = "illes balears",
-            stationId = "B893",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "JAEN",
-            stateNameNoSC = "jaen",
-            stationId = "5270B",
-            startDate = "1988-07-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LA RIOJA",
-            stateNameNoSC = "la rioja",
-            stationId = "9170",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LAS PALMAS",
-            stateNameNoSC = "las palmas",
-            stationId = "C029O",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LEON",
-            stateNameNoSC = "leon",
-            stationId = "2661",
-            startDate = "1973-01-01",
-            endDate = "2014-04-30"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LLEIDA",
-            stateNameNoSC = "lleida",
-            stationId = "9771C",
-            startDate = "1983-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LUGO",
-            stateNameNoSC = "lugo",
-            stationId = "1505",
-            startDate = "1985-05-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MADRID",
-            stateNameNoSC = "madrid",
-            stationId = "3129",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MALAGA",
-            stateNameNoSC = "malaga",
-            stationId = "6155A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MELILLA",
-            stateNameNoSC = "melilla",
-            stationId = "6000A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MURCIA",
-            stateNameNoSC = "murcia",
-            stationId = "7228",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "NAVARRA",
-            stateNameNoSC = "navarra",
-            stationId = "9263D",
-            startDate = "1988-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "OURENSE",
-            stateNameNoSC = "ourense",
-            stationId = "1700X",
-            startDate = "1994-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PALENCIA",
-            stateNameNoSC = "palencia",
-            stationId = "2400E",
-            startDate = "1988-12-03",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PONTEVEDRA",
-            stateNameNoSC = "pontevedra",
-            stationId = "1495",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SALAMANCA",
-            stateNameNoSC = "salamanca",
-            stationId = "2867",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEGOVIA",
-            stateNameNoSC = "segovia",
-            stationId = "2465",
-            startDate = "1988-10-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEVILLA",
-            stateNameNoSC = "sevilla",
-            stationId = "5783",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SORIA",
-            stateNameNoSC = "soria",
-            stationId = "2030",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SANTA CRUZ DE TENERIFE",
-            stateNameNoSC = "santa cruz de tenerife",
-            stationId = "C447A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TARRAGONA",
-            stateNameNoSC = "tarragona",
-            stationId = "9981A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TERUEL",
-            stateNameNoSC = "teruel",
-            stationId = "8368U",
-            startDate = "1986-04-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TOLEDO",
-            stateNameNoSC = "toledo",
-            stationId = "3260B",
-            startDate = "1982-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALENCIA",
-            stateNameNoSC = "valencia",
-            stationId = "8414A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALLADOLID",
-            stateNameNoSC = "valladolid",
-            stationId = "2422",
-            startDate = "1973-10-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZAMORA",
-            stateNameNoSC = "zamora",
-            stationId = "2614",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZARAGOZA",
-            stateNameNoSC = "zaragoza",
-            stationId = "9434",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-        )
-        object Execution {
-          object Top10HighestWindVelocity2024 {
-            val startDate: String = "2024"
-          }
 
-          object Top10HighestWindVelocityDecade {
-            val startDate: String = "2014-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10HighestWindVelocityGlobal {
-            val startDate: String = "1973-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10LowestWindVelocity2024 {
-            val startDate: String = "2024"
-          }
-
-          object Top10LowestWindVelocityDecade {
-            val startDate: String = "2014-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10LowestWindVelocityGlobal {
-            val startDate: String = "1973-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top5HighestIncWindVelocity {
-            val startYear: Int = 1973
-            val endYear: Int = 2024
-          }
-
-          object Top5LowestIncWindVelocity {
-            val startYear: Int = 1973
-            val endYear: Int = 2024
-          }
-
-          object AvgWindVelocity2024AllStationSpain {
-            val startDate: String = "2024"
-            val canaryIslandStates: List[String] = List(
-              "SANTA CRUZ DE TENERIFE",
-              "LAS PALMAS"
+        val singleParamStudiesValues: List[SingleParamStudyValues] = List(
+          SingleParamStudyValues(
+            studyParam = StudyParamNames.temperature,
+            studyParamAbbrev = StudyParamAbbrev.temperature,
+            dataframeColName = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys.tmedJKey,
+            reprStationRegs = List(
+              RepresentativeStationRegistry(
+                stateName = "A CORUÑA",
+                stateNameNoSC = "a coruna",
+                stationId = "1387",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALBACETE",
+                stateNameNoSC = "albacete",
+                stationId = "8175",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALICANTE",
+                stateNameNoSC = "alicante",
+                stationId = "8025",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALMERIA",
+                stateNameNoSC = "almeria",
+                stationId = "6325O",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ARABA/ALAVA",
+                stateNameNoSC = "araba",
+                stationId = "9091O",
+                startDate = "1976-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ASTURIAS",
+                stateNameNoSC = "asturias",
+                stationId = "1212E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "AVILA",
+                stateNameNoSC = "avila",
+                stationId = "2444",
+                startDate = "1983-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BADAJOZ",
+                stateNameNoSC = "badajoz",
+                stationId = "4452",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BARCELONA",
+                stateNameNoSC = "barcelona",
+                stationId = "0076",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BIZKAIA",
+                stateNameNoSC = "bizkaia",
+                stationId = "1082",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BURGOS",
+                stateNameNoSC = "burgos",
+                stationId = "2331",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CACERES",
+                stateNameNoSC = "caceres",
+                stationId = "3469A",
+                startDate = "1982-12-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CADIZ",
+                stateNameNoSC = "cadiz",
+                stationId = "5960",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CANTABRIA",
+                stateNameNoSC = "cantabria",
+                stationId = "1174I",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CASTELLON",
+                stateNameNoSC = "castellon",
+                stationId = "8500A",
+                startDate = "1976-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CEUTA",
+                stateNameNoSC = "ceuta",
+                stationId = "5000C",
+                startDate = "2003-06-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CIUDAD REAL",
+                stateNameNoSC = "cuidad real",
+                stationId = "4121",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CORDOBA",
+                stateNameNoSC = "cordoba",
+                stationId = "5402",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CUENCA",
+                stateNameNoSC = "cuenca",
+                stationId = "8096",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIPUZKOA",
+                stateNameNoSC = "gipuzkoa",
+                stationId = "1014",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIRONA",
+                stateNameNoSC = "girona",
+                stationId = "0367",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GRANADA",
+                stateNameNoSC = "granada",
+                stationId = "5530E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GUADALAJARA",
+                stateNameNoSC = "guadalajara",
+                stationId = "3013",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUELVA",
+                stateNameNoSC = "huelva",
+                stationId = "4642E",
+                startDate = "1984-06-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUESCA",
+                stateNameNoSC = "huesca",
+                stationId = "9898",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ILLES BALEARS",
+                stateNameNoSC = "illes balears",
+                stationId = "B893",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "JAEN",
+                stateNameNoSC = "jaen",
+                stationId = "5270B",
+                startDate = "1988-09-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LA RIOJA",
+                stateNameNoSC = "la rioja",
+                stationId = "9170",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LAS PALMAS",
+                stateNameNoSC = "las palmas",
+                stationId = "C029O",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LEON",
+                stateNameNoSC = "leon",
+                stationId = "2661",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LLEIDA",
+                stateNameNoSC = "lleida",
+                stationId = "9771C",
+                startDate = "1983-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LUGO",
+                stateNameNoSC = "lugo",
+                stationId = "1518A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MADRID",
+                stateNameNoSC = "madrid",
+                stationId = "3200",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MALAGA",
+                stateNameNoSC = "malaga",
+                stationId = "6155A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MELILLA",
+                stateNameNoSC = "melilla",
+                stationId = "6000A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MURCIA",
+                stateNameNoSC = "murcia",
+                stationId = "7031",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "NAVARRA",
+                stateNameNoSC = "navarra",
+                stationId = "9262",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "OURENSE",
+                stateNameNoSC = "ourense",
+                stationId = "1690A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PALENCIA",
+                stateNameNoSC = "palencia",
+                stationId = "2400E",
+                startDate = "1989-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PONTEVEDRA",
+                stateNameNoSC = "pontevedra",
+                stationId = "1495",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SALAMANCA",
+                stateNameNoSC = "salamanca",
+                stationId = "2867",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEGOVIA",
+                stateNameNoSC = "segovia",
+                stationId = "2465",
+                startDate = "1988-10-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEVILLA",
+                stateNameNoSC = "sevilla",
+                stationId = "5783",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SORIA",
+                stateNameNoSC = "soria",
+                stationId = "2030",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SANTA CRUZ DE TENERIFE",
+                stateNameNoSC = "santa cruz de tenerife",
+                stationId = "C447A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TARRAGONA",
+                stateNameNoSC = "tarragona",
+                stationId = "9981A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TERUEL",
+                stateNameNoSC = "teruel",
+                stationId = "8368U",
+                startDate = "1986-04-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TOLEDO",
+                stateNameNoSC = "toledo",
+                stationId = "4067",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALENCIA",
+                stateNameNoSC = "valencia",
+                stationId = "8414A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALLADOLID",
+                stateNameNoSC = "valladolid",
+                stationId = "2539",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZAMORA",
+                stateNameNoSC = "zamora",
+                stationId = "2614",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZARAGOZA",
+                stateNameNoSC = "zaragoza",
+                stationId = "9390",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              )
             )
-          }
-        }
-      }
-      object Pressure {
-        case class RepresentativeStationRegistry(stateName: String, stateNameNoSC: String, stationId: String, startDate: String, endDate: String)
-        val stationRegistries: List[RepresentativeStationRegistry] = List(
-          RepresentativeStationRegistry(
-            stateName = "A CORUÑA",
-            stateNameNoSC = "a coruna",
-            stationId = "1387",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
           ),
-          RepresentativeStationRegistry(
-            stateName = "ALBACETE",
-            stateNameNoSC = "albacete",
-            stationId = "8175",
-            startDate = "1988-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALICANTE",
-            stateNameNoSC = "alicante",
-            stationId = "8025",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALMERIA",
-            stateNameNoSC = "almeria",
-            stationId = "6325O",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ARABA/ALAVA",
-            stateNameNoSC = "araba",
-            stationId = "9091O",
-            startDate = "1980-02-16",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ASTURIAS",
-            stateNameNoSC = "asturias",
-            stationId = "1212E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "AVILA",
-            stateNameNoSC = "avila",
-            stationId = "2444",
-            startDate = "1983-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BADAJOZ",
-            stateNameNoSC = "badajoz",
-            stationId = "4452",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BARCELONA",
-            stateNameNoSC = "barcelona",
-            stationId = "0076",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BIZKAIA",
-            stateNameNoSC = "bizkaia",
-            stationId = "1082",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BURGOS",
-            stateNameNoSC = "burgos",
-            stationId = "2331",
-            startDate = "1978-05-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CACERES",
-            stateNameNoSC = "caceres",
-            stationId = "3469A",
-            startDate = "1982-12-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CADIZ",
-            stateNameNoSC = "cadiz",
-            stationId = "5960",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CANTABRIA",
-            stateNameNoSC = "cantabria",
-            stationId = "1109",
-            startDate = "1973-01-01",
-            endDate = "2024-05-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CASTELLON",
-            stateNameNoSC = "castellon",
-            stationId = "8500A",
-            startDate = "1976-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CEUTA",
-            stateNameNoSC = "ceuta",
-            stationId = "5000C",
-            startDate = "2005-12-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CIUDAD REAL",
-            stateNameNoSC = "cuidad real",
-            stationId = "4121",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CORDOBA",
-            stateNameNoSC = "cordoba",
-            stationId = "5402",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CUENCA",
-            stateNameNoSC = "cuenca",
-            stationId = "8096",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIPUZKOA",
-            stateNameNoSC = "gipuzkoa",
-            stationId = "1024E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIRONA",
-            stateNameNoSC = "girona",
-            stationId = "0367",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GRANADA",
-            stateNameNoSC = "granada",
-            stationId = "5530E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GUADALAJARA",
-            stateNameNoSC = "guadalajara",
-            stationId = "3013",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUELVA",
-            stateNameNoSC = "huelva",
-            stationId = "4642E",
-            startDate = "1984-06-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUESCA",
-            stateNameNoSC = "huesca",
-            stationId = "9898",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ILLES BALEARS",
-            stateNameNoSC = "illes balears",
-            stationId = "B893",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "JAEN",
-            stateNameNoSC = "jaen",
-            stationId = "5270B",
-            startDate = "1994-06-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LA RIOJA",
-            stateNameNoSC = "la rioja",
-            stationId = "9170",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LAS PALMAS",
-            stateNameNoSC = "las palmas",
-            stationId = "C029O",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LEON",
-            stateNameNoSC = "leon",
-            stationId = "1549",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LLEIDA",
-            stateNameNoSC = "lleida",
-            stationId = "9771C",
-            startDate = "1983-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LUGO",
-            stateNameNoSC = "lugo",
-            stationId = "1505",
-            startDate = "1985-05-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MADRID",
-            stateNameNoSC = "madrid",
-            stationId = "3200",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MALAGA",
-            stateNameNoSC = "malaga",
-            stationId = "6155A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MELILLA",
-            stateNameNoSC = "melilla",
-            stationId = "6000A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MURCIA",
-            stateNameNoSC = "murcia",
-            stationId = "7228",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "NAVARRA",
-            stateNameNoSC = "navarra",
-            stationId = "9263D",
-            startDate = "1975-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "OURENSE",
-            stateNameNoSC = "ourense",
-            stationId = "1690A",
-            startDate = "1974-01-01",
-            endDate = "2022-09-08"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PALENCIA",
-            stateNameNoSC = "palencia",
-            stationId = "2400E",
-            startDate = "1989-06-01",
-            endDate = "2008-03-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PONTEVEDRA",
-            stateNameNoSC = "pontevedra",
-            stationId = "1495",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SALAMANCA",
-            stateNameNoSC = "salamanca",
-            stationId = "2867",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEGOVIA",
-            stateNameNoSC = "segovia",
-            stationId = "2465",
-            startDate = "1988-10-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEVILLA",
-            stateNameNoSC = "sevilla",
-            stationId = "5783",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SORIA",
-            stateNameNoSC = "soria",
-            stationId = "2030",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SANTA CRUZ DE TENERIFE",
-            stateNameNoSC = "santa cruz de tenerife",
-            stationId = "C449C",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TARRAGONA",
-            stateNameNoSC = "tarragona",
-            stationId = "9981A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TERUEL",
-            stateNameNoSC = "teruel",
-            stationId = "8368U",
-            startDate = "1986-04-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TOLEDO",
-            stateNameNoSC = "toledo",
-            stationId = "3260B",
-            startDate = "1982-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALENCIA",
-            stateNameNoSC = "valencia",
-            stationId = "8414A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALLADOLID",
-            stateNameNoSC = "valladolid",
-            stationId = "2539",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZAMORA",
-            stateNameNoSC = "zamora",
-            stationId = "2614",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZARAGOZA",
-            stateNameNoSC = "zaragoza",
-            stationId = "9434",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-        )
-        object Execution {
-          object Top10HighestPressure2024 {
-            val startDate: String = "2024"
-          }
-
-          object Top10HighestPressureDecade {
-            val startDate: String = "2014-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10HighestPressureGlobal {
-            val startDate: String = "1973-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10LowestPressure2024 {
-            val startDate: String = "2024"
-          }
-
-          object Top10LowestPressureDecade {
-            val startDate: String = "2014-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10LowestPressureGlobal {
-            val startDate: String = "1973-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top5HighestIncPressure {
-            val startYear: Int = 1973
-            val endYear: Int = 2024
-          }
-
-          object Top5LowestIncPressure {
-            val startYear: Int = 1973
-            val endYear: Int = 2024
-          }
-
-          object AvgPressure2024AllStationSpain {
-            val startDate: String = "2024"
-            val canaryIslandStates: List[String] = List(
-              "SANTA CRUZ DE TENERIFE",
-              "LAS PALMAS"
+          SingleParamStudyValues(
+            studyParam = StudyParamNames.precipitation,
+            studyParamAbbrev = StudyParamAbbrev.precipitation,
+            dataframeColName = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys.precJKey,
+            reprStationRegs = List(
+              RepresentativeStationRegistry(
+                stateName = "A CORUÑA",
+                stateNameNoSC = "a coruna",
+                stationId = "1387",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALBACETE",
+                stateNameNoSC = "albacete",
+                stationId = "8175",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALICANTE",
+                stateNameNoSC = "alicante",
+                stationId = "8025",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALMERIA",
+                stateNameNoSC = "almeria",
+                stationId = "6325O",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ARABA/ALAVA",
+                stateNameNoSC = "araba",
+                stationId = "9091O",
+                startDate = "1977-07-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ASTURIAS",
+                stateNameNoSC = "asturias",
+                stationId = "1212E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "AVILA",
+                stateNameNoSC = "avila",
+                stationId = "2444",
+                startDate = "1983-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BADAJOZ",
+                stateNameNoSC = "badajoz",
+                stationId = "4452",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BARCELONA",
+                stateNameNoSC = "barcelona",
+                stationId = "0200E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BIZKAIA",
+                stateNameNoSC = "bizkaia",
+                stationId = "1082",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BURGOS",
+                stateNameNoSC = "burgos",
+                stationId = "2331",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CACERES",
+                stateNameNoSC = "caceres",
+                stationId = "3469A",
+                startDate = "1982-12-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CADIZ",
+                stateNameNoSC = "cadiz",
+                stationId = "5960",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CANTABRIA",
+                stateNameNoSC = "cantabria",
+                stationId = "1109",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CASTELLON",
+                stateNameNoSC = "castellon",
+                stationId = "8500A",
+                startDate = "1976-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CEUTA",
+                stateNameNoSC = "ceuta",
+                stationId = "5000C",
+                startDate = "2003-06-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CIUDAD REAL",
+                stateNameNoSC = "cuidad real",
+                stationId = "4121",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CORDOBA",
+                stateNameNoSC = "cordoba",
+                stationId = "5402",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CUENCA",
+                stateNameNoSC = "cuenca",
+                stationId = "8096",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIPUZKOA",
+                stateNameNoSC = "gipuzkoa",
+                stationId = "1014",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIRONA",
+                stateNameNoSC = "girona",
+                stationId = "0367",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GRANADA",
+                stateNameNoSC = "granada",
+                stationId = "5514",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GUADALAJARA",
+                stateNameNoSC = "guadalajara",
+                stationId = "3013",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUELVA",
+                stateNameNoSC = "huelva",
+                stationId = "4642E",
+                startDate = "1984-06-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUESCA",
+                stateNameNoSC = "huesca",
+                stationId = "9898",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ILLES BALEARS",
+                stateNameNoSC = "illes balears",
+                stationId = "B278",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "JAEN",
+                stateNameNoSC = "jaen",
+                stationId = "5270B",
+                startDate = "1983-08-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LA RIOJA",
+                stateNameNoSC = "la rioja",
+                stationId = "9170",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LAS PALMAS",
+                stateNameNoSC = "las palmas",
+                stationId = "C029O",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LEON",
+                stateNameNoSC = "leon",
+                stationId = "2661",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LLEIDA",
+                stateNameNoSC = "lleida",
+                stationId = "9771C",
+                startDate = "1983-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LUGO",
+                stateNameNoSC = "lugo",
+                stationId = "1658",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MADRID",
+                stateNameNoSC = "madrid",
+                stationId = "3200",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MALAGA",
+                stateNameNoSC = "malaga",
+                stationId = "6155A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MELILLA",
+                stateNameNoSC = "melilla",
+                stationId = "6000A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MURCIA",
+                stateNameNoSC = "murcia",
+                stationId = "7031",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "NAVARRA",
+                stateNameNoSC = "navarra",
+                stationId = "9263D",
+                startDate = "1975-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "OURENSE",
+                stateNameNoSC = "ourense",
+                stationId = "1690A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PALENCIA",
+                stateNameNoSC = "palencia",
+                stationId = "2374X",
+                startDate = "1988-12-03",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PONTEVEDRA",
+                stateNameNoSC = "pontevedra",
+                stationId = "1495",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SALAMANCA",
+                stateNameNoSC = "salamanca",
+                stationId = "2867",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEGOVIA",
+                stateNameNoSC = "segovia",
+                stationId = "2465",
+                startDate = "1988-10-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEVILLA",
+                stateNameNoSC = "sevilla",
+                stationId = "5783",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SORIA",
+                stateNameNoSC = "soria",
+                stationId = "2030",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SANTA CRUZ DE TENERIFE",
+                stateNameNoSC = "santa cruz de tenerife",
+                stationId = "C447A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TARRAGONA",
+                stateNameNoSC = "tarragona",
+                stationId = "9981A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TERUEL",
+                stateNameNoSC = "teruel",
+                stationId = "8368U",
+                startDate = "1986-04-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TOLEDO",
+                stateNameNoSC = "toledo",
+                stationId = "3260B",
+                startDate = "1982-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALENCIA",
+                stateNameNoSC = "valencia",
+                stationId = "8414A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALLADOLID",
+                stateNameNoSC = "valladolid",
+                stationId = "2539",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZAMORA",
+                stateNameNoSC = "zamora",
+                stationId = "2614",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZARAGOZA",
+                stateNameNoSC = "zaragoza",
+                stationId = "9390",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              )
             )
-          }
-        }
-      }
-      object SunRadiation {
-        case class RepresentativeStationRegistry(stateName: String, stateNameNoSC: String, stationId: String, startDate: String, endDate: String)
-        val stationRegistries: List[RepresentativeStationRegistry] = List(
-          RepresentativeStationRegistry(
-            stateName = "A CORUÑA",
-            stateNameNoSC = "a coruna",
-            stationId = "1387",
-            startDate = "1974-04-01",
-            endDate = "2024-12-31"
           ),
-          RepresentativeStationRegistry(
-            stateName = "ALBACETE",
-            stateNameNoSC = "albacete",
-            stationId = "8175",
-            startDate = "1998-10-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALICANTE",
-            stateNameNoSC = "alicante",
-            stationId = "8025",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ALMERIA",
-            stateNameNoSC = "almeria",
-            stationId = "6325O",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ARABA/ALAVA",
-            stateNameNoSC = "araba",
-            stationId = "9091O",
-            startDate = "1977-08-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ASTURIAS",
-            stateNameNoSC = "asturias",
-            stationId = "1249I",
-            startDate = "1973-01-01",
-            endDate = "2023-01-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "AVILA",
-            stateNameNoSC = "avila",
-            stationId = "2444",
-            startDate = "1983-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BADAJOZ",
-            stateNameNoSC = "badajoz",
-            stationId = "4452",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BARCELONA",
-            stateNameNoSC = "barcelona",
-            stationId = "0076",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BIZKAIA",
-            stateNameNoSC = "bizkaia",
-            stationId = "1082",
-            startDate = "1973-01-01",
-            endDate = "2002-02-28"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BURGOS",
-            stateNameNoSC = "burgos",
-            stationId = "2331",
-            startDate = "1985-11-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CACERES",
-            stateNameNoSC = "caceres",
-            stationId = "3469A",
-            startDate = "1983-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CADIZ",
-            stateNameNoSC = "cadiz",
-            stationId = "5960",
-            startDate = "1973-05-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CANTABRIA",
-            stateNameNoSC = "cantabria",
-            stationId = "1109",
-            startDate = "1977-09-01",
-            endDate = "2007-07-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CASTELLON",
-            stateNameNoSC = "castellon",
-            stationId = "8500A",
-            startDate = "1976-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CEUTA",
-            stateNameNoSC = "ceuta",
-            stationId = "5000A",
-            startDate = "1973-01-01",
-            endDate = "1986-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CIUDAD REAL",
-            stateNameNoSC = "cuidad real",
-            stationId = "4121",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CORDOBA",
-            stateNameNoSC = "cordoba",
-            stationId = "5402",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CUENCA",
-            stateNameNoSC = "cuenca",
-            stationId = "8096",
-            startDate = "1973-01-01",
-            endDate = "2012-03-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIPUZKOA",
-            stateNameNoSC = "gipuzkoa",
-            stationId = "1014",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIRONA",
-            stateNameNoSC = "girona",
-            stationId = "0367",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GRANADA",
-            stateNameNoSC = "granada",
-            stationId = "5530E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GUADALAJARA",
-            stateNameNoSC = "guadalajara",
-            stationId = "3013",
-            startDate = "1973-01-01",
-            endDate = "2007-03-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUELVA",
-            stateNameNoSC = "huelva",
-            stationId = "4642E",
-            startDate = "1984-06-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUESCA",
-            stateNameNoSC = "huesca",
-            stationId = "9898",
-            startDate = "1973-01-01",
-            endDate = "1998-03-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ILLES BALEARS",
-            stateNameNoSC = "illes balears",
-            stationId = "B278",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "JAEN",
-            stateNameNoSC = "jaen",
-            stationId = "5270B",
-            startDate = "1994-06-01",
-            endDate = "2009-11-30"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LA RIOJA",
-            stateNameNoSC = "la rioja",
-            stationId = "9170",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LAS PALMAS",
-            stateNameNoSC = "las palmas",
-            stationId = "C029O",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LEON",
-            stateNameNoSC = "leon",
-            stationId = "2661",
-            startDate = "1973-01-01",
-            endDate = "2014-04-30"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LLEIDA",
-            stateNameNoSC = "lleida",
-            stationId = "9771C",
-            startDate = "1983-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LUGO",
-            stateNameNoSC = "lugo",
-            stationId = "1505",
-            startDate = "1990-08-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MADRID",
-            stateNameNoSC = "madrid",
-            stationId = "3200",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MALAGA",
-            stateNameNoSC = "malaga",
-            stationId = "6155A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MELILLA",
-            stateNameNoSC = "melilla",
-            stationId = "6000A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MURCIA",
-            stateNameNoSC = "murcia",
-            stationId = "7228",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "NAVARRA",
-            stateNameNoSC = "navarra",
-            stationId = "9263D",
-            startDate = "1975-02-01",
-            endDate = "2016-03-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "OURENSE",
-            stateNameNoSC = "ourense",
-            stationId = "1690A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PALENCIA",
-            stateNameNoSC = "palencia",
-            stationId = "2235U",
-            startDate = "2012-05-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PONTEVEDRA",
-            stateNameNoSC = "pontevedra",
-            stationId = "1484C",
-            startDate = "1985-10-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SALAMANCA",
-            stateNameNoSC = "salamanca",
-            stationId = "2867",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEGOVIA",
-            stateNameNoSC = "segovia",
-            stationId = "2465",
-            startDate = "1988-10-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEVILLA",
-            stateNameNoSC = "sevilla",
-            stationId = "5783",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SORIA",
-            stateNameNoSC = "soria",
-            stationId = "2030",
-            startDate = "1973-01-01",
-            endDate = "2010-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SANTA CRUZ DE TENERIFE",
-            stateNameNoSC = "santa cruz de tenerife",
-            stationId = "C447A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TARRAGONA",
-            stateNameNoSC = "tarragona",
-            stationId = "9981A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TERUEL",
-            stateNameNoSC = "teruel",
-            stationId = "8368U",
-            startDate = "1986-04-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TOLEDO",
-            stateNameNoSC = "toledo",
-            stationId = "3260B",
-            startDate = "1982-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALENCIA",
-            stateNameNoSC = "valencia",
-            stationId = "8414A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALLADOLID",
-            stateNameNoSC = "valladolid",
-            stationId = "2422",
-            startDate = "1973-10-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZAMORA",
-            stateNameNoSC = "zamora",
-            stationId = "2614",
-            startDate = "1973-01-01",
-            endDate = "2011-06-30"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZARAGOZA",
-            stateNameNoSC = "zaragoza",
-            stationId = "9390",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          )
-        )
-        object Execution {
-          object Top10HighestSunRadiation2024 {
-            val startDate: String = "2024"
-          }
-
-          object Top10HighestSunRadiationDecade {
-            val startDate: String = "2014-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10HighestSunRadiationGlobal {
-            val startDate: String = "1973-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10LowestSunRadiation2024 {
-            val startDate: String = "2024"
-          }
-
-          object Top10LowestSunRadiationDecade {
-            val startDate: String = "2014-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top10LowestSunRadiationGlobal {
-            val startDate: String = "1973-01-01"
-            val endDate: String = "2024-12-31"
-          }
-
-          object Top5HighestIncSunRadiation {
-            val startYear: Int = 1973
-            val endYear: Int = 2024
-          }
-
-          object Top5LowestIncSunRadiation {
-            val startYear: Int = 1973
-            val endYear: Int = 2024
-          }
-
-          object AvgSunRadiation2024AllStationSpain {
-            val startDate: String = "2024"
-            val canaryIslandStates: List[String] = List(
-              "SANTA CRUZ DE TENERIFE",
-              "LAS PALMAS"
+          SingleParamStudyValues(
+            studyParam = StudyParamNames.windVelocity,
+            studyParamAbbrev = StudyParamAbbrev.windVelocity,
+            dataframeColName = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys.velmediaJKey,
+            reprStationRegs = List(
+              RepresentativeStationRegistry(
+                stateName = "A CORUÑA",
+                stateNameNoSC = "a coruna",
+                stationId = "1387",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALBACETE",
+                stateNameNoSC = "albacete",
+                stationId = "8175",
+                startDate = "1999-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALICANTE",
+                stateNameNoSC = "alicante",
+                stationId = "8025",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALMERIA",
+                stateNameNoSC = "almeria",
+                stationId = "6325O",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ARABA/ALAVA",
+                stateNameNoSC = "araba",
+                stationId = "9091O",
+                startDate = "1977-07-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ASTURIAS",
+                stateNameNoSC = "asturias",
+                stationId = "1212E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "AVILA",
+                stateNameNoSC = "avila",
+                stationId = "2444",
+                startDate = "1988-08-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BADAJOZ",
+                stateNameNoSC = "badajoz",
+                stationId = "4452",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BARCELONA",
+                stateNameNoSC = "barcelona",
+                stationId = "0076",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BIZKAIA",
+                stateNameNoSC = "bizkaia",
+                stationId = "1082",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BURGOS",
+                stateNameNoSC = "burgos",
+                stationId = "2331",
+                startDate = "1986-07-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CACERES",
+                stateNameNoSC = "caceres",
+                stationId = "3469A",
+                startDate = "1982-12-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CADIZ",
+                stateNameNoSC = "cadiz",
+                stationId = "5960",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CANTABRIA",
+                stateNameNoSC = "cantabria",
+                stationId = "1109",
+                startDate = "1977-09-01",
+                endDate = "2006-04-30"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CASTELLON",
+                stateNameNoSC = "castellon",
+                stationId = "8500A",
+                startDate = "1976-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CEUTA",
+                stateNameNoSC = "ceuta",
+                stationId = "5000C",
+                startDate = "2003-06-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CIUDAD REAL",
+                stateNameNoSC = "cuidad real",
+                stationId = "4121",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CORDOBA",
+                stateNameNoSC = "cordoba",
+                stationId = "5402",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CUENCA",
+                stateNameNoSC = "cuenca",
+                stationId = "8096",
+                startDate = "1995-10-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIPUZKOA",
+                stateNameNoSC = "gipuzkoa",
+                stationId = "1014",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIRONA",
+                stateNameNoSC = "girona",
+                stationId = "0367",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GRANADA",
+                stateNameNoSC = "granada",
+                stationId = "5530E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GUADALAJARA",
+                stateNameNoSC = "guadalajara",
+                stationId = "3013",
+                startDate = "1973-01-01",
+                endDate = "1997-01-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUELVA",
+                stateNameNoSC = "huelva",
+                stationId = "4642E",
+                startDate = "1984-06-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUESCA",
+                stateNameNoSC = "huesca",
+                stationId = "9898",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ILLES BALEARS",
+                stateNameNoSC = "illes balears",
+                stationId = "B893",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "JAEN",
+                stateNameNoSC = "jaen",
+                stationId = "5270B",
+                startDate = "1988-07-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LA RIOJA",
+                stateNameNoSC = "la rioja",
+                stationId = "9170",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LAS PALMAS",
+                stateNameNoSC = "las palmas",
+                stationId = "C029O",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LEON",
+                stateNameNoSC = "leon",
+                stationId = "2661",
+                startDate = "1973-01-01",
+                endDate = "2014-04-30"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LLEIDA",
+                stateNameNoSC = "lleida",
+                stationId = "9771C",
+                startDate = "1983-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LUGO",
+                stateNameNoSC = "lugo",
+                stationId = "1505",
+                startDate = "1985-05-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MADRID",
+                stateNameNoSC = "madrid",
+                stationId = "3129",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MALAGA",
+                stateNameNoSC = "malaga",
+                stationId = "6155A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MELILLA",
+                stateNameNoSC = "melilla",
+                stationId = "6000A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MURCIA",
+                stateNameNoSC = "murcia",
+                stationId = "7228",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "NAVARRA",
+                stateNameNoSC = "navarra",
+                stationId = "9263D",
+                startDate = "1988-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "OURENSE",
+                stateNameNoSC = "ourense",
+                stationId = "1700X",
+                startDate = "1994-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PALENCIA",
+                stateNameNoSC = "palencia",
+                stationId = "2400E",
+                startDate = "1988-12-03",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PONTEVEDRA",
+                stateNameNoSC = "pontevedra",
+                stationId = "1495",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SALAMANCA",
+                stateNameNoSC = "salamanca",
+                stationId = "2867",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEGOVIA",
+                stateNameNoSC = "segovia",
+                stationId = "2465",
+                startDate = "1988-10-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEVILLA",
+                stateNameNoSC = "sevilla",
+                stationId = "5783",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SORIA",
+                stateNameNoSC = "soria",
+                stationId = "2030",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SANTA CRUZ DE TENERIFE",
+                stateNameNoSC = "santa cruz de tenerife",
+                stationId = "C447A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TARRAGONA",
+                stateNameNoSC = "tarragona",
+                stationId = "9981A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TERUEL",
+                stateNameNoSC = "teruel",
+                stationId = "8368U",
+                startDate = "1986-04-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TOLEDO",
+                stateNameNoSC = "toledo",
+                stationId = "3260B",
+                startDate = "1982-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALENCIA",
+                stateNameNoSC = "valencia",
+                stationId = "8414A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALLADOLID",
+                stateNameNoSC = "valladolid",
+                stationId = "2422",
+                startDate = "1973-10-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZAMORA",
+                stateNameNoSC = "zamora",
+                stationId = "2614",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZARAGOZA",
+                stateNameNoSC = "zaragoza",
+                stationId = "9434",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
             )
-          }
-        }
-      }
-      object RelativeHumidity {
-        case class RepresentativeStationRegistry(stateName: String, stateNameNoSC: String, stationId: String, startDate: String, endDate: String)
-        val stationRegistries: List[RepresentativeStationRegistry] = List(
-          RepresentativeStationRegistry(
-            stateName = "A CORUÑA",
-            stateNameNoSC = "a coruna",
-            stationId = "1387",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
           ),
-          RepresentativeStationRegistry(
-            stateName = "ALBACETE",
-            stateNameNoSC = "albacete",
-            stationId = "8175",
-            startDate = "1998-09-01",
-            endDate = "2024-12-31"
+          SingleParamStudyValues(
+            studyParam = StudyParamNames.pressure,
+            studyParamAbbrev = StudyParamAbbrev.pressure,
+            dataframeColName = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys.presmaxJKey,
+            reprStationRegs = List(
+              RepresentativeStationRegistry(
+                stateName = "A CORUÑA",
+                stateNameNoSC = "a coruna",
+                stationId = "1387",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALBACETE",
+                stateNameNoSC = "albacete",
+                stationId = "8175",
+                startDate = "1988-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALICANTE",
+                stateNameNoSC = "alicante",
+                stationId = "8025",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALMERIA",
+                stateNameNoSC = "almeria",
+                stationId = "6325O",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ARABA/ALAVA",
+                stateNameNoSC = "araba",
+                stationId = "9091O",
+                startDate = "1980-02-16",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ASTURIAS",
+                stateNameNoSC = "asturias",
+                stationId = "1212E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "AVILA",
+                stateNameNoSC = "avila",
+                stationId = "2444",
+                startDate = "1983-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BADAJOZ",
+                stateNameNoSC = "badajoz",
+                stationId = "4452",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BARCELONA",
+                stateNameNoSC = "barcelona",
+                stationId = "0076",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BIZKAIA",
+                stateNameNoSC = "bizkaia",
+                stationId = "1082",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BURGOS",
+                stateNameNoSC = "burgos",
+                stationId = "2331",
+                startDate = "1978-05-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CACERES",
+                stateNameNoSC = "caceres",
+                stationId = "3469A",
+                startDate = "1982-12-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CADIZ",
+                stateNameNoSC = "cadiz",
+                stationId = "5960",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CANTABRIA",
+                stateNameNoSC = "cantabria",
+                stationId = "1109",
+                startDate = "1973-01-01",
+                endDate = "2024-05-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CASTELLON",
+                stateNameNoSC = "castellon",
+                stationId = "8500A",
+                startDate = "1976-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CEUTA",
+                stateNameNoSC = "ceuta",
+                stationId = "5000C",
+                startDate = "2005-12-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CIUDAD REAL",
+                stateNameNoSC = "cuidad real",
+                stationId = "4121",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CORDOBA",
+                stateNameNoSC = "cordoba",
+                stationId = "5402",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CUENCA",
+                stateNameNoSC = "cuenca",
+                stationId = "8096",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIPUZKOA",
+                stateNameNoSC = "gipuzkoa",
+                stationId = "1024E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIRONA",
+                stateNameNoSC = "girona",
+                stationId = "0367",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GRANADA",
+                stateNameNoSC = "granada",
+                stationId = "5530E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GUADALAJARA",
+                stateNameNoSC = "guadalajara",
+                stationId = "3013",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUELVA",
+                stateNameNoSC = "huelva",
+                stationId = "4642E",
+                startDate = "1984-06-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUESCA",
+                stateNameNoSC = "huesca",
+                stationId = "9898",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ILLES BALEARS",
+                stateNameNoSC = "illes balears",
+                stationId = "B893",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "JAEN",
+                stateNameNoSC = "jaen",
+                stationId = "5270B",
+                startDate = "1994-06-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LA RIOJA",
+                stateNameNoSC = "la rioja",
+                stationId = "9170",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LAS PALMAS",
+                stateNameNoSC = "las palmas",
+                stationId = "C029O",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LEON",
+                stateNameNoSC = "leon",
+                stationId = "1549",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LLEIDA",
+                stateNameNoSC = "lleida",
+                stationId = "9771C",
+                startDate = "1983-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LUGO",
+                stateNameNoSC = "lugo",
+                stationId = "1505",
+                startDate = "1985-05-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MADRID",
+                stateNameNoSC = "madrid",
+                stationId = "3200",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MALAGA",
+                stateNameNoSC = "malaga",
+                stationId = "6155A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MELILLA",
+                stateNameNoSC = "melilla",
+                stationId = "6000A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MURCIA",
+                stateNameNoSC = "murcia",
+                stationId = "7228",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "NAVARRA",
+                stateNameNoSC = "navarra",
+                stationId = "9263D",
+                startDate = "1975-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "OURENSE",
+                stateNameNoSC = "ourense",
+                stationId = "1690A",
+                startDate = "1974-01-01",
+                endDate = "2022-09-08"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PALENCIA",
+                stateNameNoSC = "palencia",
+                stationId = "2400E",
+                startDate = "1989-06-01",
+                endDate = "2008-03-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PONTEVEDRA",
+                stateNameNoSC = "pontevedra",
+                stationId = "1495",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SALAMANCA",
+                stateNameNoSC = "salamanca",
+                stationId = "2867",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEGOVIA",
+                stateNameNoSC = "segovia",
+                stationId = "2465",
+                startDate = "1988-10-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEVILLA",
+                stateNameNoSC = "sevilla",
+                stationId = "5783",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SORIA",
+                stateNameNoSC = "soria",
+                stationId = "2030",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SANTA CRUZ DE TENERIFE",
+                stateNameNoSC = "santa cruz de tenerife",
+                stationId = "C449C",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TARRAGONA",
+                stateNameNoSC = "tarragona",
+                stationId = "9981A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TERUEL",
+                stateNameNoSC = "teruel",
+                stationId = "8368U",
+                startDate = "1986-04-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TOLEDO",
+                stateNameNoSC = "toledo",
+                stationId = "3260B",
+                startDate = "1982-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALENCIA",
+                stateNameNoSC = "valencia",
+                stationId = "8414A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALLADOLID",
+                stateNameNoSC = "valladolid",
+                stationId = "2539",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZAMORA",
+                stateNameNoSC = "zamora",
+                stationId = "2614",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZARAGOZA",
+                stateNameNoSC = "zaragoza",
+                stationId = "9434",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+            )
           ),
-          RepresentativeStationRegistry(
-            stateName = "ALICANTE",
-            stateNameNoSC = "alicante",
-            stationId = "8025",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
+          SingleParamStudyValues(
+            studyParam = StudyParamNames.sunRadiation,
+            studyParamAbbrev = StudyParamAbbrev.sunRadiation,
+            dataframeColName = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys.solJKey,
+            reprStationRegs = List(
+              RepresentativeStationRegistry(
+                stateName = "A CORUÑA",
+                stateNameNoSC = "a coruna",
+                stationId = "1387",
+                startDate = "1974-04-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALBACETE",
+                stateNameNoSC = "albacete",
+                stationId = "8175",
+                startDate = "1998-10-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALICANTE",
+                stateNameNoSC = "alicante",
+                stationId = "8025",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALMERIA",
+                stateNameNoSC = "almeria",
+                stationId = "6325O",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ARABA/ALAVA",
+                stateNameNoSC = "araba",
+                stationId = "9091O",
+                startDate = "1977-08-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ASTURIAS",
+                stateNameNoSC = "asturias",
+                stationId = "1249I",
+                startDate = "1973-01-01",
+                endDate = "2023-01-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "AVILA",
+                stateNameNoSC = "avila",
+                stationId = "2444",
+                startDate = "1983-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BADAJOZ",
+                stateNameNoSC = "badajoz",
+                stationId = "4452",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BARCELONA",
+                stateNameNoSC = "barcelona",
+                stationId = "0076",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BIZKAIA",
+                stateNameNoSC = "bizkaia",
+                stationId = "1082",
+                startDate = "1973-01-01",
+                endDate = "2002-02-28"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BURGOS",
+                stateNameNoSC = "burgos",
+                stationId = "2331",
+                startDate = "1985-11-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CACERES",
+                stateNameNoSC = "caceres",
+                stationId = "3469A",
+                startDate = "1983-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CADIZ",
+                stateNameNoSC = "cadiz",
+                stationId = "5960",
+                startDate = "1973-05-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CANTABRIA",
+                stateNameNoSC = "cantabria",
+                stationId = "1109",
+                startDate = "1977-09-01",
+                endDate = "2007-07-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CASTELLON",
+                stateNameNoSC = "castellon",
+                stationId = "8500A",
+                startDate = "1976-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CEUTA",
+                stateNameNoSC = "ceuta",
+                stationId = "5000A",
+                startDate = "1973-01-01",
+                endDate = "1986-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CIUDAD REAL",
+                stateNameNoSC = "cuidad real",
+                stationId = "4121",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CORDOBA",
+                stateNameNoSC = "cordoba",
+                stationId = "5402",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CUENCA",
+                stateNameNoSC = "cuenca",
+                stationId = "8096",
+                startDate = "1973-01-01",
+                endDate = "2012-03-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIPUZKOA",
+                stateNameNoSC = "gipuzkoa",
+                stationId = "1014",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIRONA",
+                stateNameNoSC = "girona",
+                stationId = "0367",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GRANADA",
+                stateNameNoSC = "granada",
+                stationId = "5530E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GUADALAJARA",
+                stateNameNoSC = "guadalajara",
+                stationId = "3013",
+                startDate = "1973-01-01",
+                endDate = "2007-03-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUELVA",
+                stateNameNoSC = "huelva",
+                stationId = "4642E",
+                startDate = "1984-06-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUESCA",
+                stateNameNoSC = "huesca",
+                stationId = "9898",
+                startDate = "1973-01-01",
+                endDate = "1998-03-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ILLES BALEARS",
+                stateNameNoSC = "illes balears",
+                stationId = "B278",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "JAEN",
+                stateNameNoSC = "jaen",
+                stationId = "5270B",
+                startDate = "1994-06-01",
+                endDate = "2009-11-30"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LA RIOJA",
+                stateNameNoSC = "la rioja",
+                stationId = "9170",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LAS PALMAS",
+                stateNameNoSC = "las palmas",
+                stationId = "C029O",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LEON",
+                stateNameNoSC = "leon",
+                stationId = "2661",
+                startDate = "1973-01-01",
+                endDate = "2014-04-30"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LLEIDA",
+                stateNameNoSC = "lleida",
+                stationId = "9771C",
+                startDate = "1983-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LUGO",
+                stateNameNoSC = "lugo",
+                stationId = "1505",
+                startDate = "1990-08-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MADRID",
+                stateNameNoSC = "madrid",
+                stationId = "3200",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MALAGA",
+                stateNameNoSC = "malaga",
+                stationId = "6155A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MELILLA",
+                stateNameNoSC = "melilla",
+                stationId = "6000A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MURCIA",
+                stateNameNoSC = "murcia",
+                stationId = "7228",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "NAVARRA",
+                stateNameNoSC = "navarra",
+                stationId = "9263D",
+                startDate = "1975-02-01",
+                endDate = "2016-03-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "OURENSE",
+                stateNameNoSC = "ourense",
+                stationId = "1690A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PALENCIA",
+                stateNameNoSC = "palencia",
+                stationId = "2235U",
+                startDate = "2012-05-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PONTEVEDRA",
+                stateNameNoSC = "pontevedra",
+                stationId = "1484C",
+                startDate = "1985-10-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SALAMANCA",
+                stateNameNoSC = "salamanca",
+                stationId = "2867",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEGOVIA",
+                stateNameNoSC = "segovia",
+                stationId = "2465",
+                startDate = "1988-10-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEVILLA",
+                stateNameNoSC = "sevilla",
+                stationId = "5783",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SORIA",
+                stateNameNoSC = "soria",
+                stationId = "2030",
+                startDate = "1973-01-01",
+                endDate = "2010-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SANTA CRUZ DE TENERIFE",
+                stateNameNoSC = "santa cruz de tenerife",
+                stationId = "C447A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TARRAGONA",
+                stateNameNoSC = "tarragona",
+                stationId = "9981A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TERUEL",
+                stateNameNoSC = "teruel",
+                stationId = "8368U",
+                startDate = "1986-04-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TOLEDO",
+                stateNameNoSC = "toledo",
+                stationId = "3260B",
+                startDate = "1982-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALENCIA",
+                stateNameNoSC = "valencia",
+                stationId = "8414A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALLADOLID",
+                stateNameNoSC = "valladolid",
+                stationId = "2422",
+                startDate = "1973-10-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZAMORA",
+                stateNameNoSC = "zamora",
+                stationId = "2614",
+                startDate = "1973-01-01",
+                endDate = "2011-06-30"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZARAGOZA",
+                stateNameNoSC = "zaragoza",
+                stationId = "9390",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              )
+            )
           ),
-          RepresentativeStationRegistry(
-            stateName = "ALMERIA",
-            stateNameNoSC = "almeria",
-            stationId = "6325O",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
+          SingleParamStudyValues(
+            studyParam = StudyParamNames.relativeHumidity,
+            studyParamAbbrev = StudyParamAbbrev.relativeHumidity,
+            dataframeColName = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys.hrmediaJKey,
+            reprStationRegs = List(
+              RepresentativeStationRegistry(
+                stateName = "A CORUÑA",
+                stateNameNoSC = "a coruna",
+                stationId = "1387",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALBACETE",
+                stateNameNoSC = "albacete",
+                stationId = "8175",
+                startDate = "1998-09-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALICANTE",
+                stateNameNoSC = "alicante",
+                stationId = "8025",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ALMERIA",
+                stateNameNoSC = "almeria",
+                stationId = "6325O",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ARABA/ALAVA",
+                stateNameNoSC = "araba",
+                stationId = "9091O",
+                startDate = "1977-07-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ASTURIAS",
+                stateNameNoSC = "asturias",
+                stationId = "1212E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "AVILA",
+                stateNameNoSC = "avila",
+                stationId = "2444",
+                startDate = "1983-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BADAJOZ",
+                stateNameNoSC = "badajoz",
+                stationId = "4452",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BARCELONA",
+                stateNameNoSC = "barcelona",
+                stationId = "0200E",
+                startDate = "1983-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BIZKAIA",
+                stateNameNoSC = "bizkaia",
+                stationId = "1082",
+                startDate = "1985-09-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "BURGOS",
+                stateNameNoSC = "burgos",
+                stationId = "2331",
+                startDate = "1986-04-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CACERES",
+                stateNameNoSC = "caceres",
+                stationId = "3469A",
+                startDate = "1982-12-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CADIZ",
+                stateNameNoSC = "cadiz",
+                stationId = "5960",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CANTABRIA",
+                stateNameNoSC = "cantabria",
+                stationId = "1109",
+                startDate = "1977-09-01",
+                endDate = "2024-05-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CASTELLON",
+                stateNameNoSC = "castellon",
+                stationId = "8500A",
+                startDate = "1976-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CEUTA",
+                stateNameNoSC = "ceuta",
+                stationId = "5000C",
+                startDate = "2005-12-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CIUDAD REAL",
+                stateNameNoSC = "cuidad real",
+                stationId = "4121",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CORDOBA",
+                stateNameNoSC = "cordoba",
+                stationId = "5402",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "CUENCA",
+                stateNameNoSC = "cuenca",
+                stationId = "8096",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIPUZKOA",
+                stateNameNoSC = "gipuzkoa",
+                stationId = "1014",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GIRONA",
+                stateNameNoSC = "girona",
+                stationId = "0367",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GRANADA",
+                stateNameNoSC = "granada",
+                stationId = "5530E",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "GUADALAJARA",
+                stateNameNoSC = "guadalajara",
+                stationId = "3013",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUELVA",
+                stateNameNoSC = "huelva",
+                stationId = "4642E",
+                startDate = "1984-06-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "HUESCA",
+                stateNameNoSC = "huesca",
+                stationId = "9898",
+                startDate = "1980-09-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ILLES BALEARS",
+                stateNameNoSC = "illes balears",
+                stationId = "B893",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "JAEN",
+                stateNameNoSC = "jaen",
+                stationId = "5270B",
+                startDate = "1994-06-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LA RIOJA",
+                stateNameNoSC = "la rioja",
+                stationId = "9170",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LAS PALMAS",
+                stateNameNoSC = "las palmas",
+                stationId = "C649I",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LEON",
+                stateNameNoSC = "leon",
+                stationId = "1549",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LLEIDA",
+                stateNameNoSC = "lleida",
+                stationId = "9771C",
+                startDate = "1983-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "LUGO",
+                stateNameNoSC = "lugo",
+                stationId = "1505",
+                startDate = "1985-05-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MADRID",
+                stateNameNoSC = "madrid",
+                stationId = "3200",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MALAGA",
+                stateNameNoSC = "malaga",
+                stationId = "6155A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MELILLA",
+                stateNameNoSC = "melilla",
+                stationId = "6000A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "MURCIA",
+                stateNameNoSC = "murcia",
+                stationId = "7228",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "NAVARRA",
+                stateNameNoSC = "navarra",
+                stationId = "9263D",
+                startDate = "1975-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "OURENSE",
+                stateNameNoSC = "ourense",
+                stationId = "1690A",
+                startDate = "1983-05-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PALENCIA",
+                stateNameNoSC = "palencia",
+                stationId = "2400E",
+                startDate = "1989-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "PONTEVEDRA",
+                stateNameNoSC = "pontevedra",
+                stationId = "1495",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SALAMANCA",
+                stateNameNoSC = "salamanca",
+                stationId = "2867",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEGOVIA",
+                stateNameNoSC = "segovia",
+                stationId = "2465",
+                startDate = "1988-10-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SEVILLA",
+                stateNameNoSC = "sevilla",
+                stationId = "5783",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SORIA",
+                stateNameNoSC = "soria",
+                stationId = "2030",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "SANTA CRUZ DE TENERIFE",
+                stateNameNoSC = "santa cruz de tenerife",
+                stationId = "C447A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TARRAGONA",
+                stateNameNoSC = "tarragona",
+                stationId = "9981A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TERUEL",
+                stateNameNoSC = "teruel",
+                stationId = "8368U",
+                startDate = "1986-04-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "TOLEDO",
+                stateNameNoSC = "toledo",
+                stationId = "3260B",
+                startDate = "1982-02-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALENCIA",
+                stateNameNoSC = "valencia",
+                stationId = "8414A",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "VALLADOLID",
+                stateNameNoSC = "valladolid",
+                stationId = "2539",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZAMORA",
+                stateNameNoSC = "zamora",
+                stationId = "2614",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              ),
+              RepresentativeStationRegistry(
+                stateName = "ZARAGOZA",
+                stateNameNoSC = "zaragoza",
+                stationId = "9434",
+                startDate = "1973-01-01",
+                endDate = "2024-12-31"
+              )
+            )
           ),
-          RepresentativeStationRegistry(
-            stateName = "ARABA/ALAVA",
-            stateNameNoSC = "araba",
-            stationId = "9091O",
-            startDate = "1977-07-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ASTURIAS",
-            stateNameNoSC = "asturias",
-            stationId = "1212E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "AVILA",
-            stateNameNoSC = "avila",
-            stationId = "2444",
-            startDate = "1983-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BADAJOZ",
-            stateNameNoSC = "badajoz",
-            stationId = "4452",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BARCELONA",
-            stateNameNoSC = "barcelona",
-            stationId = "0200E",
-            startDate = "1983-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BIZKAIA",
-            stateNameNoSC = "bizkaia",
-            stationId = "1082",
-            startDate = "1985-09-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "BURGOS",
-            stateNameNoSC = "burgos",
-            stationId = "2331",
-            startDate = "1986-04-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CACERES",
-            stateNameNoSC = "caceres",
-            stationId = "3469A",
-            startDate = "1982-12-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CADIZ",
-            stateNameNoSC = "cadiz",
-            stationId = "5960",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CANTABRIA",
-            stateNameNoSC = "cantabria",
-            stationId = "1109",
-            startDate = "1977-09-01",
-            endDate = "2024-05-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CASTELLON",
-            stateNameNoSC = "castellon",
-            stationId = "8500A",
-            startDate = "1976-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CEUTA",
-            stateNameNoSC = "ceuta",
-            stationId = "5000C",
-            startDate = "2005-12-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CIUDAD REAL",
-            stateNameNoSC = "cuidad real",
-            stationId = "4121",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CORDOBA",
-            stateNameNoSC = "cordoba",
-            stationId = "5402",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "CUENCA",
-            stateNameNoSC = "cuenca",
-            stationId = "8096",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIPUZKOA",
-            stateNameNoSC = "gipuzkoa",
-            stationId = "1014",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GIRONA",
-            stateNameNoSC = "girona",
-            stationId = "0367",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GRANADA",
-            stateNameNoSC = "granada",
-            stationId = "5530E",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "GUADALAJARA",
-            stateNameNoSC = "guadalajara",
-            stationId = "3013",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUELVA",
-            stateNameNoSC = "huelva",
-            stationId = "4642E",
-            startDate = "1984-06-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "HUESCA",
-            stateNameNoSC = "huesca",
-            stationId = "9898",
-            startDate = "1980-09-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ILLES BALEARS",
-            stateNameNoSC = "illes balears",
-            stationId = "B893",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "JAEN",
-            stateNameNoSC = "jaen",
-            stationId = "5270B",
-            startDate = "1994-06-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LA RIOJA",
-            stateNameNoSC = "la rioja",
-            stationId = "9170",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LAS PALMAS",
-            stateNameNoSC = "las palmas",
-            stationId = "C649I",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LEON",
-            stateNameNoSC = "leon",
-            stationId = "1549",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LLEIDA",
-            stateNameNoSC = "lleida",
-            stationId = "9771C",
-            startDate = "1983-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "LUGO",
-            stateNameNoSC = "lugo",
-            stationId = "1505",
-            startDate = "1985-05-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MADRID",
-            stateNameNoSC = "madrid",
-            stationId = "3200",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MALAGA",
-            stateNameNoSC = "malaga",
-            stationId = "6155A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MELILLA",
-            stateNameNoSC = "melilla",
-            stationId = "6000A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "MURCIA",
-            stateNameNoSC = "murcia",
-            stationId = "7228",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "NAVARRA",
-            stateNameNoSC = "navarra",
-            stationId = "9263D",
-            startDate = "1975-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "OURENSE",
-            stateNameNoSC = "ourense",
-            stationId = "1690A",
-            startDate = "1983-05-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PALENCIA",
-            stateNameNoSC = "palencia",
-            stationId = "2400E",
-            startDate = "1989-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "PONTEVEDRA",
-            stateNameNoSC = "pontevedra",
-            stationId = "1495",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SALAMANCA",
-            stateNameNoSC = "salamanca",
-            stationId = "2867",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEGOVIA",
-            stateNameNoSC = "segovia",
-            stationId = "2465",
-            startDate = "1988-10-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SEVILLA",
-            stateNameNoSC = "sevilla",
-            stationId = "5783",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SORIA",
-            stateNameNoSC = "soria",
-            stationId = "2030",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "SANTA CRUZ DE TENERIFE",
-            stateNameNoSC = "santa cruz de tenerife",
-            stationId = "C447A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TARRAGONA",
-            stateNameNoSC = "tarragona",
-            stationId = "9981A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TERUEL",
-            stateNameNoSC = "teruel",
-            stationId = "8368U",
-            startDate = "1986-04-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "TOLEDO",
-            stateNameNoSC = "toledo",
-            stationId = "3260B",
-            startDate = "1982-02-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALENCIA",
-            stateNameNoSC = "valencia",
-            stationId = "8414A",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "VALLADOLID",
-            stateNameNoSC = "valladolid",
-            stationId = "2539",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZAMORA",
-            stateNameNoSC = "zamora",
-            stationId = "2614",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          ),
-          RepresentativeStationRegistry(
-            stateName = "ZARAGOZA",
-            stateNameNoSC = "zaragoza",
-            stationId = "9434",
-            startDate = "1973-01-01",
-            endDate = "2024-12-31"
-          )
         )
+
         object Execution {
-          object Top10HighestRelativeHumidity2024 {
+          object Top10Highest2024 {
             val startDate: String = "2024"
           }
 
-          object Top10HighestRelativeHumidityDecade {
+          object Top10HighestDecade {
             val startDate: String = "2014-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10HighestRelativeHumidityGlobal {
+          object Top10HighestGlobal {
             val startDate: String = "1973-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10LowestRelativeHumidity2024 {
+          object Top10Lowest2024 {
             val startDate: String = "2024"
           }
 
-          object Top10LowestRelativeHumidityDecade {
+          object Top10LowestDecade {
             val startDate: String = "2014-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top10LowestRelativeHumidityGlobal {
+          object Top10LowestGlobal {
             val startDate: String = "1973-01-01"
             val endDate: String = "2024-12-31"
           }
 
-          object Top5HighestIncRelativeHumidity {
+          object Top5HighestInc {
             val startYear: Int = 1973
             val endYear: Int = 2024
           }
 
-          object Top5LowestIncRelativeHumidity {
+          object Top5LowestInc {
             val startYear: Int = 1973
             val endYear: Int = 2024
           }
 
-          object AvgRelativeHumidity2024AllStationSpain {
+          object Avg2024AllStationSpain {
             val startDate: String = "2024"
             val canaryIslandStates: List[String] = List(
               "SANTA CRUZ DE TENERIFE",
@@ -4489,8 +4027,7 @@ object ConstantsV2 {
           }
           object Top10BetterSunPower {
             val climateParams: List[(String, Double, Double)] = List(
-              ("sol", 5, Double.PositiveInfinity),
-              ("tmax", Double.NegativeInfinity, 30),
+              ("sol", 6, Double.PositiveInfinity),
               ("prec", 0, 1.5)
             )
             val startDate: String = "2014-01-01"
