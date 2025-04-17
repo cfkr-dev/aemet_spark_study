@@ -311,6 +311,8 @@ object InitApp extends App {
 //    case Left(exception) => throw exception
 //  }
 
+
+//  SparkQueries.Stations.execute()
 //  SparkQueries.Climograph.execute()
 //  SparkQueries.Temperature.execute()
 //  SparkQueries.Precipitation.execute()
@@ -318,10 +320,34 @@ object InitApp extends App {
 //  SparkQueries.Pressure.execute()
 //  SparkQueries.SunRadiation.execute()
 //  SparkQueries.RelativeHumidity.execute()
+//  SparkQueries.InterestingStudies.execute()
+
+  SparkQueries.Stations.execute()
+  SparkQueries.Climograph.execute()
+  SparkQueries.SingleParamStudies.execute()
   SparkQueries.InterestingStudies.execute()
 
   //SparkQueries.test()
 
+//  SparkQueries.getStationCountByYearInALapse("1973-01-01", Some("2024-12-31")) match {
+//    case Right(value) => value.show()
+//    case Left(exception) => throw exception
+//  }
+
+//  SparkQueries.getStationsCountByParamIntervalsInALapse(
+//    List(
+//      ("altitud", 0, 500),
+//      ("altitud", 500, 1000),
+//      ("altitud", 1000, 1500),
+//      ("altitud", 1500, 2000),
+//      ("altitud", 2000, 2500),
+//      ("altitud", 2500, Double.PositiveInfinity)
+//    ),
+//    "2024"
+//  ) match {
+//    case Right(value) => value.show()
+//    case Left(exception) => throw exception
+//  }
 
 
 
