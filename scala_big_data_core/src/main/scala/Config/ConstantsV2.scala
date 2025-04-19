@@ -503,378 +503,6 @@ object ConstantsV2 {
         }
       }
       object Climograph {
-        object Arid {
-          object BWh {
-            object Peninsula {
-              object Dirs {
-                val stationResult: String = Peninsula.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = BWh.Global.Dirs.base + "peninsula/"
-                }
-              }
-            }
-
-            object Canary {
-              object Dirs {
-                val stationResult: String = Canary.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Canary.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = BWh.Global.Dirs.base + "canary_islands/"
-                }
-              }
-            }
-
-            object Global {
-              object Dirs {
-                val base: String = Arid.Global.Dirs.base + "BWh/"
-              }
-            }
-          }
-
-          object BWk {
-            object Peninsula {
-              object Dirs {
-                val stationResult: String = Peninsula.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = BWk.Global.Dirs.base + "peninsula/"
-                }
-              }
-            }
-
-            object Global {
-              object Dirs {
-                val base: String = Arid.Global.Dirs.base + "BWk/"
-              }
-            }
-          }
-
-          object BSh {
-            object Peninsula {
-              object Dirs {
-                val stationResult: String = Peninsula.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = BSh.Global.Dirs.base + "peninsula/"
-                }
-              }
-            }
-
-            object Canary {
-              object Dirs {
-                val stationResult: String = Canary.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Canary.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = BSh.Global.Dirs.base + "canary_islands/"
-                }
-              }
-            }
-
-            object Balear {
-              object Dirs {
-                val stationResult: String = Balear.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Balear.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = BSh.Global.Dirs.base + "balear_islands/"
-                }
-              }
-            }
-
-            object Global {
-              object Dirs {
-                val base: String = Arid.Global.Dirs.base + "BSh/"
-              }
-            }
-          }
-
-          object BSk {
-            object Peninsula {
-              object Dirs {
-                val stationResult: String = Peninsula.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = BSk.Global.Dirs.base + "peninsula/"
-                }
-              }
-            }
-
-            object Canary {
-              object Dirs {
-                val stationResult: String = Canary.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Canary.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = BSk.Global.Dirs.base + "canary_islands/"
-                }
-              }
-            }
-
-            object Balear {
-              object Dirs {
-                val stationResult: String = Balear.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Balear.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = BSk.Global.Dirs.base + "balear_islands/"
-                }
-              }
-            }
-
-            object Global {
-              object Dirs {
-                val base: String = Arid.Global.Dirs.base + "BSk/"
-              }
-            }
-          }
-
-          object Global {
-            object Dirs {
-              val base: String = Climograph.Global.Dirs.base + "arid_climates/"
-            }
-          }
-        }
-
-        object Warm {
-          object Csa {
-            object Peninsula {
-              object Dirs {
-                val stationResult: String = Peninsula.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = Csa.Global.Dirs.base + "peninsula/"
-                }
-              }
-            }
-
-            object Canary {
-              object Dirs {
-                val stationResult: String = Canary.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Canary.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = Csa.Global.Dirs.base + "canary_islands/"
-                }
-              }
-            }
-
-            object Balear {
-              object Dirs {
-                val stationResult: String = Balear.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Balear.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = Csa.Global.Dirs.base + "balear_islands/"
-                }
-              }
-            }
-
-            object Global {
-              object Dirs {
-                val base: String = Warm.Global.Dirs.base + "Csa/"
-              }
-            }
-          }
-
-          object Csb {
-            object Peninsula {
-              object Dirs {
-                val stationResult: String = Peninsula.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = Csb.Global.Dirs.base + "peninsula/"
-                }
-              }
-            }
-
-            object Canary {
-              object Dirs {
-                val stationResult: String = Canary.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Canary.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = Csb.Global.Dirs.base + "canary_islands/"
-                }
-              }
-            }
-
-            object Balear {
-              object Dirs {
-                val stationResult: String = Balear.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Balear.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = Csb.Global.Dirs.base + "balear_islands/"
-                }
-              }
-            }
-
-            object Global {
-              object Dirs {
-                val base: String = Warm.Global.Dirs.base + "Csb/"
-              }
-            }
-          }
-
-          object Cfa {
-            object Peninsula {
-              object Dirs {
-                val stationResult: String = Peninsula.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = Cfa.Global.Dirs.base + "peninsula/"
-                }
-              }
-            }
-
-            object Global {
-              object Dirs {
-                val base: String = Warm.Global.Dirs.base + "Cfa/"
-              }
-            }
-          }
-
-          object Cfb {
-            object Peninsula {
-              object Dirs {
-                val stationResult: String = Peninsula.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = Cfb.Global.Dirs.base + "peninsula/"
-                }
-              }
-            }
-
-            object Global {
-              object Dirs {
-                val base: String = Warm.Global.Dirs.base + "Cfb/"
-              }
-            }
-          }
-
-          object Global {
-            object Dirs {
-              val base: String = Climograph.Global.Dirs.base + "warm_climates/"
-            }
-          }
-        }
-
-        object Cold {
-          object Dsb {
-            object Peninsula {
-              object Dirs {
-                val stationResult: String = Peninsula.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = Dsb.Global.Dirs.base + "peninsula/"
-                }
-              }
-            }
-
-            object Global {
-              object Dirs {
-                val base: String = Cold.Global.Dirs.base + "Dsb/"
-              }
-            }
-          }
-
-          object Dfb {
-            object Peninsula {
-              object Dirs {
-                val stationResult: String = Peninsula.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = Dfb.Global.Dirs.base + "peninsula/"
-                }
-              }
-            }
-
-            object Global {
-              object Dirs {
-                val base: String = Cold.Global.Dirs.base + "Dfb/"
-              }
-            }
-          }
-
-          object Dfc {
-            object Peninsula {
-              object Dirs {
-                val stationResult: String = Peninsula.Global.Dirs.base + "station/"
-                val tempAndPrecResult: String = Peninsula.Global.Dirs.base + "temp_and_prec/"
-              }
-
-              object Global {
-                object Dirs {
-                  val base: String = Dfc.Global.Dirs.base + "peninsula/"
-                }
-              }
-            }
-
-            object Global {
-              object Dirs {
-                val base: String = Cold.Global.Dirs.base + "Dfc/"
-              }
-            }
-          }
-
-          object Global {
-            object Dirs {
-              val base: String = Climograph.Global.Dirs.base + "cold_climates/"
-            }
-          }
-        }
-
         object Dirs {
           val resultStation: String = Climograph.Global.Dirs.base + "%s/%s/%s/station"
           val resultTempPrec: String = Climograph.Global.Dirs.base + "%s/%s/%s/temp_and_prec"
@@ -901,7 +529,8 @@ object ConstantsV2 {
         object EvolFromStartForEachState {
           object Dirs {
             val resultStation: String = Global.Dirs.base + "evol/%s/station/"
-            val resultEvol: String = Global.Dirs.base + "evol/%s/evolution/"
+            val resultEvol: String = Global.Dirs.base + "evol/%s/evol/"
+            val resultEvolRegression: String = Global.Dirs.base + "evol/%s/regression/"
           }
         }
 
@@ -943,7 +572,7 @@ object ConstantsV2 {
         object PrecAndPressionEvolFromStartForEachState {
           object Dirs {
             val resultStation: String = InterestingStudies.Global.Dirs.base + "prec_and_pression_evol/%s/station/"
-            val resultEvol: String = InterestingStudies.Global.Dirs.base + "prec_and_pression_evol/%s/evolution/"
+            val resultEvol: String = InterestingStudies.Global.Dirs.base + "prec_and_pression_evol/%s/evol/"
           }
         }
 
@@ -1075,6 +704,7 @@ object ConstantsV2 {
             val evolFromStartForEachState: String = "%s evolution from the start of registries for each state"
             val evolFromStartForEachStateStartStation: String = "Fetching data from representative %s state station"
             val evolFromStartForEachStateStart: String = "Fetching data from %s state %s evolution"
+            val evolFromStartForEachStateStartRegression: String = "%s regression model for %s evolution from the start of registers"
             val top5HighestInc: String = "Top 5 places with the highest increment of %s from the start of registers"
             val top5LowestInc: String = "Top 5 places with the lowest increment of %s from the start of registers"
             val avg2024AllStationSpainContinental: String = "Average %s in 2024 for all station in the spanish continental territory"
@@ -1159,6 +789,8 @@ object ConstantsV2 {
           }
           object StationCountByState2024 {
             val startDate: String = "2024"
+            val param: String = "provincia"
+            val paramGroupName: String = "state"
           }
           object StationCountByAltitude2024 {
             val startDate: String = "2024"
@@ -4017,6 +3649,12 @@ object ConstantsV2 {
           )
         )
         object Execution {
+          object PrecAndPressEvolFromStartForEachState {
+            val climateParams: List[(String, String)] = List(
+              ("prec", "prec"),
+              ("presmax", "press")
+            )
+          }
           object Top10BetterWindPower {
             val climateParams: List[(String, Double, Double)] = List(
               ("velmedia", 6, 9),
