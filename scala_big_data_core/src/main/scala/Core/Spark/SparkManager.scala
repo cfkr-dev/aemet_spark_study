@@ -1,19 +1,13 @@
 package Core.Spark
 
+import Config.ConstantsV2._
+import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
 import Utils.JSONUtils
-import org.apache.spark.sql.expressions.{UserDefinedFunction, Window}
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
-import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.ml.regression.LinearRegression
-import org.apache.spark.ml.linalg.Vectors
-import Config.ConstantsV2._
-import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
 import org.apache.spark.storage.StorageLevel
-
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 
 object SparkManager {
   private val ctsStorageDataAemetAllStationInfo = Storage.DataAemet.AllStationInfo
@@ -45,13 +39,13 @@ object SparkManager {
       metadataPath: String
     ): Either[Exception, DataFrame] = {
       def createDataframeSchemaAemet(metadataJSON: ujson.Value): StructType = {
-        val constantsAemetAPIGlobal = Config.Constants.AemetAPI.Global
+        val ctsRemoteReqAemetParamsGlobalMetadataSchemaJSONKeys = RemoteRequest.AemetAPI.Params.Global.Metadata.SchemaJSONKeys
         StructType(
-          metadataJSON(constantsAemetAPIGlobal.metadataFields).arr.map(field => {
+          metadataJSON(ctsRemoteReqAemetParamsGlobalMetadataSchemaJSONKeys.fieldDefJKey).arr.map(field => {
             StructField(
-              field(constantsAemetAPIGlobal.metadataFieldsID).str,
+              field(ctsRemoteReqAemetParamsGlobalMetadataSchemaJSONKeys.DataFieldsJSONKeys.idJKey).str,
               StringType,
-              !field(constantsAemetAPIGlobal.metadataFieldsRequired).bool
+              !field(ctsRemoteReqAemetParamsGlobalMetadataSchemaJSONKeys.DataFieldsJSONKeys.requiredJKey).bool
             )
           }).toArray
         )
@@ -102,17 +96,17 @@ object SparkManager {
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.altitudJKey ->
             (column => col(column).cast("int")),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey ->
-            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey ->
             (column => {
               when(col(column) === "Acum", lit(null).cast("double"))
                 .otherwise(
                   when(col(column) === "Ip", lit(0.0).cast("double"))
-                    .otherwise(bround(regexp_replace(col(column), ",", ".").cast("double"), 1))
+                    .otherwise(round(regexp_replace(col(column), ",", ".").cast("double"), 1))
                 )
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tminJKey ->
-            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatminJKey ->
             (column => {
               when(col(column) === "Varias", lit(null).cast("timestamp"))
@@ -124,7 +118,7 @@ object SparkManager {
                 )
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmaxJKey ->
-            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatmaxJKey ->
             (column => {
               when(col(column) === "Varias", lit(null).cast("timestamp"))
@@ -141,9 +135,9 @@ object SparkManager {
                 .otherwise(regexp_replace(col(column), ",", "").cast("int"))
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey ->
-            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.rachaJKey ->
-            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horarachaJKey ->
             (column => {
               when(col(column) === "Varias", lit(null).cast("timestamp"))
@@ -155,9 +149,9 @@ object SparkManager {
                 )
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.solJKey ->
-            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.presmaxJKey ->
-            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horapresmaxJKey ->
             (column => {
               when(col(column) === "Varias", lit(null).cast("timestamp"))
@@ -169,7 +163,7 @@ object SparkManager {
                 )
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.presminJKey ->
-            (column => bround(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horapresminJKey ->
             (column => {
               when(col(column) === "Varias", lit(null).cast("timestamp"))
@@ -296,7 +290,6 @@ object SparkManager {
 
     import SparkCore.sparkSession.implicits._
 
-    private val ctsSparkQueriesGlobal = Spark.Queries.Global
     private val ctsLogsSparkQueriesStudiesGlobal = Logs.SparkQueries.Studies.Global
 
     private case class FetchAndSaveInfo(
@@ -307,11 +300,21 @@ object SparkManager {
       saveInfoMessage: String = ctsLogsSparkQueriesStudiesGlobal.saveInfo
     )
 
+    def execute(): Unit = {
+      SparkCore.dataframes.allStations.as("stations").count()
+      SparkCore.dataframes.allMeteoInfo.as("meteo").count()
+
+      Stations.execute()
+      Climograph.execute()
+      SingleParamStudies.execute()
+      InterestingStudies.execute()
+    }
+
     private def simpleFetchAndSave(
       queryTitle: String = "",
       queries: Seq[FetchAndSaveInfo],
       encloseHalfLengthStart: Int = 35
-    ): Unit = {
+    ): Seq[DataFrame] = {
       if (queryTitle != "")
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startQuery.format(
           queryTitle
@@ -344,13 +347,14 @@ object SparkManager {
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endQuery.format(
           queryTitle
         ), encloseHalfLength = encloseHalfLengthStart)
+
+      queries.map(query => query.dataframe)
     }
 
     object Stations {
       private val ctsSparkQueriesStations = Spark.Queries.Stations
       private val ctsLogsSparkQueriesStudiesStations = Logs.SparkQueries.Studies.Stations
       private val ctsStorageDataSparkStations = Storage.DataSpark.Stations
-      private val ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys = RemoteRequest.AemetAPI.Params.AllStationInfo.Metadata.DataFieldsJSONKeys
 
       def execute(): Unit = {
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startStudy.format(
@@ -385,8 +389,8 @@ object SparkManager {
             FetchAndSaveInfo(
               getStationCountByColumnInLapse(
                 column = (
-                  col(ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.provinciaJKey),
-                  ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.provinciaJKey
+                  col(ctsSparkQueriesStations.Execution.StationCountByState2024.param),
+                  ctsSparkQueriesStations.Execution.StationCountByState2024.paramGroupName
                 ),
                 startDate = ctsSparkQueriesStations.Execution.StationCountByState2024.startDate) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
@@ -513,6 +517,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10Highest2024.startDate,
                   endDate = None) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
@@ -535,6 +540,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10HighestDecade.startDate,
                   endDate = Some(ctsSparkQueriesSingleParamStudies.Execution.Top10HighestDecade.endDate)) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
@@ -557,6 +563,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10HighestGlobal.startDate,
                   endDate = Some(ctsSparkQueriesSingleParamStudies.Execution.Top10HighestGlobal.endDate)) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
@@ -579,6 +586,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10Lowest2024.startDate,
                   endDate = None,
                   highest = false
@@ -603,6 +611,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10LowestDecade.startDate,
                   endDate = Some(ctsSparkQueriesSingleParamStudies.Execution.Top10LowestDecade.endDate),
                   highest = false
@@ -627,6 +636,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10LowestGlobal.startDate,
                   endDate = Some(ctsSparkQueriesSingleParamStudies.Execution.Top10LowestGlobal.endDate),
                   highest = false
@@ -643,7 +653,7 @@ object SparkManager {
           )
 
           // erature evolution from the start of registers for each state
-          simpleFetchAndSave(
+          val regressionModelDf: DataFrame = simpleFetchAndSave(
             ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.evolFromStartForEachState.format(
               study.studyParam.capitalize
             ),
@@ -666,7 +676,9 @@ object SparkManager {
                 FetchAndSaveInfo(
                   getClimateParamInALapseById(
                     registry.stationId,
-                    List(study.dataframeColName),
+                    List(
+                      (study.dataframeColName, study.studyParamAbbrev)
+                    ),
                     registry.startDate,
                     Some(registry.endDate)
                   ) match {
@@ -682,10 +694,34 @@ object SparkManager {
                     registry.stateName,
                     study.studyParam.replace("_", " ")
                   )
+                ),
+                FetchAndSaveInfo(
+                  getStationClimateParamRegressionModelInALapse(
+                    registry.stationId,
+                    study.dataframeColName,
+                    registry.startDate,
+                    Some(registry.endDate)
+                  ) match {
+                    case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                      return
+                    case Right(dataFrame: DataFrame) => dataFrame
+                  },
+                  ctsStorageDataSparkSingleParamStudies.EvolFromStartForEachState.Dirs.resultEvolRegression.format(
+                    study.studyParamAbbrev,
+                    registry.stateNameNoSC.replace(" ", "_")
+                  ),
+                  ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.evolFromStartForEachStateStartRegression.format(
+                    registry.stateName.capitalize,
+                    study.studyParam.replace("_", " ")
+                  )
                 )
               )
             })
-          )
+          ).zipWithIndex.filter {
+            case (_, idx) => idx % 3 == 2
+          }.map(_._1).reduce(_ union _).persist(StorageLevel.MEMORY_AND_DISK_SER)
+
+          regressionModelDf.count()
 
           // Top 5 highest increment of erature
           simpleFetchAndSave(
@@ -696,7 +732,9 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamIncrementInAYearLapse(
                   stationIds = study.reprStationRegs.map(registry => registry.stationId),
+                  regressionModels = regressionModelDf,
                   climateParam = study.dataframeColName,
+                  paramNameToShow = study.studyParamAbbrev,
                   startYear = ctsSparkQueriesSingleParamStudies.Execution.Top5HighestInc.startYear,
                   endYear = ctsSparkQueriesSingleParamStudies.Execution.Top5HighestInc.endYear
                 ) match {
@@ -720,7 +758,9 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamIncrementInAYearLapse(
                   stationIds = study.reprStationRegs.map(registry => registry.stationId),
+                  regressionModels = regressionModelDf,
                   climateParam = study.dataframeColName,
+                  paramNameToShow = study.studyParamAbbrev,
                   startYear = ctsSparkQueriesSingleParamStudies.Execution.Top5LowestInc.startYear,
                   endYear = ctsSparkQueriesSingleParamStudies.Execution.Top5LowestInc.endYear,
                   highest = false
@@ -736,6 +776,8 @@ object SparkManager {
             )
           )
 
+          regressionModelDf.unpersist()
+
           // Get average erature in 2024 for all station in the spanish continental territory
           simpleFetchAndSave(
             ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.avg2024AllStationSpainContinental.format(
@@ -745,6 +787,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getAllStationsByStatesAvgClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsSparkQueriesSingleParamStudies.Execution.Avg2024AllStationSpain.startDate
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
@@ -767,6 +810,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getAllStationsByStatesAvgClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsSparkQueriesSingleParamStudies.Execution.Avg2024AllStationSpain.startDate,
                   states = Some(ctsSparkQueriesSingleParamStudies.Execution.Avg2024AllStationSpain.canaryIslandStates),
                 ) match {
@@ -792,7 +836,6 @@ object SparkManager {
       private val ctsSparkQueriesInterestingStudies = Spark.Queries.InterestingStudies
       private val ctsLogsSparkQueriesStudiesInterestingStudies = Logs.SparkQueries.Studies.InterestingStudies
       private val ctsStorageDataSparkInterestingStudies = Storage.DataSpark.InterestingStudies
-      private val ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys
 
       def execute(): Unit = {
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startStudy.format(
@@ -820,10 +863,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getClimateParamInALapseById(
                   registry.stationId,
-                  List(
-                    ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey,
-                    ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.presmaxJKey,
-                  ),
+                  ctsSparkQueriesInterestingStudies.Execution.PrecAndPressEvolFromStartForEachState.climateParams,
                   registry.startDate,
                   Some(registry.endDate)
                 ) match {
@@ -1039,12 +1079,12 @@ object SparkManager {
           allStationsDf
             .filter($"indicativo" === stationId)
             .select(
-              $"indicativo",
-              $"nombre",
-              $"provincia",
+              $"indicativo".alias("station_id"),
+              $"nombre".alias("station_name"),
+              $"provincia".alias("state"),
               $"latitud".alias("lat_dms"),
               $"longitud".alias("long_dms"),
-              $"altitud"
+              $"altitud".alias("altitude")
             )
         )
       } catch {
@@ -1066,8 +1106,12 @@ object SparkManager {
               case Some(end) => $"fecha".between(lit(startDate), lit(end))
               case None => year($"fecha") === startDate.toInt
             }
-          ).groupBy(column._1.alias(column._2))
-          .agg(countDistinct($"indicativo").alias("station_count"))
+          ).groupBy(column._1.as(column._2))
+          .agg(countDistinct($"indicativo").as("count"))
+          .select(
+            col(column._2),
+            $"count"
+          )
           .orderBy(column._2)
         )
       } catch {
@@ -1108,7 +1152,7 @@ object SparkManager {
             ).agg(
               lit(actualMin).as("min_value"),
               lit(actualMax).as("max_value"),
-              countDistinct("indicativo").as("station_count")
+              countDistinct("indicativo").as("count")
             )
           }.reduce(_.union(_)).orderBy("min_value")
         )
@@ -1132,10 +1176,10 @@ object SparkManager {
                 $"indicativo" === stationId &&
                 year($"fecha") === observationYear
             ).groupBy(
-              month($"fecha").alias("month")
+              month($"fecha").as("month")
             ).agg(
-              round(avg($"tmed"), 2).alias("avg_tmed"),
-              round(sum($"prec"), 2).alias("total_prec")
+              round(avg($"tmed"), 1).as("temp_monthly_avg"),
+              round(sum($"prec"), 1).as("prec_monthly_sum")
             ).orderBy($"month")
         )
       } catch {
@@ -1145,6 +1189,7 @@ object SparkManager {
 
     private def getTopNClimateParamInALapse(
       climateParam: String,
+      paramNameToShow: String,
       startDate: String,
       endDate: Option[String] = None,
       topN: Int = 10,
@@ -1163,14 +1208,14 @@ object SparkManager {
           .agg(avg(col(climateParam)).as(s"${climateParam}_avg"))
           .join(stationDf, Seq("indicativo"), "inner")
           .select(
-            $"stations.indicativo",
-            $"stations.nombre",
-            $"stations.provincia",
-            col(s"${climateParam}_avg"),
+            $"stations.indicativo".alias("station_id"),
+            $"stations.nombre".alias("station_name"),
+            $"stations.provincia".alias("state"),
+            col(s"${climateParam}_avg").alias(s"${paramNameToShow}_daily_avg"),
             $"stations.latitud".alias("lat_dms"),
             $"stations.longitud".alias("long_dms"),
-            $"stations.altitud"
-          ).orderBy(if (highest) col(s"${climateParam}_avg").desc else col(s"${climateParam}_avg").asc)
+            $"stations.altitud".alias("altitude")
+          ).orderBy(if (highest) col(s"${paramNameToShow}_daily_avg").desc else col(s"${paramNameToShow}_daily_avg").asc)
           .limit(topN)
           .withColumn("top", monotonically_increasing_id() + 1)
         )
@@ -1207,7 +1252,7 @@ object SparkManager {
               .orderBy(if (highest) col("days_with_conds").desc else col("days_with_conds").asc)
               .withColumn("top", monotonically_increasing_id() + 1)
               .select(
-                $"provincia",
+                $"provincia".alias("state"),
                 $"top"
               )
           } else {
@@ -1218,12 +1263,12 @@ object SparkManager {
               .orderBy(if (highest) col("days_with_conds").desc else col("days_with_conds").asc)
               .withColumn("top", monotonically_increasing_id() + 1)
               .select(
-                $"stations.indicativo",
-                $"stations.nombre",
-                $"stations.provincia",
+                $"stations.indicativo".alias("station_id"),
+                $"stations.nombre".alias("station_name"),
+                $"stations.provincia".alias("state"),
                 $"stations.latitud".alias("lat_dms"),
                 $"stations.longitud".alias("long_dms"),
-                $"stations.altitud",
+                $"stations.altitud".alias("altitude"),
                 $"top"
               )
           })
@@ -1237,7 +1282,7 @@ object SparkManager {
 
     private def getClimateParamInALapseById(
       stationId: String,
-      climateParams: Seq[String],
+      climateParams: Seq[(String, String)],
       startDate: String,
       endDate: Option[String] = None
     ): Either[Exception, DataFrame] = {
@@ -1251,11 +1296,11 @@ object SparkManager {
               case None => year($"fecha") === startDate.toInt
             })
           ) { (acc, climateParam) =>
-            acc.filter(col(climateParam).isNotNull)
+            acc.filter(col(climateParam._1).isNotNull)
           }
           .filter($"indicativo" === stationId)
-          .select(Seq(col("fecha")) ++ climateParams.map(param => col(param)): _*)
-          .orderBy("fecha")
+          .select(Seq(col("fecha").alias("date")) ++ climateParams.map(param => round(col(param._1), 1).alias(s"${param._2}_daily_avg")): _*)
+          .orderBy("date")
         )
       } catch {
         case exception: Exception => Left(exception)
@@ -1264,6 +1309,7 @@ object SparkManager {
 
     private def getAllStationsByStatesAvgClimateParamInALapse(
       climateParam: String,
+      paramNameToShow: String,
       startDate: String,
       endDate: Option[String] = None,
       states: Option[Seq[String]] = None
@@ -1284,11 +1330,13 @@ object SparkManager {
           .agg(avg(col(climateParam)).as(s"${climateParam}_avg"))
           .join(stationDf, Seq("indicativo"), "inner")
           .select(
-            $"stations.nombre",
-            col(s"${climateParam}_avg"),
+            $"stations.indicativo".alias("station_id"),
+            $"stations.nombre".alias("station_name"),
+            $"stations.provincia".alias("state"),
+            round(col(s"${climateParam}_avg"), 1).alias(s"${paramNameToShow}_daily_avg"),
             $"stations.latitud_dec".alias("lat_dec"),
             $"stations.longitud_dec".alias("long_dec"),
-            $"stations.altitud",
+            $"stations.altitud".alias("altitude")
           )
         )
       } catch {
@@ -1296,9 +1344,58 @@ object SparkManager {
       }
     }
 
+    private def getStationClimateParamRegressionModelInALapse(
+      stationId: String,
+      climateParam: String,
+      startYear: String,
+      endYear: Option[String] = None
+    ): Either[Exception, DataFrame] = {
+      try {
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
+
+        val filteredDF = meteoDf
+          .filter($"indicativo" === stationId)
+          .filter(endYear match {
+            case Some(end) => $"fecha".between(lit(startYear), lit(end))
+            case None => year($"fecha") === startYear
+          })
+          .filter(col(climateParam).isNotNull)
+          .withColumn("year", year($"fecha"))
+          .groupBy("year")
+          .agg(avg(col(climateParam)).as("climate_param_avg"))
+          .select(
+            $"year".alias("x"),
+            $"climate_param_avg".alias("y")
+          )
+
+        val (meanX, meanY) = filteredDF.agg(avg("x"), avg("y")).as[(Double, Double)].first() match {
+          case (mx, my) => (mx, my)
+        }
+
+        val (beta1, beta0) = filteredDF.withColumn("x_diff", $"x" - meanX)
+          .withColumn("y_diff", $"y" - meanY)
+          .agg(
+            sum($"x_diff" * $"y_diff").as("num"),
+            sum($"x_diff" * $"x_diff").as("den")
+          ).as[(Double, Double)].first() match {
+          case (num, den) =>
+            val b1 = num / den
+            val b0 = meanY - b1 * meanX
+            (b1, b0)
+        }
+
+        Right(Seq((stationId, beta1, beta0)).toDF("station_id", "beta_1", "beta_0"))
+
+      } catch {
+        case exception: Exception => Left(exception)
+      }
+    }
+
     private def getTopNClimateParamIncrementInAYearLapse(
       stationIds: Seq[String],
+      regressionModels: DataFrame,
       climateParam: String,
+      paramNameToShow: String,
       startYear: Int,
       endYear: Int,
       highest: Boolean = true,
@@ -1307,77 +1404,40 @@ object SparkManager {
       try {
         val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
         val stationDf: DataFrame = SparkCore.dataframes.allStations.as("stations")
-        
-        val filteredDf = meteoDf
-          .filter($"indicativo".isin(stationIds: _*))
-          .filter(col(climateParam).isNotNull)
-          .withColumn("year", year($"fecha"))
-          .groupBy("indicativo", "year")
-          .agg(avg(col(climateParam)).as(s"${climateParam}_avg"))
-          .persist(StorageLevel.MEMORY_AND_DISK_SER)
-
-        val characteristicsVectorAssembler = new VectorAssembler()
-          .setInputCols(Array("year"))
-          .setOutputCol("features")
-
-        val result = filteredDf
-          .select("indicativo")
-          .distinct()
-          .as[String]
-          .collect()
-          .flatMap { indicativo =>
-            val fittedModel = new LinearRegression().fit(
-              characteristicsVectorAssembler.transform(
-                filteredDf.filter($"indicativo" === indicativo)
-              ).select(
-                $"features", col(s"${climateParam}_avg").as("label")
-              )
-            )
-
-            val predictions = fittedModel.transform(
-                characteristicsVectorAssembler.transform(
-                  Seq(startYear, endYear).toDF("year")
-                )
-              ).select("year", "prediction")
-              .as[(Int, Double)]
-              .collect()
-              .toMap
-
-            for {
-              predStartYear <- predictions.get(startYear)
-              predEndYear <- predictions.get(endYear)
-            } yield (indicativo, predEndYear - predStartYear)
-          }
-
-        val mediaDiariaPorIndicativo = filteredDf
-          .filter($"year".between(startYear, endYear))
-          .groupBy("indicativo")
-          .agg(avg(col(s"${climateParam}_avg")).as(s"${climateParam}_daily_avg"))
-
-        filteredDf.unpersist(true)
 
         Right(
-          result
-            .toSeq
-            .toDF("indicativo", "incr")
-            .join(mediaDiariaPorIndicativo, Seq("indicativo"), "inner")
-            .join(stationDf, Seq("indicativo"), "inner")
+          regressionModels
+            .filter($"station_id".isin(stationIds: _*))
             .withColumn(
-              "incr_percentage",
-              ($"incr" / col(s"${climateParam}_daily_avg")) * 100
+              "inc",
+              ($"beta_1" * lit(endYear) + $"beta_0") - ($"beta_1" * lit(startYear) + $"beta_0")
             )
+            .select($"station_id".as("indicativo"), $"inc")
+            .join(
+              meteoDf
+                .filter($"indicativo".isin(stationIds: _*))
+                .filter(col(climateParam).isNotNull)
+                .withColumn("year", year($"fecha"))
+                .filter($"year".between(startYear, endYear))
+                .groupBy("indicativo")
+                .agg(avg(col(climateParam)).as(s"${climateParam}_daily_avg")),
+              Seq("indicativo"),
+              "inner"
+            )
+            .join(stationDf, Seq("indicativo"), "inner")
+            .withColumn("inc_perc", $"inc" / col(s"${climateParam}_daily_avg") * 100)
             .select(
-              $"incr",
-              $"incr_percentage",
-              col(s"${climateParam}_daily_avg"),
-              $"stations.indicativo",
-              $"stations.nombre",
-              $"stations.provincia",
+              round($"inc", 1).alias("inc"),
+              round($"inc_perc", 1).alias("inc_prec"),
+              round(col(s"${climateParam}_daily_avg"), 1).alias(s"${paramNameToShow}_daily_avg"),
+              $"stations.indicativo".alias("station_id"),
+              $"stations.nombre".alias("station_name"),
+              $"stations.provincia".alias("state"),
               $"stations.latitud".alias("lat_dms"),
               $"stations.longitud".alias("long_dms"),
-              $"stations.altitud"
+              $"stations.altitud".alias("altitude")
             )
-            .orderBy(if (highest) $"incr".desc else $"incr".asc)
+            .orderBy(if (highest) $"inc".desc else $"inc".asc)
             .limit(topN)
             .withColumn("top", monotonically_increasing_id() + 1)
         )

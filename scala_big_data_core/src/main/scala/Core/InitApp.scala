@@ -322,10 +322,13 @@ object InitApp extends App {
 //  SparkQueries.RelativeHumidity.execute()
 //  SparkQueries.InterestingStudies.execute()
 
-  SparkQueries.Stations.execute()
-  SparkQueries.Climograph.execute()
-  SparkQueries.SingleParamStudies.execute()
-  SparkQueries.InterestingStudies.execute()
+
+  //SparkQueries.Stations.execute()
+  //SparkQueries.Climograph.execute()
+  //SparkQueries.SingleParamStudies.execute()
+  //SparkQueries.InterestingStudies.execute()
+
+  SparkQueries.execute()
 
   //SparkQueries.test()
 
