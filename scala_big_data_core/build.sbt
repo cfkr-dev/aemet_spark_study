@@ -24,3 +24,5 @@ libraryDependencies += "com.lihaoyi" %% "upickle" % "4.0.2"
 
 // https://mvnrepository.com/artifact/com.lihaoyi/fansi
 libraryDependencies += "com.lihaoyi" %% "fansi" % "0.5.0"
+
+libraryDependencies += "com.github.pureconfig" %% "pureconfig" % "0.17.8"
