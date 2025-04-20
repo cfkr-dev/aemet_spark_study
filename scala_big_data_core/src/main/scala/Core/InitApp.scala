@@ -8,8 +8,59 @@ import Core.DataExtraction.Ifapa.IfapaAPIClient
 import Core.DataExtraction.Ifapa.IfapaToAemetConverter
 import Core.Spark.SparkManager.SparkQueries
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import pureconfig.error.CannotConvert
 
 object InitApp extends App {
+
+  import pureconfig._
+  import pureconfig.generic.auto._
+  import com.typesafe.config.ConfigFactory
+
+  // ConfigReader personalizado para Double
+  implicit val doubleWithInfReader: ConfigReader[Double] = ConfigReader.fromString {
+    case "+inf" | "inf" | "∞" | "Infinity" => Right(Double.PositiveInfinity)
+    case "-inf" | "-∞" | "-Infinity" => Right(Double.NegativeInfinity)
+    case "NaN" => Right(Double.NaN)
+    case s =>
+      try Right(s.toDouble)
+      catch {
+        case _: NumberFormatException =>
+          Left(CannotConvert(s, "Double", "Formato inválido o no soportado"))
+      }
+  }
+
+  //case class ClimateParam(name: String, min: Double, max: Double)
+  //case class AppConfig(climateParams: List[(String, Double, Double)])
+
+  case class TestTop10(climateParams: List[(String, Double, Double)], startDate: String, endDate: String)
+
+  // Cargar archivo .conf que incluye ${...}
+  val externalConfig = ConfigFactory.parseFile(new java.io.File("./src/main/resources/config/spark/execution/interesting-studies.conf")).resolve()
+
+  // Usar PureConfig para deserializar
+  val config = ConfigSource.fromConfig(externalConfig).at("top-10-better-sun-power").loadOrThrow[TestTop10]
+
+
+
+
+  // Convertir a tu formato deseado: List[(String, Double, Double)]
+//  val result: List[(String, Double, Double)] =
+//    config.climateParams.map(p => (p.name, p.min, p.max))
+
+  // Mostrarlo
+  println(config.toString)
+
+
+
+
+
+
+
+
+
+
+
+
 
   //AemetAPIClient.aemetDataExtraction()
   //IfapaAPIClient.ifapaDataExtraction()
@@ -328,7 +379,7 @@ object InitApp extends App {
   //SparkQueries.SingleParamStudies.execute()
   //SparkQueries.InterestingStudies.execute()
 
-  SparkQueries.execute()
+  //SparkQueries.execute()
 
   //SparkQueries.test()
 
