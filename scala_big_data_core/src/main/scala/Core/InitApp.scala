@@ -3,6 +3,9 @@ package Core
 //import InitApp.ec
 
 //import Config.ConstantsV2.Spark.Queries.Temperature.tempEvolFromStartForEachState.stationRegistries
+
+import Config.DataExtraction
+import Config.DataExtraction.Constants
 import Core.DataExtraction.Aemet.AemetAPIClient
 import Core.DataExtraction.Ifapa.IfapaAPIClient
 import Core.DataExtraction.Ifapa.IfapaToAemetConverter
@@ -12,33 +15,56 @@ import pureconfig.error.CannotConvert
 
 object InitApp extends App {
 
-  import pureconfig._
-  import pureconfig.generic.auto._
-  import com.typesafe.config.ConfigFactory
+//  import pureconfig._
+//  import pureconfig.generic.auto._
+//  import com.typesafe.config.ConfigFactory
+//
+//  // ConfigReader personalizado para Double
+//  implicit val doubleWithInfReader: ConfigReader[Double] = ConfigReader.fromString {
+//    case "+inf" | "inf" | "∞" | "Infinity" => Right(Double.PositiveInfinity)
+//    case "-inf" | "-∞" | "-Infinity" => Right(Double.NegativeInfinity)
+//    case "NaN" => Right(Double.NaN)
+//    case s =>
+//      try Right(s.toDouble)
+//      catch {
+//        case _: NumberFormatException =>
+//          Left(CannotConvert(s, "Double", "Formato inválido o no soportado"))
+//      }
+//  }
+//
+//  //case class ClimateParam(name: String, min: Double, max: Double)
+//  //case class AppConfig(climateParams: List[(String, Double, Double)])
+//
+//  case class TestTop10(climateParams: List[(String, Double, Double)], startDate: String, endDate: String)
+//
+//
+//  // Definir el modelo de configuración con camelCase
+//  case class Formats(
+//    dateHour: String,
+//    dateHourUtc: String,
+//    dateHourZoned: String,
+//    dateFormat: String,
+//    dateFormatFile: String,
+//    hourMinuteFormat: String
+//  )
+//
+//  case class Errors(
+//    failOnGettingJson: String,
+//    errorInReadingFile: String,
+//    errorInDirectoryCreation: String
+//  )
+//
+//  case class AppConfig(
+//    formats: Formats,
+//    errors: Errors
+//  )
+//
+//  // Cargar archivo .conf que incluye ${...}
+//  val externalConfig = ConfigFactory.parseFile(new java.io.File("./src/main/resources/config/global/utils.conf")).resolve()
+//
+//  // Usar PureConfig para deserializar
+//  val config = ConfigSource.fromConfig(externalConfig).loadOrThrow[AppConfig]
 
-  // ConfigReader personalizado para Double
-  implicit val doubleWithInfReader: ConfigReader[Double] = ConfigReader.fromString {
-    case "+inf" | "inf" | "∞" | "Infinity" => Right(Double.PositiveInfinity)
-    case "-inf" | "-∞" | "-Infinity" => Right(Double.NegativeInfinity)
-    case "NaN" => Right(Double.NaN)
-    case s =>
-      try Right(s.toDouble)
-      catch {
-        case _: NumberFormatException =>
-          Left(CannotConvert(s, "Double", "Formato inválido o no soportado"))
-      }
-  }
-
-  //case class ClimateParam(name: String, min: Double, max: Double)
-  //case class AppConfig(climateParams: List[(String, Double, Double)])
-
-  case class TestTop10(climateParams: List[(String, Double, Double)], startDate: String, endDate: String)
-
-  // Cargar archivo .conf que incluye ${...}
-  val externalConfig = ConfigFactory.parseFile(new java.io.File("./src/main/resources/config/spark/execution/interesting-studies.conf")).resolve()
-
-  // Usar PureConfig para deserializar
-  val config = ConfigSource.fromConfig(externalConfig).at("top-10-better-sun-power").loadOrThrow[TestTop10]
 
 
 
@@ -48,9 +74,16 @@ object InitApp extends App {
 //    config.climateParams.map(p => (p.name, p.min, p.max))
 
   // Mostrarlo
-  println(config.toString)
+//  println(config.errors.failOnGettingJson.format("asdasd"))
 
+  println(Config.DataExtraction.Constants.storage)
+  println(Config.DataExtraction.Constants.log.aemetConf.allStationInfoEndFetchingMetadata)
+  println(Config.DataExtraction.Constants.url)
+  println(Config.DataExtraction.Constants.execution)
 
+  println(Config.Global.Constants.schema)
+  println(Config.Global.Constants.storage)
+  println(Config.Global.Constants.utils)
 
 
 
