@@ -7,7 +7,6 @@ import pureconfig.{ConfigReader, ConfigSource}
 import scala.reflect.ClassTag
 
 object PureConfigUtils {
-  // Reader personalizado para Double que admite "+inf", "-inf", etc.
   implicit val doubleWithInfReader: ConfigReader[Double] = ConfigReader.fromString {
     case "+inf" | "inf" | "∞" | "Infinity"     => Right(Double.PositiveInfinity)
     case "-inf" | "-∞" | "-Infinity"           => Right(Double.NegativeInfinity)
