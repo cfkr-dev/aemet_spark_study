@@ -1,17 +1,10 @@
 package Core
 
+import Config.GlobalConf.Constants
+
 //import InitApp.ec
 
 //import Config.ConstantsV2.Spark.Queries.Temperature.tempEvolFromStartForEachState.stationRegistries
-
-import Config.DataExtraction
-import Config.DataExtraction.Constants
-import Core.DataExtraction.Aemet.AemetAPIClient
-import Core.DataExtraction.Ifapa.IfapaAPIClient
-import Core.DataExtraction.Ifapa.IfapaToAemetConverter
-import Core.Spark.SparkManager.SparkQueries
-import org.apache.spark.sql.{DataFrame, SparkSession}
-import pureconfig.error.CannotConvert
 
 object InitApp extends App {
 
@@ -76,15 +69,18 @@ object InitApp extends App {
   // Mostrarlo
 //  println(config.errors.failOnGettingJson.format("asdasd"))
 
-  println(Config.DataExtraction.Constants.storage)
-  println(Config.DataExtraction.Constants.log.aemetConf.allStationInfoEndFetchingMetadata)
-  println(Config.DataExtraction.Constants.url)
-  println(Config.DataExtraction.Constants.execution)
+  println(Config.DataExtractionConf.Constants.storage)
+  println(Config.DataExtractionConf.Constants.log.aemetConf.allStationInfoEndFetchingMetadata)
+  println(Config.DataExtractionConf.Constants.url)
+  println(Config.DataExtractionConf.Constants.execution)
 
-  println(Config.Global.Constants.schema)
-  println(Config.Global.Constants.storage)
-  println(Config.Global.Constants.utils)
+  println(Config.GlobalConf.Constants.schema)
+  println(Config.GlobalConf.Constants.storage)
+  println(Config.GlobalConf.Constants.utils)
 
+  println(Config.SparkConf.Constants.execution)
+  println(Config.SparkConf.Constants.log)
+  println(Config.SparkConf.Constants.storage)
 
 
 
