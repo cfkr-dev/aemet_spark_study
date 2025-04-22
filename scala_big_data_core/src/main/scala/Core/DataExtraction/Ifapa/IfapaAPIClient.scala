@@ -1,6 +1,6 @@
 package Core.DataExtraction.Ifapa
 
-import Config.ConstantsV2._
+import Config.DataExtractionConf
 import Utils.ChronoUtils.{await, executeAndAwaitIfTimeNotExceedMinimum}
 import Utils.ConsoleLogUtils.Message._
 import Utils.FileUtils.saveContentToPath
@@ -12,9 +12,11 @@ import ujson.{Value, read}
 import scala.annotation.tailrec
 
 object IfapaAPIClient {
-  private val ctsStorageDataIfapaGlobal = Storage.DataIfapa.Global
-  private val ctsRemoteReqIfapaParamsGlobal = RemoteRequest.IfapaAPI.Params.Global
-  private val ctsLogsIfapaGlobal = Logs.Ifapa.Global
+  private val ctsExecutionIfapa = DataExtractionConf.Constants.execution.ifapaConf
+  private val ctsExecutionGlobal = DataExtractionConf.Constants.execution.globalConf
+  private val ctsLog = DataExtractionConf.Constants.log.ifapaConf
+  private val ctsStorage = DataExtractionConf.Constants.storage.ifapaConf
+  private val ctsUrl = DataExtractionConf.Constants.url.ifapaConf
 
   private def getIfapaAPIResource(uri: Uri): Either[Exception, Value] = {
     sendRequest(uri) match {
@@ -24,28 +26,26 @@ object IfapaAPIClient {
   }
 
   def ifapaDataExtraction(): Unit = {
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaGlobal.IfapaDataExtraction.singleStationInfoStartFetchingMetadata)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationInfoStartFetchingMetadata)
     SingleStationInfo.saveSingleStationInfoMetadata()
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaGlobal.IfapaDataExtraction.singleStationInfoEndFetchingMetadata)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationInfoEndFetchingMetadata)
 
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaGlobal.IfapaDataExtraction.singleStationMeteoInfoStartFetchingMetadata)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationMeteoInfoStartFetchingMetadata)
     SingleStationMeteoInfo.saveSingleStationMeteoInfoMetadata()
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaGlobal.IfapaDataExtraction.singleStationMeteoInfoEndFetchingMetadata)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationMeteoInfoEndFetchingMetadata)
 
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaGlobal.IfapaDataExtraction.singleStationInfoStartFetchingData)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationInfoStartFetchingData)
     SingleStationInfo.saveSingleStationInfo()
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaGlobal.IfapaDataExtraction.singleStationInfoEndFetchingData)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationInfoEndFetchingData)
 
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaGlobal.IfapaDataExtraction.singleStationMeteoInfoStartFetchingData)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationMeteoInfoStartFetchingData)
     SingleStationMeteoInfo.saveSingleStationMeteoInfo()
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaGlobal.IfapaDataExtraction.singleStationMeteoInfoEndFetchingData)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationMeteoInfoEndFetchingData)
   }
 
   private object SingleStationMeteoInfo {
-    private val ctsStorageDataIfapaSingleStationMeteoInfo = Storage.DataIfapa.SingleStationMeteoInfo
-    private val ctsRemoteReqIfapaParamsSingleStationMeteoInfo = RemoteRequest.IfapaAPI.Params.SingleStationMeteoInfo
-    private val ctsRemoteReqIfapaURISingleStationMeteoInfo = RemoteRequest.IfapaAPI.URI.SingleStationMeteoInfo
-    private val ctsRemoteReqIfapaURIAllMetadata = RemoteRequest.IfapaAPI.URI.AllMetadata
+    private val ctsStorageSingleMeteoInfo = ctsStorage.singleStationMeteoInfo
+    private val ctsExecutionApiResSingleStationMeteoInfo = ctsExecutionIfapa.apiResources.singleStationMeteoInfo
 
     def saveSingleStationMeteoInfoMetadata(): Unit = {
       def saveSingleStationMeteoInfoMetadataAction(): Unit = {
@@ -62,9 +62,9 @@ object IfapaAPIClient {
                 filename,
                 lowercaseKeys(
                   json
-                  (ctsRemoteReqIfapaParamsGlobal.ResponseJSONKeys.definitions)
-                  (ctsRemoteReqIfapaParamsGlobal.Metadata.SchemaJSONKeys.singleStationMeteoInfo)
-                  (ctsRemoteReqIfapaParamsGlobal.Metadata.SchemaJSONKeys.DataField)
+                  (ctsExecutionIfapa.reqResp.response.metadata)
+                  (ctsExecutionIfapa.reqResp.metadata.singleStationMeteoInfo)
+                  (ctsExecutionIfapa.reqResp.metadata.fieldProperties)
                 ),
                 appendContent = false,
                 writeJSON
@@ -77,17 +77,17 @@ object IfapaAPIClient {
           }
 
           if (!getAndSave(
-            ctsRemoteReqIfapaURIAllMetadata.dataEndpoint,
-            ctsStorageDataIfapaSingleStationMeteoInfo.Dirs.metadata,
-            ctsStorageDataIfapaSingleStationMeteoInfo.FileNames.metadata
+            ctsUrl.allMeteadata,
+            ctsStorageSingleMeteoInfo.dirs.metadata,
+            ctsStorageSingleMeteoInfo.filenames.metadata
           )) {
-            await(ctsRemoteReqIfapaParamsGlobal.Execution.Time.minimumMillisBetweenMetadataRequest)
+            await(ctsExecutionGlobal.delayTimes.requestMetadata)
             doWhileWithGetAndSave()
           }
         }
 
         executeAndAwaitIfTimeNotExceedMinimum(
-          ctsRemoteReqIfapaParamsGlobal.Execution.Time.minimumMillisBetweenMetadataRequest
+          ctsExecutionGlobal.delayTimes.requestMetadata
         ) {
           doWhileWithGetAndSave()
         }
@@ -97,27 +97,31 @@ object IfapaAPIClient {
     }
 
     def saveSingleStationMeteoInfo(): Unit = {
-      def saveSingleStationMeteoInfoAction(stateCode: String,
-                                           stationCode: String,
-                                           startDate: String,
-                                           endDate: String,
-                                           getEt0: Boolean = false
-                                          ): Unit = {
+      def saveSingleStationMeteoInfoAction(
+        stateCode: String,
+        stationCode: String,
+        startDate: String,
+        endDate: String,
+        getEt0: Boolean = false
+      ): Unit = {
         @tailrec
-        def doWhileWithGetAndSave(stateCode: String,
-                                  stationCode: String,
-                                  startDate: String,
-                                  endDate: String,
-                                  getEt0: Boolean): Unit = {
-          def getAndSave(endpoint: String,
-                         stateCode: String,
-                         stationCode: String,
-                         startDate: String,
-                         endDate: String,
-                         getEt0: Boolean,
-                         path: String,
-                         filename: String
-                        ): Boolean = {
+        def doWhileWithGetAndSave(
+          stateCode: String,
+          stationCode: String,
+          startDate: String,
+          endDate: String,
+          getEt0: Boolean
+        ): Unit = {
+          def getAndSave(
+            endpoint: String,
+            stateCode: String,
+            stationCode: String,
+            startDate: String,
+            endDate: String,
+            getEt0: Boolean,
+            path: String,
+            filename: String
+          ): Boolean = {
             getIfapaAPIResource(
               buildUrl(
                 endpoint,
@@ -147,43 +151,41 @@ object IfapaAPIClient {
           }
 
           if (!getAndSave(
-            ctsRemoteReqIfapaURISingleStationMeteoInfo.dataEndpoint,
+            ctsUrl.singleStationMeteoInfo,
             stateCode,
             stationCode,
             startDate,
             endDate,
             getEt0,
-            ctsStorageDataIfapaSingleStationMeteoInfo.Dirs.dataRegistry,
-            ctsStorageDataIfapaSingleStationMeteoInfo.FileNames.dataRegistry.format(
+            ctsStorageSingleMeteoInfo.dirs.data,
+            ctsStorageSingleMeteoInfo.filenames.data.format(
               startDate, endDate
             )
           )) {
-            await(ctsRemoteReqIfapaParamsGlobal.Execution.Time.minimumMillisBetweenRequest)
+            await(ctsExecutionGlobal.delayTimes.requestSimple)
             doWhileWithGetAndSave(stateCode, stationCode, startDate, endDate, getEt0)
           }
         }
 
         executeAndAwaitIfTimeNotExceedMinimum(
-          ctsRemoteReqIfapaParamsGlobal.Execution.Time.minimumMillisBetweenRequest
+          ctsExecutionGlobal.delayTimes.requestSimple
         ) {
           doWhileWithGetAndSave(stateCode, stationCode, startDate, endDate, getEt0)
         }
       }
 
       saveSingleStationMeteoInfoAction(
-        ctsRemoteReqIfapaParamsSingleStationMeteoInfo.Execution.Args.stateAlmeriaCode,
-        ctsRemoteReqIfapaParamsSingleStationMeteoInfo.Execution.Args.stationTabernasCode,
-        ctsRemoteReqIfapaParamsSingleStationMeteoInfo.Execution.Args.startDate,
-        ctsRemoteReqIfapaParamsSingleStationMeteoInfo.Execution.Args.endDate
+        ctsExecutionApiResSingleStationMeteoInfo.stateCode,
+        ctsExecutionApiResSingleStationMeteoInfo.stationCode,
+        ctsExecutionApiResSingleStationMeteoInfo.startDate,
+        ctsExecutionApiResSingleStationMeteoInfo.endDate
       )
     }
   }
 
   private object SingleStationInfo {
-    private val ctsStorageDataIfapaSingleStationInfo = Storage.DataIfapa.SingleStationInfo
-    private val ctsRemoteReqIfapaParamsSingleStationInfo = RemoteRequest.IfapaAPI.Params.SingleStationInfo
-    private val ctsRemoteReqIfapaURISingleStationInfo = RemoteRequest.IfapaAPI.URI.SingleStationInfo
-    private val ctsRemoteReqIfapaURIAllMetadata = RemoteRequest.IfapaAPI.URI.AllMetadata
+    private val ctsStorageSingleStationInfo = ctsStorage.singleStationInfo
+    private val ctsExecutionApiResSingleStationInfo = ctsExecutionIfapa.apiResources.singleStationInfo
 
     def saveSingleStationInfoMetadata(): Unit = {
       def saveSingleStationInfoMetadataAction(): Unit = {
@@ -200,9 +202,9 @@ object IfapaAPIClient {
                 filename,
                 lowercaseKeys(
                   json
-                  (ctsRemoteReqIfapaParamsGlobal.ResponseJSONKeys.definitions)
-                  (ctsRemoteReqIfapaParamsGlobal.Metadata.SchemaJSONKeys.singleStationInfo)
-                  (ctsRemoteReqIfapaParamsGlobal.Metadata.SchemaJSONKeys.DataField)
+                  (ctsExecutionIfapa.reqResp.response.metadata)
+                  (ctsExecutionIfapa.reqResp.metadata.singleStationInfo)
+                  (ctsExecutionIfapa.reqResp.metadata.fieldProperties)
                 ),
                 appendContent = false,
                 writeJSON
@@ -215,17 +217,17 @@ object IfapaAPIClient {
           }
 
           if (!getAndSave(
-            ctsRemoteReqIfapaURIAllMetadata.dataEndpoint,
-            ctsStorageDataIfapaSingleStationInfo.Dirs.metadata,
-            ctsStorageDataIfapaSingleStationInfo.FileNames.metadata
+            ctsUrl.allMeteadata,
+            ctsStorageSingleStationInfo.dirs.metadata,
+            ctsStorageSingleStationInfo.filenames.metadata
           )) {
-            await(ctsRemoteReqIfapaParamsGlobal.Execution.Time.minimumMillisBetweenMetadataRequest)
+            await(ctsExecutionGlobal.delayTimes.requestMetadata)
             doWhileWithGetAndSave()
           }
         }
 
         executeAndAwaitIfTimeNotExceedMinimum(
-          ctsRemoteReqIfapaParamsGlobal.Execution.Time.minimumMillisBetweenMetadataRequest
+          ctsExecutionGlobal.delayTimes.requestMetadata
         ) {
           doWhileWithGetAndSave()
         }
@@ -235,19 +237,22 @@ object IfapaAPIClient {
     }
 
     def saveSingleStationInfo(): Unit = {
-      def saveSingleStationInfoAction(stateCode: String,
-                                      stationCode: String
-                                     ): Unit = {
+      def saveSingleStationInfoAction(
+        stateCode: String,
+        stationCode: String
+      ): Unit = {
         @tailrec
-        def doWhileWithGetAndSave(stateCode: String,
-                                  stationCode: String
-                                 ): Unit = {
-          def getAndSave(endpoint: String,
-                         stateCode: String,
-                         stationCode: String,
-                         path: String,
-                         filename: String
-                        ): Boolean = {
+        def doWhileWithGetAndSave(
+          stateCode: String,
+          stationCode: String
+        ): Unit = {
+          def getAndSave(
+            endpoint: String,
+            stateCode: String,
+            stationCode: String,
+            path: String,
+            filename: String
+          ): Boolean = {
             getIfapaAPIResource(
               buildUrl(
                 endpoint,
@@ -274,29 +279,29 @@ object IfapaAPIClient {
           }
 
           if (!getAndSave(
-            ctsRemoteReqIfapaURISingleStationInfo.dataEndpoint,
+            ctsUrl.singleStationInfo,
             stateCode,
             stationCode,
-            ctsStorageDataIfapaSingleStationInfo.Dirs.dataRegistry,
-            ctsStorageDataIfapaSingleStationInfo.FileNames.dataRegistry.format(
+            ctsStorageSingleStationInfo.dirs.data,
+            ctsStorageSingleStationInfo.filenames.data.format(
               stateCode, stationCode
             )
           )) {
-            await(ctsRemoteReqIfapaParamsGlobal.Execution.Time.minimumMillisBetweenRequest)
+            await(ctsExecutionGlobal.delayTimes.requestSimple)
             doWhileWithGetAndSave(stateCode, stationCode)
           }
         }
 
         executeAndAwaitIfTimeNotExceedMinimum(
-          ctsRemoteReqIfapaParamsGlobal.Execution.Time.minimumMillisBetweenRequest
+          ctsExecutionGlobal.delayTimes.requestSimple
         ) {
           doWhileWithGetAndSave(stateCode, stationCode)
         }
       }
 
       saveSingleStationInfoAction(
-        ctsRemoteReqIfapaParamsSingleStationInfo.Execution.Args.stateAlmeriaCode,
-        ctsRemoteReqIfapaParamsSingleStationInfo.Execution.Args.stationTabernasCode
+        ctsExecutionApiResSingleStationInfo.stateCode,
+        ctsExecutionApiResSingleStationInfo.stateCode
       )
     }
   }

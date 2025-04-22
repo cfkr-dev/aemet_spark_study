@@ -1,6 +1,6 @@
 package Core.DataExtraction.Aemet
 
-import Config.ConstantsV2
+import Config.{DataExtractionConf, GlobalConf}
 import Utils.ChronoUtils.{await, executeAndAwaitIfTimeNotExceedMinimum}
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleMessage}
 import Utils.FileUtils.saveContentToPath
@@ -16,42 +16,44 @@ import java.time.format.DateTimeFormatter
 import scala.annotation.tailrec
 
 object AemetAPIClient {
-  private val ctsStorageDataAemetGlobal = ConstantsV2.Storage.DataAemet.Global
-  private val ctsRemoteReqAemetParamsGlobal = ConstantsV2.RemoteRequest.AemetAPI.Params.Global
-  private val ctsLogsAemetGlobal = ConstantsV2.Logs.Aemet.Global
-
-  private val APIKey = FileUtils.getContentFromPath(ctsStorageDataAemetGlobal.FilePaths.apiKey)
+  private val ctsExecutionAemet = DataExtractionConf.Constants.execution.aemetConf
+  private val ctsExecutionGlobal = DataExtractionConf.Constants.execution.globalConf
+  private val ctsLog = DataExtractionConf.Constants.log.aemetConf
+  private val ctsStorage = DataExtractionConf.Constants.storage.aemetConf
+  private val ctsUrl = DataExtractionConf.Constants.url.aemetConf
+  private val ctsUtils = GlobalConf.Constants.utils
 
   def aemetDataExtraction(): Unit = {
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsAemetGlobal.AemetDataExtraction.allStationInfoStartFetchingMetadata)
+    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoStartFetchingMetadata)
     AllStationsData.saveStationInfoMetadata()
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsAemetGlobal.AemetDataExtraction.allStationInfoEndFetchingMetadata)
+    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoEndFetchingMetadata)
 
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsAemetGlobal.AemetDataExtraction.allMeteoInfoStartFetchingMetadata)
+    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoStartFetchingMetadata)
     AllStationsMeteorologicalDataBetweenDates.saveStationMeteoInfoMetadata()
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsAemetGlobal.AemetDataExtraction.allMeteoInfoEndFetchingMetadata)
+    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoEndFetchingMetadata)
 
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsAemetGlobal.AemetDataExtraction.allStationInfoStartFetchingData)
+    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoStartFetchingData)
     AllStationsData.saveStationInfo()
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsAemetGlobal.AemetDataExtraction.allStationInfoEndFetchingData)
+    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoEndFetchingData)
 
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsAemetGlobal.AemetDataExtraction.allMeteoInfoStartFetchingData)
+    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoStartFetchingData)
     AllStationsMeteorologicalDataBetweenDates.saveStationMeteoInfo()
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsAemetGlobal.AemetDataExtraction.allMeteoInfoEndFetchingData)
+    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoEndFetchingData)
   }
 
-  private def getAemetAPIResource(uri: Uri,
-                                  isMetadata: Boolean = false
-                                 ): Either[Exception, ujson.Value] = {
+  private def getAemetAPIResource(
+    uri: Uri,
+    isMetadata: Boolean = false
+  ): Either[Exception, ujson.Value] = {
     sendRequest(uri) match {
       case Right(response) =>
         val dataParsedToJSON = ujson.read(response.body)
-        dataParsedToJSON(ctsRemoteReqAemetParamsGlobal.ResponseJSONKeys.stateNumber).num.toInt match {
+        dataParsedToJSON(ctsExecutionAemet.reqResp.response.stateNumber).num.toInt match {
           case 200 =>
             val requestURIResource: String = if (isMetadata) {
-              ctsRemoteReqAemetParamsGlobal.ResponseJSONKeys.metadata
+              ctsExecutionAemet.reqResp.response.metadata
             } else {
-              ctsRemoteReqAemetParamsGlobal.ResponseJSONKeys.data
+              ctsExecutionAemet.reqResp.response.data
             }
 
             sendRequest(uri"${dataParsedToJSON(requestURIResource).str}") match {
@@ -59,39 +61,39 @@ object AemetAPIClient {
               case Left(exception) => Left(exception)
             }
 
-          case _ => Left(new Exception(ctsLogsAemetGlobal.GetAemetResource.failOnGettingJSON.format(uri.toString())))
+          case _ => Left(new Exception(ctsUtils.errors.failOnGettingJson.format(uri.toString())))
         }
       case Left(exception) => Left(exception)
     }
   }
 
   private object AllStationsMeteorologicalDataBetweenDates {
-    private val ctsStorageDataAemetAllMeteoInfo = ConstantsV2.Storage.DataAemet.AllMeteoInfo
-    private val ctsRemoteReqAemetParamsAllMeteoInfo = ConstantsV2.RemoteRequest.AemetAPI.Params.AllMeteoInfo
-    private val ctsRemoteReqAemetURIAllMeteoInfo = ConstantsV2.RemoteRequest.AemetAPI.URI.AllMeteoInfo
+    private val ctsStorageAllMeteoInfo = ctsStorage.allMeteoInfo
+    private val ctsExecutionApiResAllMeteoInfo = ctsExecutionAemet.apiResources.allMeteoInfo
 
-    private def getAndSave(endpoint: String,
-                           startDate: ZonedDateTime,
-                           endDate: ZonedDateTime,
-                           isMetadata: Boolean,
-                           path: String,
-                           filename: String
-                          ): Boolean = {
+    private def getAndSave(
+      endpoint: String,
+      startDate: ZonedDateTime,
+      endDate: ZonedDateTime,
+      isMetadata: Boolean,
+      path: String,
+      filename: String
+    ): Boolean = {
       getAemetAPIResource(
         buildUrl(
           endpoint,
           List(
             startDate.format(
-              DateTimeFormatter.ofPattern(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Format.dateHour)
+              DateTimeFormatter.ofPattern(ctsUtils.formats.dateHourUtc)
             ),
             endDate.format(
-              DateTimeFormatter.ofPattern(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Format.dateHour)
+              DateTimeFormatter.ofPattern(ctsUtils.formats.dateHourUtc)
             )
           ),
           List(
-            (ctsRemoteReqAemetParamsGlobal.RequestJSONKeys.apiKey, APIKey match {
-              case Right(apiKey) => apiKey
-              case Left(exception) => throw exception
+            (ctsExecutionAemet.reqResp.request.apiKey, sys.env.get(ctsExecutionAemet.reqResp.request.apiKeyEnvName) match {
+              case Some(apiKey) => apiKey
+              case None => throw new Exception(ctsUtils.errors.environmentVariableNotFound.format(ctsExecutionAemet.reqResp.request.apiKeyEnvName))
             })
           )
         ), isMetadata = isMetadata
@@ -121,30 +123,30 @@ object AemetAPIClient {
         @tailrec
         def doWhileWithGetAndSave(startDate: ZonedDateTime, endDate: ZonedDateTime): Unit = {
           if (!getAndSave(
-            ctsRemoteReqAemetURIAllMeteoInfo.dataEndpoint,
+            ctsUrl.allMeteoInfo,
             startDate,
             endDate,
             isMetadata = true,
-            ctsStorageDataAemetAllMeteoInfo.Dirs.metadata,
-            ctsStorageDataAemetAllMeteoInfo.FileNames.metadata)
+            ctsStorageAllMeteoInfo.dirs.metadata,
+            ctsStorageAllMeteoInfo.filenames.metadata)
           ) {
-            ChronoUtils.await(ctsRemoteReqAemetParamsGlobal.Execution.Time.minimumMillisBetweenMetadataRequest)
+            ChronoUtils.await(ctsExecutionGlobal.delayTimes.requestMetadata)
             doWhileWithGetAndSave(startDate, endDate)
           }
         }
 
-        if (!startDate.isBefore(DateUtils.getDateZonedDateTime(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Args.endDate))) return
+        if (!startDate.isBefore(DateUtils.getDateZonedDateTime(ctsExecutionApiResAllMeteoInfo.endDate))) return
 
         ChronoUtils.executeAndAwaitIfTimeNotExceedMinimum(
-          ctsRemoteReqAemetParamsGlobal.Execution.Time.minimumMillisBetweenMetadataRequest
+          ctsExecutionGlobal.delayTimes.requestMetadata
         ) {
           doWhileWithGetAndSave(startDate, endDate)
         }
       }
 
       saveStationMeteoInfoMetadataAction(
-        DateUtils.getDateZonedDateTime(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Args.startDate),
-        DateUtils.getDateZonedDateTime(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Args.startDate),
+        DateUtils.getDateZonedDateTime(ctsExecutionApiResAllMeteoInfo.startDate),
+        DateUtils.getDateZonedDateTime(ctsExecutionApiResAllMeteoInfo.startDate),
       )
     }
 
@@ -154,40 +156,40 @@ object AemetAPIClient {
         @tailrec
         def doWhileWithGetAndSave(startDate: ZonedDateTime, endDate: ZonedDateTime): Unit = {
           if (!getAndSave(
-            ctsRemoteReqAemetURIAllMeteoInfo.dataEndpoint,
+            ctsUrl.allMeteoInfo,
             startDate,
             endDate,
             isMetadata = false,
-            ctsStorageDataAemetAllMeteoInfo.Dirs.dataRegistry,
-            ctsStorageDataAemetAllMeteoInfo.FileNames.dataRegistry.format(
+            ctsStorageAllMeteoInfo.dirs.data,
+            ctsStorageAllMeteoInfo.filenames.data.format(
               startDate.format(
-                DateTimeFormatter.ofPattern(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Format.dateFormatFile)
+                DateTimeFormatter.ofPattern(ctsUtils.formats.dateFormatFile)
               ),
               endDate.format(
-                DateTimeFormatter.ofPattern(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Format.dateFormatFile)
+                DateTimeFormatter.ofPattern(ctsUtils.formats.dateFormatFile)
               )
             ))
           ) {
-            ChronoUtils.await(ctsRemoteReqAemetParamsGlobal.Execution.Time.minimumMillisBetweenRequest)
+            ChronoUtils.await(ctsExecutionGlobal.delayTimes.requestSimple)
             doWhileWithGetAndSave(startDate, endDate)
           }
         }
 
-        if (!startDate.isBefore(DateUtils.getDateZonedDateTime(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Args.endDate))) return
+        if (!startDate.isBefore(DateUtils.getDateZonedDateTime(ctsExecutionApiResAllMeteoInfo.endDate))) return
 
         ChronoUtils.executeAndAwaitIfTimeNotExceedMinimum(
-          ctsRemoteReqAemetParamsGlobal.Execution.Time.minimumMillisBetweenRequest
+          ctsExecutionGlobal.delayTimes.requestSimple
         ) {
           doWhileWithGetAndSave(startDate, endDate)
         }
 
         FileUtils.saveContentToPath(
-          ctsStorageDataAemetAllMeteoInfo.Dirs.metadata,
-          ctsStorageDataAemetAllMeteoInfo.FileNames.lastSavedDate,
+          ctsStorageAllMeteoInfo.dirs.metadata,
+          ctsStorageAllMeteoInfo.filenames.lastSavedDate,
           Obj(
-            ctsRemoteReqAemetParamsAllMeteoInfo.LastSavedDatesJSONKeys.lastEndDate ->
+            ctsExecutionAemet.reqResp.lastSavedDates.lastEndDate ->
               endDate.format(
-                DateTimeFormatter.ofPattern(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Format.dateHourRaw)
+                DateTimeFormatter.ofPattern(ctsUtils.formats.dateHourZoned)
               )
           ),
           appendContent = false,
@@ -201,33 +203,33 @@ object AemetAPIClient {
           DateUtils.addTime(endDate, 1),
           DateUtils.capDate(
             DateUtils.addTime(DateUtils.addTime(endDate, 1), 14, 23, 59, 59),
-            DateUtils.getDateZonedDateTime(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Args.endDate)
+            DateUtils.getDateZonedDateTime(ctsExecutionApiResAllMeteoInfo.endDate)
           )
         )
       }
 
       val (startDate, endDate): (ZonedDateTime, ZonedDateTime) = FileUtils.getContentFromPath(
-        ctsStorageDataAemetAllMeteoInfo.FilePaths.lastSavedDate
+        ctsStorageAllMeteoInfo.filepaths.lastSavedDate
       ) match {
         case Right(json) =>
           val currentEndDate: ZonedDateTime = DateUtils.getDateZonedDateTime(
             ujson.read(json)
-            (ctsRemoteReqAemetParamsAllMeteoInfo.LastSavedDatesJSONKeys.lastEndDate).str
+            (ctsExecutionAemet.reqResp.lastSavedDates.lastEndDate).str
           )
           val startDate: ZonedDateTime = DateUtils.addTime(
             currentEndDate, 1
           )
           val endDate: ZonedDateTime = DateUtils.capDate(
             DateUtils.addTime(DateUtils.addTime(currentEndDate, 1), 14, 23, 59, 59),
-            DateUtils.getDateZonedDateTime(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Args.endDate)
+            DateUtils.getDateZonedDateTime(ctsExecutionApiResAllMeteoInfo.endDate)
           )
 
           (startDate, endDate)
 
         case Left(exception: Exception) =>
-          val startDate: ZonedDateTime = DateUtils.getDateZonedDateTime(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Args.startDate)
+          val startDate: ZonedDateTime = DateUtils.getDateZonedDateTime(ctsExecutionApiResAllMeteoInfo.startDate)
           val endDate: ZonedDateTime = DateUtils.addTime(
-            DateUtils.getDateZonedDateTime(ctsRemoteReqAemetParamsAllMeteoInfo.Execution.Args.startDate), 14, 23, 59, 59
+            DateUtils.getDateZonedDateTime(ctsExecutionApiResAllMeteoInfo.startDate), 14, 23, 59, 59
           )
 
           ConsoleLogUtils.Message.printlnConsoleMessage(NotificationType.Warning, exception.toString)
@@ -243,8 +245,7 @@ object AemetAPIClient {
   }
 
   private object AllStationsData {
-    private val ctsStorageDataAemetAllStationInfo = ConstantsV2.Storage.DataAemet.AllStationInfo
-    private val ctsRemoteReqAemetURIAllStationInfo = ConstantsV2.RemoteRequest.AemetAPI.URI.AllStationInfo
+    private val ctsStorageAllStationInfo = ctsStorage.allStationInfo
 
     private def getAndSave(endpoint: String, path: String, filename: String, isMetadata: Boolean = false): Boolean = {
       getAemetAPIResource(
@@ -252,9 +253,9 @@ object AemetAPIClient {
           endpoint,
           List(),
           List(
-            (ctsRemoteReqAemetParamsGlobal.RequestJSONKeys.apiKey, APIKey match {
-              case Right(apiKey) => apiKey
-              case Left(exception) => throw exception
+            (ctsExecutionAemet.reqResp.request.apiKey, sys.env.get(ctsExecutionAemet.reqResp.request.apiKeyEnvName) match {
+              case Some(apiKey) => apiKey
+              case None => throw new Exception(ctsUtils.errors.environmentVariableNotFound.format(ctsExecutionAemet.reqResp.request.apiKeyEnvName))
             })
           )
         ),
@@ -281,18 +282,18 @@ object AemetAPIClient {
         @tailrec
         def doWhileWithGetAndSave(): Unit = {
           if (!getAndSave(
-            ctsRemoteReqAemetURIAllStationInfo.dataEndpoint,
-            ctsStorageDataAemetAllStationInfo.Dirs.metadata,
-            ctsStorageDataAemetAllStationInfo.FileNames.metadata,
+            ctsUrl.allStationInfo,
+            ctsStorageAllStationInfo.dirs.metadata,
+            ctsStorageAllStationInfo.filenames.metadata,
             isMetadata = true
           )) {
-            await(ctsRemoteReqAemetParamsGlobal.Execution.Time.minimumMillisBetweenMetadataRequest)
+            await(ctsExecutionGlobal.delayTimes.requestMetadata)
             doWhileWithGetAndSave()
           }
         }
 
         executeAndAwaitIfTimeNotExceedMinimum(
-          ctsRemoteReqAemetParamsGlobal.Execution.Time.minimumMillisBetweenMetadataRequest
+          ctsExecutionGlobal.delayTimes.requestMetadata
         ) {
           doWhileWithGetAndSave()
         }
@@ -306,17 +307,17 @@ object AemetAPIClient {
         @tailrec
         def doWhileWithGetAndSave(): Unit = {
           if (!getAndSave(
-            ctsRemoteReqAemetURIAllStationInfo.dataEndpoint,
-            ctsStorageDataAemetAllStationInfo.Dirs.dataRegistry,
-            ctsStorageDataAemetAllStationInfo.FileNames.dataRegistry,
+            ctsUrl.allStationInfo,
+            ctsStorageAllStationInfo.dirs.data,
+            ctsStorageAllStationInfo.filenames.data,
           )) {
-            await(ctsRemoteReqAemetParamsGlobal.Execution.Time.minimumMillisBetweenRequest)
+            await(ctsExecutionGlobal.delayTimes.requestSimple)
             doWhileWithGetAndSave()
           }
         }
 
         executeAndAwaitIfTimeNotExceedMinimum(
-          ctsRemoteReqAemetParamsGlobal.Execution.Time.minimumMillisBetweenRequest
+          ctsExecutionGlobal.delayTimes.requestSimple
         ) {
           doWhileWithGetAndSave()
         }

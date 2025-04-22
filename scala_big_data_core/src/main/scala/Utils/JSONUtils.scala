@@ -49,8 +49,10 @@ object JSONUtils {
     }
   }
 
-  def buildJSONFromSchemaAndData(schemaJSON: ujson.Value,
-                                 schemaDataRelation: Map[String, ujson.Value]): ujson.Value = {
+  def buildJSONFromSchemaAndData(
+    schemaJSON: ujson.Value,
+    schemaDataRelation: Map[String, ujson.Value]
+  ): ujson.Value = {
     schemaJSON match {
       case ujson.Obj(fields) => ujson.Obj.from(
         fields.toList.collect {

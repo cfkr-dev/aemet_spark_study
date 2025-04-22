@@ -32,7 +32,15 @@ object DateUtils {
     this.addTime(date, 0, months, days, hours, minutes, seconds)
   }
 
-  def addTime(date: ZonedDateTime, years: Int, months: Int, days: Int, hours: Long, minutes: Long, seconds: Long): ZonedDateTime = {
+  def addTime(
+    date: ZonedDateTime,
+    years: Int,
+    months: Int,
+    days: Int,
+    hours: Long,
+    minutes: Long,
+    seconds: Long
+  ): ZonedDateTime = {
     val yearsMonthsDays = Period.of(years, months, days)
     val hoursMinutesSeconds = Duration.ofHours(hours).plusMinutes(minutes).plusSeconds(seconds)
 
