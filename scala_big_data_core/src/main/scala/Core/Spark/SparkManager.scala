@@ -5,8 +5,8 @@ import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMe
 import Utils.JSONUtils
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
-import org.apache.spark.sql.{Column, DataFrame, SparkSession}
+import org.apache.spark.sql.types.{DataType, DoubleType, IntegerType, StringType, StructField, StructType, TimestampType}
+import org.apache.spark.sql.{Column, DataFrame, SaveMode, SparkSession}
 import org.apache.spark.storage.StorageLevel
 
 object SparkManager {
@@ -70,7 +70,7 @@ object SparkManager {
     def saveDataframeAsParquet(dataframe: DataFrame, path: String): Either[Exception, String] = {
       try {
         dataframe.write
-          .mode("overwrite")
+          .mode(SaveMode.Overwrite)
           .parquet(path)
 
         Right(path)
@@ -94,22 +94,22 @@ object SparkManager {
               "ALMERÍA" -> "ALMERIA"
             ).getOrElse(value, value)).apply(col(column))),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.altitudJKey ->
-            (column => col(column).cast("int")),
+            (column => col(column).cast(IntegerType)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey ->
-            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey ->
             (column => {
-              when(col(column) === "Acum", lit(null).cast("double"))
+              when(col(column) === "Acum", lit(null).cast(DoubleType))
                 .otherwise(
-                  when(col(column) === "Ip", lit(0.0).cast("double"))
-                    .otherwise(round(regexp_replace(col(column), ",", ".").cast("double"), 1))
+                  when(col(column) === "Ip", lit(0.0).cast(DoubleType))
+                    .otherwise(round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1))
                 )
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tminJKey ->
-            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatminJKey ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast("timestamp"))
+              when(col(column) === "Varias", lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
                     concat_ws(" ", col("fecha"), col(column)),
@@ -118,10 +118,10 @@ object SparkManager {
                 )
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmaxJKey ->
-            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatmaxJKey ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast("timestamp"))
+              when(col(column) === "Varias", lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
                     concat_ws(" ", col("fecha"), col(column)),
@@ -131,16 +131,16 @@ object SparkManager {
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.dirJKey ->
             (column => {
-              when(col(column) === "99" || col(column) === "88", lit(null).cast("int"))
-                .otherwise(regexp_replace(col(column), ",", "").cast("int"))
+              when(col(column) === "99" || col(column) === "88", lit(null).cast(IntegerType))
+                .otherwise(regexp_replace(col(column), ",", "").cast(IntegerType))
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey ->
-            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.rachaJKey ->
-            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horarachaJKey ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast("timestamp"))
+              when(col(column) === "Varias", lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
                     concat_ws(" ", col("fecha"), col(column)),
@@ -149,12 +149,12 @@ object SparkManager {
                 )
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.solJKey ->
-            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.presmaxJKey ->
-            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horapresmaxJKey ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast("timestamp"))
+              when(col(column) === "Varias", lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
                     concat_ws(" ", col("fecha"), col(column)),
@@ -163,10 +163,10 @@ object SparkManager {
                 )
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.presminJKey ->
-            (column => round(regexp_replace(col(column), ",", ".").cast("double"), 1)),
+            (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horapresminJKey ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast("timestamp"))
+              when(col(column) === "Varias", lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
                     concat_ws(" ", col("fecha"), col(column)),
@@ -175,12 +175,12 @@ object SparkManager {
                 )
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmediaJKey ->
-            (column => col(column).cast("int")),
+            (column => col(column).cast(IntegerType)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmaxJKey ->
-            (column => col(column).cast("int")),
+            (column => col(column).cast(IntegerType)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrmaxJKey ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast("timestamp"))
+              when(col(column) === "Varias", lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
                     concat_ws(" ", col("fecha"), col(column)),
@@ -189,10 +189,10 @@ object SparkManager {
                 )
             }),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrminJKey ->
-            (column => col(column).cast("int")),
+            (column => col(column).cast(IntegerType)),
           ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrminJKey ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast("timestamp"))
+              when(col(column) === "Varias", lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
                     concat_ws(" ", col("fecha"), col(column)),
@@ -219,8 +219,8 @@ object SparkManager {
               "ALMERÍA" -> "ALMERIA"
             ).getOrElse(value, value)).apply(col(column))),
           ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.altitudJKey ->
-            (column => col(column).cast("int")),
-          "latitud_dec" ->
+            (column => col(column).cast(IntegerType)),
+          "lat_dec" ->
             (_ => round(udf((dms: String) => {
               val degrees = dms.substring(0, 2).toInt
               val minutes = dms.substring(2, 4).toInt
@@ -229,7 +229,7 @@ object SparkManager {
               val decimal = degrees + (minutes / 60.0) + (seconds / 3600.0)
               if (direction == 'S' || direction == 'W') -decimal else decimal
             }).apply(col(ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.latitudJKey)), 6)),
-          "longitud_dec" ->
+          "long_dec" ->
             (_ => round(udf((dms: String) => {
               val degrees = dms.substring(0, 2).toInt
               val minutes = dms.substring(2, 4).toInt
@@ -1136,7 +1136,7 @@ object SparkManager {
           }
         ).select(
           $"indicativo",
-          col(paramIntervals.head._1).cast("double")
+          col(paramIntervals.head._1).cast(DoubleType)
         )
 
         Right(
@@ -1334,8 +1334,8 @@ object SparkManager {
             $"stations.nombre".alias("station_name"),
             $"stations.provincia".alias("state"),
             round(col(s"${climateParam}_avg"), 1).alias(s"${paramNameToShow}_daily_avg"),
-            $"stations.latitud_dec".alias("lat_dec"),
-            $"stations.longitud_dec".alias("long_dec"),
+            $"stations.lat_dec".alias("lat_dec"),
+            $"stations.long_dec".alias("long_dec"),
             $"stations.altitud".alias("altitude")
           )
         )
