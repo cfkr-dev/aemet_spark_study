@@ -10,7 +10,7 @@ case class AemetApiResources(allMeteoInfo: AemetAllMeteoInfo)
 case class AemetLastSavedDates(lastEndDate: String)
 
 
-case class AemetRequest(apiKey: String)
+case class AemetRequest(apiKey: String, apiKeyEnvName: String)
 
 
 case class AemetResponse(stateNumber: String, metadata: String, data: String)

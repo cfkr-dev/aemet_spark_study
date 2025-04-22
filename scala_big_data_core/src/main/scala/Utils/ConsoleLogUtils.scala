@@ -8,28 +8,27 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 object ConsoleLogUtils {
-  private val ctsLogsGlobal = Config.ConstantsV2.Logs.Global
-  
+
   object Method {
     def printlnGet(uri: Uri): Unit = println(
-      Color.Magenta(ZonedDateTime.now().format(DateTimeFormatter.ofPattern(ctsLogsGlobal.EnhancedConsoleLog.format.dateHour))).overlay(Bold.On) +
-      ctsLogsGlobal.EnhancedConsoleLog.Decorators.spaceVerticalDividerSpace +
-      Color.Yellow(ctsLogsGlobal.EnhancedConsoleLog.Method.methodGet).overlay(Bold.On) +
-      ctsLogsGlobal.EnhancedConsoleLog.Decorators.spaceBigArrowSpace +
-      uri.toString() +
-      "\n"
+      Color.Magenta(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"))).overlay(Bold.On) +
+        " | " +
+        Color.Yellow("GET").overlay(Bold.On) +
+        " => " +
+        uri.toString() +
+        "\n"
     )
   }
 
   object Response {
     def printlnResponse[T](response: Response[T]): Unit =
       println(
-        Color.Magenta(ZonedDateTime.now().format(DateTimeFormatter.ofPattern(ctsLogsGlobal.EnhancedConsoleLog.format.dateHour))).overlay(Bold.On) +
-        ctsLogsGlobal.EnhancedConsoleLog.Decorators.spaceVerticalDividerSpace +
-        response.request.uri.toString() +
-        ctsLogsGlobal.EnhancedConsoleLog.Decorators.spaceBigArrowSpace +
-        getCodeAndStatusEnhancedString(response.code, response.statusText) +
-        "\n"
+        Color.Magenta(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"))).overlay(Bold.On) +
+          " | " +
+          response.request.uri.toString() +
+          " => " +
+          getCodeAndStatusEnhancedString(response.code, response.statusText) +
+          "\n"
       )
 
     private def getCodeAndStatusEnhancedString(code: StatusCode, statusText: String): Str = {
@@ -45,9 +44,9 @@ object ConsoleLogUtils {
   object Message {
     object NotificationType extends Enumeration {
       type NotificationType = Value
-      val Error: NotificationType = Value(ctsLogsGlobal.EnhancedConsoleLog.Message.notificationError)
-      val Warning: NotificationType = Value(ctsLogsGlobal.EnhancedConsoleLog.Message.notificationWarning)
-      val Information: NotificationType = Value(ctsLogsGlobal.EnhancedConsoleLog.Message.notificationInformation)
+      val Error: NotificationType = Value("ERR")
+      val Warning: NotificationType = Value("WARN")
+      val Information: NotificationType = Value("INFO")
     }
 
     import NotificationType._
@@ -64,38 +63,35 @@ object ConsoleLogUtils {
       val color: fansi.EscapeAttr = getNotificationTypeString(notificationType)
 
       println(
-        Color.Magenta(ZonedDateTime.now().format(DateTimeFormatter.ofPattern(ctsLogsGlobal.EnhancedConsoleLog.format.dateHour))).overlay(Bold.On) +
-        ctsLogsGlobal.EnhancedConsoleLog.Decorators.spaceVerticalDividerSpace +
-        color(notificationType.toString + ctsLogsGlobal.EnhancedConsoleLog.Decorators.colonSpace).overlay(Bold.On) +
-        color(message) +
-        "\n"
+        Color.Magenta(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"))).overlay(Bold.On) +
+          " | " +
+          color(notificationType.toString + ": ").overlay(Bold.On) +
+          color(message) +
+          "\n"
       )
     }
 
-    def printlnConsoleEnclosedMessage(notificationType: NotificationType,
-                                      message: String,
-                                      encloseString: String = ctsLogsGlobal.EnhancedConsoleLog.Decorators.horizontalCenterLine,
-                                      encloseHalfLength: Int = 30
-                                     ): Unit = {
+    def printlnConsoleEnclosedMessage(
+      notificationType: NotificationType,
+      message: String,
+      encloseString: String = "-",
+      encloseHalfLength: Int = 30
+    ): Unit = {
       val color: fansi.EscapeAttr = getNotificationTypeString(notificationType)
 
       println(
         color(encloseString * encloseHalfLength) +
-        " " +
-        Color.Magenta(ZonedDateTime.now().format(DateTimeFormatter.ofPattern(ctsLogsGlobal.EnhancedConsoleLog.format.dateHour))).overlay(Bold.On) +
-        ctsLogsGlobal.EnhancedConsoleLog.Decorators.spaceVerticalDividerSpace +
-        color(notificationType.toString + ctsLogsGlobal.EnhancedConsoleLog.Decorators.colonSpace).overlay(Bold.On) +
-        color(message) +
-        " " +
-        color(encloseString * encloseHalfLength) +
-        "\n"
+          " " +
+          Color.Magenta(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"))).overlay(Bold.On) +
+          " | " +
+          color(notificationType.toString + ": ").overlay(Bold.On) +
+          color(message) +
+          " " +
+          color(encloseString * encloseHalfLength) +
+          "\n"
       )
     }
   }
-
-
-
-
 
 
 }

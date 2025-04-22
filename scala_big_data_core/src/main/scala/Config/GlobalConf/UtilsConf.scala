@@ -12,7 +12,8 @@ case class UtilsFormats(
 case class UtilsErrors(
   failOnGettingJson: String,
   errorInReadingFile: String,
-  errorInDirectoryCreation: String
+  errorInDirectoryCreation: String,
+  environmentVariableNotFound: String
 )
 
 case class UtilsConf(formats: UtilsFormats, errors: UtilsErrors)

@@ -8,9 +8,9 @@ import scala.reflect.ClassTag
 
 object PureConfigUtils {
   implicit val doubleWithInfReader: ConfigReader[Double] = ConfigReader.fromString {
-    case "+inf" | "inf" | "∞" | "Infinity"     => Right(Double.PositiveInfinity)
-    case "-inf" | "-∞" | "-Infinity"           => Right(Double.NegativeInfinity)
-    case "NaN"                                 => Right(Double.NaN)
+    case "+inf" | "inf" | "∞" | "Infinity" => Right(Double.PositiveInfinity)
+    case "-inf" | "-∞" | "-Infinity" => Right(Double.NegativeInfinity)
+    case "NaN" => Right(Double.NaN)
     case s =>
       try Right(s.toDouble)
       catch {

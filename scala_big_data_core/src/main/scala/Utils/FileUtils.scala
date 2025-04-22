@@ -5,13 +5,11 @@ import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import scala.io.Source
 
 object FileUtils {
-  val ctsLogsGlobal = Config.ConstantsV2.Logs.Global
-
   def getContentFromPath(path: String): Either[Exception, String] = {
     val file = new File(path)
 
     if (!file.exists())
-      return Left(new Exception(ctsLogsGlobal.FileUtils.errorInReadingFile.format(file.toString)))
+      return Left(new Exception("Error in finding file (%s)".format(file.toString)))
 
     val source = Source.fromFile(file)
     val content = source.getLines().mkString("\n")
@@ -21,12 +19,18 @@ object FileUtils {
     Right(content)
   }
 
-  def saveContentToPath[T](path: String, fileName: String, content: T, appendContent: Boolean, writer: (File, T, Boolean) => Either[Exception, String]): Either[Exception, String] = {
+  def saveContentToPath[T](
+    path: String,
+    fileName: String,
+    content: T,
+    appendContent: Boolean,
+    writer: (File, T, Boolean) => Either[Exception, String]
+  ): Either[Exception, String] = {
     val dir = new File(path)
 
     if (!dir.exists())
       if (!dir.mkdirs())
-        return Left(new Exception(ctsLogsGlobal.FileUtils.errorInDirectoryCreation.format(dir.toString)))
+        return Left(new Exception("Error in directory creation (%s)".format(dir.toString)))
 
     writer(new File(dir, fileName), content, appendContent) match {
       case Right(filePath: String) => Right(filePath)

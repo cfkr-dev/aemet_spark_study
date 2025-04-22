@@ -1,6 +1,8 @@
 package Core
 
 import Config.GlobalConf.Constants
+import Core.DataExtraction.Aemet.AemetAPIClient
+import Core.DataExtraction.Ifapa.{IfapaAPIClient, IfapaToAemetConverter}
 
 //import InitApp.ec
 
@@ -69,20 +71,18 @@ object InitApp extends App {
   // Mostrarlo
 //  println(config.errors.failOnGettingJson.format("asdasd"))
 
-  println(Config.DataExtractionConf.Constants.storage)
-  println(Config.DataExtractionConf.Constants.log.aemetConf.allStationInfoEndFetchingMetadata)
-  println(Config.DataExtractionConf.Constants.url)
-  println(Config.DataExtractionConf.Constants.execution)
-
-  println(Config.GlobalConf.Constants.schema)
-  println(Config.GlobalConf.Constants.storage)
-  println(Config.GlobalConf.Constants.utils)
-
-  println(Config.SparkConf.Constants.execution)
-  println(Config.SparkConf.Constants.log)
-  println(Config.SparkConf.Constants.storage)
-
-
+//  println(Config.DataExtractionConf.Constants.storage)
+//  println(Config.DataExtractionConf.Constants.log.aemetConf.allStationInfoEndFetchingMetadata)
+//  println(Config.DataExtractionConf.Constants.url)
+//  println(Config.DataExtractionConf.Constants.execution)
+//
+//  println(Config.GlobalConf.Constants.schema)
+//  println(Config.GlobalConf.Constants.storage)
+//  println(Config.GlobalConf.Constants.utils)
+//
+//  println(Config.SparkConf.Constants.execution)
+//  println(Config.SparkConf.Constants.log)
+//  println(Config.SparkConf.Constants.storage)
 
 
 
@@ -91,9 +91,11 @@ object InitApp extends App {
 
 
 
-  //AemetAPIClient.aemetDataExtraction()
-  //IfapaAPIClient.ifapaDataExtraction()
-//  IfapaToAemetConverter.ifapaToAemetConversion()
+
+
+  AemetAPIClient.aemetDataExtraction()
+  IfapaAPIClient.ifapaDataExtraction()
+  IfapaToAemetConverter.ifapaToAemetConversion()
 
 //  SparkQueries.Aemet.stationMonthlyAvgTempAndPrecInAYear("7002Y", 2024)
 //  SparkQueries.Aemet.stationInfo("7002Y")

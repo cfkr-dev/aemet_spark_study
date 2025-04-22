@@ -1,125 +1,130 @@
 package Core.DataExtraction.Ifapa
 
 import Config.ConstantsV2._
+import Config.DataExtractionConf
+import Config.GlobalConf
 import Utils.ConsoleLogUtils.Message._
 import Utils.FileUtils.{copyFile, saveContentToPath}
 import Utils.JSONUtils.{buildJSONFromSchemaAndData, readJSON, transformJSONValues, writeJSON}
 import ujson.{Arr, Obj, Value}
 
 object IfapaToAemetConverter {
-  private val ctsRemoteReqAemetParamsGlobalMetadataSchemaJSONKeys = RemoteRequest.AemetAPI.Params.Global.Metadata.SchemaJSONKeys
-  private val ctsLogsIfapaAemetFormatGlobal = Logs.IfapaAemetFormat.Global
+  private val ctsExecutionAemet = DataExtractionConf.Constants.execution.aemetConf
+  private val ctsLogs = DataExtractionConf.Constants.log.ifapaAemetFormatConf
 
   private def genEmptyAemetJSONFromMetadata(metadataJSON: ujson.Value): ujson.Value = {
     ujson.Obj.from(
-      metadataJSON(ctsRemoteReqAemetParamsGlobalMetadataSchemaJSONKeys.fieldDefJKey).arr.map(field => {
-        field(ctsRemoteReqAemetParamsGlobalMetadataSchemaJSONKeys.DataFieldsJSONKeys.idJKey).str -> ujson.Null
+      metadataJSON(ctsExecutionAemet.reqResp.metadata.schemaDef).arr.map(field => {
+        field(ctsExecutionAemet.reqResp.metadata.fieldId).str -> ujson.Null
       })
     )
   }
 
   def ifapaToAemetConversion(): Unit = {
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaAemetFormatGlobal.IfapaToAemet.singleStationInfoStartConverting)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.singleStationInfoStartConverting)
     SingleStationInfo.saveSingleStationInfoAemetFormat()
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaAemetFormatGlobal.IfapaToAemet.singleStationInfoEndConverting)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.singleStationInfoEndConverting)
 
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaAemetFormatGlobal.IfapaToAemet.singleStationMeteoInfoStartConverting)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.singleStationMeteoInfoStartConverting)
     SingleStationMeteoInfo.saveSingleStationMeteoInfoAemetFormat()
-    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsIfapaAemetFormatGlobal.IfapaToAemet.singleStationMeteoInfoEndConverting)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.singleStationMeteoInfoEndConverting)
   }
 
   private object SingleStationMeteoInfo {
-    private val ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys
-    private val ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys = RemoteRequest.IfapaAPI.Params.SingleStationMeteoInfo.Metadata.DataFieldsJSONKeys
-    private val ctsRemoteReqIfapaParamsSingleStationMeteoInfo = RemoteRequest.IfapaAPI.Params.SingleStationMeteoInfo
-    private val ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldJSONKeys = RemoteRequest.IfapaAPI.Params.SingleStationInfo.Metadata.DataFieldsJSONKeys
-    private val ctsRemoteReqIfapaParamsSingleStateInfoMetadataDataFieldJSONKeys = RemoteRequest.IfapaAPI.Params.SingleStateInfo.Metadata.DataFieldsJSONKeys
-    private val ctsStorageDataAemetAllMeteoInfo = Storage.DataAemet.AllMeteoInfo
-    private val ctsStorageDataIfapaSingleStationMeteoInfo = Storage.DataIfapa.SingleStationMeteoInfo
-    private val ctsStorageDataIfapaSingleStationInfo = Storage.DataIfapa.SingleStationInfo
-    private val ctsStorageDataIfapaAemetFormatSingleStationMeteoInfo = Storage.DataIfapaAemetFormat.SingleStationMeteoInfo
+    private val ctsSchemaAemetAllMeteoInfo = GlobalConf.Constants.schema.aemetConf.allMeteoInfo
+    private val ctsSchemaIfapaSingleStationMeteoInfo = GlobalConf.Constants.schema.ifapaConf.singleStationMeteoInfo
+    private val ctsSchemaIfapaSingleStationInfo = GlobalConf.Constants.schema.ifapaConf.singleStationInfo
+    private val ctsSchemaIfapaSingleStateInfo = GlobalConf.Constants.schema.ifapaConf.singleStateInfo
+    private val ctsExecutionIfapa = DataExtractionConf.Constants.execution.ifapaConf
+    private val ctsStorageAemetAllMeteoInfo = DataExtractionConf.Constants.storage.aemetConf.allMeteoInfo
+    private val ctsStorageIfapaSingleStationMeteoInfo = DataExtractionConf.Constants.storage.ifapaConf.singleStationMeteoInfo
+    private val ctsStorageIfapaSingleStationInfo = DataExtractionConf.Constants.storage.ifapaConf.singleStationInfo
+    private val ctsStorageIfapaAemetFormatSingleStationMeteoInfo = DataExtractionConf.Constants.storage.ifapaAemetFormatConf.singleStationMeteoInfo
 
     def saveSingleStationMeteoInfoAemetFormat(): Unit = {
-      def genAemetMeteoInfoJSONKeysToIfapaJSONValues(ifapaMeteoInfo: ujson.Value, ifapaStationInfo: ujson.Value): Map[String, ujson.Value] = {
+      def genAemetMeteoInfoJSONKeysToIfapaJSONValues(
+        ifapaMeteoInfo: ujson.Value,
+        ifapaStationInfo: ujson.Value
+      ): Map[String, ujson.Value] = {
         Map(
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.fechaJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.fechaJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.indicativoJKey ->
-            ifapaStationInfo(ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldJSONKeys.codigoestacionJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.nombreJKey ->
-            ifapaStationInfo(ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldJSONKeys.nombreJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.provinciaJKey ->
-            ifapaStationInfo(ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldJSONKeys.provinciaJKey)
-            (ctsRemoteReqIfapaParamsSingleStateInfoMetadataDataFieldJSONKeys.nombreJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.altitudJKey ->
-            ifapaStationInfo(ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldJSONKeys.altitudJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.tempmediaJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.precipitacionJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tminJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.tempminJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatminJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.hormintempminJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmaxJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.tempmaxJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatmaxJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.hormintempmaxJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.dirJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.dirvientovelmaxJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.velvientoJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.rachaJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.velvientomaxJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horarachaJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.horminvelmaxJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmediaJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.humedadmediaJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmaxJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.humedadmaxJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrmaxJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.horminhummaxJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrminJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.humedadminJKey),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrminJKey ->
-            ifapaMeteoInfo(ctsRemoteReqIfapaParamsSingleStationMeteoInfoMetadataDataFieldsJSONKeys.horminhumminJKey)
+          ctsSchemaAemetAllMeteoInfo.fecha ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.fecha),
+          ctsSchemaAemetAllMeteoInfo.indicativo ->
+            ifapaStationInfo(ctsSchemaIfapaSingleStationInfo.codigoEstacion),
+          ctsSchemaAemetAllMeteoInfo.nombre ->
+            ifapaStationInfo(ctsSchemaIfapaSingleStationInfo.nombre),
+          ctsSchemaAemetAllMeteoInfo.provincia ->
+            ifapaStationInfo(ctsSchemaIfapaSingleStationInfo.provincia)
+            (ctsSchemaIfapaSingleStateInfo.nombre),
+          ctsSchemaAemetAllMeteoInfo.altitud ->
+            ifapaStationInfo(ctsSchemaIfapaSingleStationInfo.altitud),
+          ctsSchemaAemetAllMeteoInfo.tMed ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.tempMedia),
+          ctsSchemaAemetAllMeteoInfo.prec ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.precipitacion),
+          ctsSchemaAemetAllMeteoInfo.tMin ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.tempMin),
+          ctsSchemaAemetAllMeteoInfo.horaTMin ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.horMinTempMin),
+          ctsSchemaAemetAllMeteoInfo.tMax ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.tempMax),
+          ctsSchemaAemetAllMeteoInfo.horaTMax ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.horMinTempMax),
+          ctsSchemaAemetAllMeteoInfo.dir ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.dirVientoVelMax),
+          ctsSchemaAemetAllMeteoInfo.velMedia ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.velViento),
+          ctsSchemaAemetAllMeteoInfo.racha ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.velVientoMax),
+          ctsSchemaAemetAllMeteoInfo.horaRacha ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.horMinVelMax),
+          ctsSchemaAemetAllMeteoInfo.hrMedia ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.humedadMedia),
+          ctsSchemaAemetAllMeteoInfo.hrMax ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.humedadMax),
+          ctsSchemaAemetAllMeteoInfo.horaHrMax ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.horMinHumMax),
+          ctsSchemaAemetAllMeteoInfo.hrMin ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.humedadMin),
+          ctsSchemaAemetAllMeteoInfo.horaHrMin ->
+            ifapaMeteoInfo(ctsSchemaIfapaSingleStationMeteoInfo.horMinHumMin)
         )
       }
 
       def genAemetMeteoInfoFormatters(): Map[String, ujson.Value => ujson.Value] = {
         Map(
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.fechaJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.indicativoJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.nombreJKey -> (value => value.str.toUpperCase),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.provinciaJKey -> (value => value.str.toUpperCase),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.altitudJKey -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tminJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatminJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmaxJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatmaxJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.dirJKey -> (value => f"${Math.round(value.num / 10.0).toInt}%02d"),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.rachaJKey -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horarachaJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmediaJKey -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmaxJKey -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrmaxJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrminJKey -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrminJKey -> (value => value.str)
+          ctsSchemaAemetAllMeteoInfo.fecha -> (value => value.str),
+          ctsSchemaAemetAllMeteoInfo.indicativo -> (value => value.str),
+          ctsSchemaAemetAllMeteoInfo.nombre -> (value => value.str.toUpperCase),
+          ctsSchemaAemetAllMeteoInfo.provincia -> (value => value.str.toUpperCase),
+          ctsSchemaAemetAllMeteoInfo.altitud -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
+          ctsSchemaAemetAllMeteoInfo.tMed -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
+          ctsSchemaAemetAllMeteoInfo.prec -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
+          ctsSchemaAemetAllMeteoInfo.tMin -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
+          ctsSchemaAemetAllMeteoInfo.horaTMin -> (value => value.str),
+          ctsSchemaAemetAllMeteoInfo.tMax -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
+          ctsSchemaAemetAllMeteoInfo.horaTMax -> (value => value.str),
+          ctsSchemaAemetAllMeteoInfo.dir -> (value => f"${Math.round(value.num / 10.0).toInt}%02d"),
+          ctsSchemaAemetAllMeteoInfo.velMedia -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
+          ctsSchemaAemetAllMeteoInfo.racha -> (value => (Math.round(value.num * 10) / 10.0).toString.replace(".", ",")),
+          ctsSchemaAemetAllMeteoInfo.horaRacha -> (value => value.str),
+          ctsSchemaAemetAllMeteoInfo.hrMedia -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
+          ctsSchemaAemetAllMeteoInfo.hrMax -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
+          ctsSchemaAemetAllMeteoInfo.horaHrMax -> (value => value.str),
+          ctsSchemaAemetAllMeteoInfo.hrMin -> (value => Math.round(value.num).toInt.toString.replace(".", ",")),
+          ctsSchemaAemetAllMeteoInfo.horaHrMin -> (value => value.str)
         )
       }
 
-      val aemetAllMeteoInfoMetadata: Value = readJSON(ctsStorageDataAemetAllMeteoInfo.FilePaths.metadata) match {
+      val aemetAllMeteoInfoMetadata: Value = readJSON(ctsStorageAemetAllMeteoInfo.filepaths.metadata) match {
         case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
           return
         case Right(json: Value) => json
       }
 
-      val ifapaSingleStationInfo: Value = readJSON(ctsStorageDataIfapaSingleStationInfo.FilePaths.dataRegistry.format(
-        ctsRemoteReqIfapaParamsSingleStationMeteoInfo.Execution.Args.stateAlmeriaCode,
-        ctsRemoteReqIfapaParamsSingleStationMeteoInfo.Execution.Args.stationTabernasCode,
+      val ifapaSingleStationInfo: Value = readJSON(ctsStorageIfapaSingleStationInfo.filepaths.data.format(
+        ctsExecutionIfapa.apiResources.singleStationMeteoInfo.stateCode,
+        ctsExecutionIfapa.apiResources.singleStationMeteoInfo.stationCode
       )) match {
         case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
           return
@@ -129,28 +134,29 @@ object IfapaToAemetConverter {
       val formatter: Map[String, ujson.Value => ujson.Value] = genAemetMeteoInfoFormatters()
 
       saveContentToPath(
-        ctsStorageDataIfapaAemetFormatSingleStationMeteoInfo.Dirs.dataRegistry,
-        ctsStorageDataIfapaAemetFormatSingleStationMeteoInfo.FileNames.dataRegistry.format(
-          ctsRemoteReqIfapaParamsSingleStationMeteoInfo.Execution.Args.startDate,
-          ctsRemoteReqIfapaParamsSingleStationMeteoInfo.Execution.Args.endDate
+        ctsStorageIfapaAemetFormatSingleStationMeteoInfo.dirs.data,
+        ctsStorageIfapaAemetFormatSingleStationMeteoInfo.filenames.data.format(
+          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.startDate,
+          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.endDate
         ),
-        readJSON(ctsStorageDataIfapaSingleStationMeteoInfo.FilePaths.dataRegistry.format(
-          ctsRemoteReqIfapaParamsSingleStationMeteoInfo.Execution.Args.startDate,
-          ctsRemoteReqIfapaParamsSingleStationMeteoInfo.Execution.Args.endDate
+        readJSON(ctsStorageIfapaSingleStationMeteoInfo.filepaths.data.format(
+          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.startDate,
+          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.endDate
         )) match {
           case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
             return
           case Right(json: Value) => Arr(json.arr.map {
-            registryJSON => transformJSONValues(
-              buildJSONFromSchemaAndData(
-                genEmptyAemetJSONFromMetadata(aemetAllMeteoInfoMetadata),
-                genAemetMeteoInfoJSONKeysToIfapaJSONValues(
-                  registryJSON,
-                  ifapaSingleStationInfo
-                )
-              ),
-              formatter
-            )
+            registryJSON =>
+              transformJSONValues(
+                buildJSONFromSchemaAndData(
+                  genEmptyAemetJSONFromMetadata(aemetAllMeteoInfoMetadata),
+                  genAemetMeteoInfoJSONKeysToIfapaJSONValues(
+                    registryJSON,
+                    ifapaSingleStationInfo
+                  )
+                ),
+                formatter
+              )
           })
         },
         appendContent = false,
@@ -158,8 +164,8 @@ object IfapaToAemetConverter {
       ) match {
         case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
         case Right(_) => copyFile(
-          ctsStorageDataAemetAllMeteoInfo.FilePaths.metadata,
-          ctsStorageDataIfapaAemetFormatSingleStationMeteoInfo.FilePaths.metadata
+          ctsStorageAemetAllMeteoInfo.filepaths.metadata,
+          ctsStorageIfapaAemetFormatSingleStationMeteoInfo.filepaths.metadata
         ) match {
           case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
           case Right(_) => ()
@@ -169,47 +175,47 @@ object IfapaToAemetConverter {
   }
 
   private object SingleStationInfo {
-    private val ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys = RemoteRequest.AemetAPI.Params.AllStationInfo.Metadata.DataFieldsJSONKeys
-    private val ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldsJSONKeys = RemoteRequest.IfapaAPI.Params.SingleStationInfo.Metadata.DataFieldsJSONKeys
-    private val ctsRemoteReqIfapaParamsSingleStateInfoMetadataDataFieldsJSONKeys = RemoteRequest.IfapaAPI.Params.SingleStateInfo.Metadata.DataFieldsJSONKeys
-    private val ctsRemoteReqIfapaParamsSingleStationInfo = RemoteRequest.IfapaAPI.Params.SingleStationInfo
-    private val ctsStorageDataAemetAllStationInfo = Storage.DataAemet.AllStationInfo
-    private val ctsStorageDataIfapaSingleStationInfo = Storage.DataIfapa.SingleStationInfo
-    private val ctsStorageDataIfapaAemetFormatSingleStationInfo = Storage.DataIfapaAemetFormat.SingleStationInfo
+    private val ctsSchemaAemetAllStationInfo = GlobalConf.Constants.schema.aemetConf.allStationInfo
+    private val ctsSchemaIfapaSingleStationInfo = GlobalConf.Constants.schema.ifapaConf.singleStationInfo
+    private val ctsSchemaIfapaSingleStateInfo = GlobalConf.Constants.schema.ifapaConf.singleStateInfo
+    private val ctsExecutionIfapa = DataExtractionConf.Constants.execution.ifapaConf
+    private val ctsStorageAemetAllStationInfo = DataExtractionConf.Constants.storage.aemetConf.allStationInfo
+    private val ctsStorageIfapaSingleStationInfo = DataExtractionConf.Constants.storage.ifapaConf.singleStationInfo
+    private val ctsStorageIfapaAemetFormatSingleStationInfo = DataExtractionConf.Constants.storage.ifapaAemetFormatConf.singleStationInfo
 
     def saveSingleStationInfoAemetFormat(): Unit = {
       def genAemetAllStationInfoJSONKeysToIfapaJSONValues(ifapaStationInfo: ujson.Value): Map[String, ujson.Value] = {
         Map(
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.latitudJKey ->
-            ifapaStationInfo(ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldsJSONKeys.latitudJKey),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.provinciaJKey ->
-            ifapaStationInfo(ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldsJSONKeys.provinciaJKey)
-            (ctsRemoteReqIfapaParamsSingleStateInfoMetadataDataFieldsJSONKeys.nombreJKey),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.indicativoJKey ->
-            ifapaStationInfo(ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldsJSONKeys.codigoestacionJKey),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.altitudJKey ->
-            ifapaStationInfo(ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldsJSONKeys.altitudJKey),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.nombreJKey ->
-            ifapaStationInfo(ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldsJSONKeys.nombreJKey),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.indsinopJKey -> "",
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.longitudJKey ->
-            ifapaStationInfo(ctsRemoteReqIfapaParamsSingleStationInfoMetadataDataFieldsJSONKeys.longitudJKey)
+          ctsSchemaAemetAllStationInfo.latitud ->
+            ifapaStationInfo(ctsSchemaIfapaSingleStationInfo.latitud),
+          ctsSchemaAemetAllStationInfo.provincia ->
+            ifapaStationInfo(ctsSchemaIfapaSingleStationInfo.provincia)
+            (ctsSchemaIfapaSingleStateInfo.nombre),
+          ctsSchemaAemetAllStationInfo.indicativo ->
+            ifapaStationInfo(ctsSchemaIfapaSingleStationInfo.codigoEstacion),
+          ctsSchemaAemetAllStationInfo.altitud ->
+            ifapaStationInfo(ctsSchemaIfapaSingleStationInfo.altitud),
+          ctsSchemaAemetAllStationInfo.nombre ->
+            ifapaStationInfo(ctsSchemaIfapaSingleStationInfo.nombre),
+          ctsSchemaAemetAllStationInfo.indsinop -> "",
+          ctsSchemaAemetAllStationInfo.longitud ->
+            ifapaStationInfo(ctsSchemaIfapaSingleStationInfo.longitud)
         )
       }
 
       def genAemetStationInfoFormatters(): Map[String, ujson.Value => ujson.Value] = {
         Map(
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.latitudJKey -> (value => value.str.replaceAll("(\\d{3})([A-Z])$", "$2")),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.provinciaJKey -> (value => value.str.toUpperCase),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.indicativoJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.altitudJKey -> (value => (Math.round(value.num * 10) / 10.0).toInt.toString.replace(".", ",")),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.nombreJKey -> (value => value.str.toUpperCase()),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.indsinopJKey -> (value => value.str),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.longitudJKey -> (value => value.str.replaceAll("(\\d{3})([A-Z])$", "$2"))
+          ctsSchemaAemetAllStationInfo.latitud -> (value => value.str.replaceAll("(\\d{3})([A-Z])$", "$2")),
+          ctsSchemaAemetAllStationInfo.provincia -> (value => value.str.toUpperCase),
+          ctsSchemaAemetAllStationInfo.indicativo -> (value => value.str),
+          ctsSchemaAemetAllStationInfo.altitud -> (value => (Math.round(value.num * 10) / 10.0).toInt.toString.replace(".", ",")),
+          ctsSchemaAemetAllStationInfo.nombre -> (value => value.str.toUpperCase()),
+          ctsSchemaAemetAllStationInfo.indsinop -> (value => value.str),
+          ctsSchemaAemetAllStationInfo.longitud -> (value => value.str.replaceAll("(\\d{3})([A-Z])$", "$2"))
         )
       }
 
-      val aemetAllStationInfoMetadata: Value = readJSON(ctsStorageDataAemetAllStationInfo.FilePaths.metadata) match {
+      val aemetAllStationInfoMetadata: Value = readJSON(ctsStorageAemetAllStationInfo.filepaths.metadata) match {
         case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
           return
         case Right(json: Value) => json
@@ -218,14 +224,14 @@ object IfapaToAemetConverter {
       val formatter: Map[String, ujson.Value => ujson.Value] = genAemetStationInfoFormatters()
 
       saveContentToPath(
-        ctsStorageDataIfapaAemetFormatSingleStationInfo.Dirs.dataRegistry,
-        ctsStorageDataIfapaAemetFormatSingleStationInfo.FileNames.dataRegistry.format(
-          ctsRemoteReqIfapaParamsSingleStationInfo.Execution.Args.stateAlmeriaCode,
-          ctsRemoteReqIfapaParamsSingleStationInfo.Execution.Args.stationTabernasCode
+        ctsStorageIfapaAemetFormatSingleStationInfo.dirs.data,
+        ctsStorageIfapaAemetFormatSingleStationInfo.filenames.data.format(
+          ctsExecutionIfapa.apiResources.singleStationInfo.stateCode,
+          ctsExecutionIfapa.apiResources.singleStationInfo.stationCode
         ),
-        readJSON(ctsStorageDataIfapaSingleStationInfo.FilePaths.dataRegistry.format(
-          ctsRemoteReqIfapaParamsSingleStationInfo.Execution.Args.stateAlmeriaCode,
-          ctsRemoteReqIfapaParamsSingleStationInfo.Execution.Args.stationTabernasCode
+        readJSON(ctsStorageIfapaSingleStationInfo.filepaths.data.format(
+          ctsExecutionIfapa.apiResources.singleStationInfo.stateCode,
+          ctsExecutionIfapa.apiResources.singleStationInfo.stationCode
         )) match {
           case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
             return
@@ -242,8 +248,8 @@ object IfapaToAemetConverter {
       ) match {
         case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
         case Right(_) => copyFile(
-          ctsStorageDataAemetAllStationInfo.FilePaths.metadata,
-          ctsStorageDataIfapaAemetFormatSingleStationInfo.FilePaths.metadata
+          ctsStorageAemetAllStationInfo.filepaths.metadata,
+          ctsStorageIfapaAemetFormatSingleStationInfo.filepaths.metadata
         ) match {
           case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
           case Right(_) => ()
