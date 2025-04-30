@@ -1,12 +1,10 @@
 package Core.DataExtraction.Ifapa
 
-import Config.ConstantsV2._
-import Config.DataExtractionConf
-import Config.GlobalConf
+import Config.{DataExtractionConf, GlobalConf}
 import Utils.ConsoleLogUtils.Message._
 import Utils.FileUtils.{copyFile, saveContentToPath}
 import Utils.JSONUtils.{buildJSONFromSchemaAndData, readJSON, transformJSONValues, writeJSON}
-import ujson.{Arr, Obj, Value}
+import ujson.{Arr, Value}
 
 object IfapaToAemetConverter {
   private val ctsExecutionAemet = DataExtractionConf.Constants.execution.aemetConf

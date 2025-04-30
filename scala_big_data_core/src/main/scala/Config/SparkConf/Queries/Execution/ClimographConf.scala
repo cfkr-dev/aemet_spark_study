@@ -22,7 +22,7 @@ case class ClimateGroupRegistry(
 )
 
 case class ClimographConf(
-  observationYear: String,
+  observationYear: Int,
   locations: ClimographLocations,
   stationsRegistries: List[ClimateGroupRegistry]
 )

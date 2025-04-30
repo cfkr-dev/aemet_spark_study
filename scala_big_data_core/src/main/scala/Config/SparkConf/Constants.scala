@@ -66,7 +66,7 @@ object Constants {
     storage = InitStorageConf(
       aemetConf = readConfigFromFile[Init.Storage.AemetConf]("config/spark/init/storage/aemet.conf"),
       globalConf = readConfigFromFile[Init.Storage.GlobalConf]("config/spark/init/storage/global.conf"),
-      ifapaAemetFormatConf = readConfigFromFile[Init.Storage.IfapaAemetFormatConf]("config/spark/init/storage/ifapaAemetFormat.conf"),
+      ifapaAemetFormatConf = readConfigFromFile[Init.Storage.IfapaAemetFormatConf]("config/spark/init/storage/ifapa-aemet-format.conf"),
     )
   )
 

@@ -3,12 +3,23 @@ package Core
 import Config.GlobalConf.Constants
 import Core.DataExtraction.Aemet.AemetAPIClient
 import Core.DataExtraction.Ifapa.{IfapaAPIClient, IfapaToAemetConverter}
+import Core.Spark.SparkManager.SparkQueries
 
 //import InitApp.ec
 
 //import Config.ConstantsV2.Spark.Queries.Temperature.tempEvolFromStartForEachState.stationRegistries
 
 object InitApp extends App {
+
+  //AemetAPIClient.aemetDataExtraction()
+  //IfapaAPIClient.ifapaDataExtraction()
+  //IfapaToAemetConverter.ifapaToAemetConversion()
+  SparkQueries.execute()
+
+
+
+
+
 
 //  import pureconfig._
 //  import pureconfig.generic.auto._
@@ -92,10 +103,6 @@ object InitApp extends App {
 
 
 
-
-  AemetAPIClient.aemetDataExtraction()
-  IfapaAPIClient.ifapaDataExtraction()
-  IfapaToAemetConverter.ifapaToAemetConversion()
 
 //  SparkQueries.Aemet.stationMonthlyAvgTempAndPrecInAYear("7002Y", 2024)
 //  SparkQueries.Aemet.stationInfo("7002Y")
