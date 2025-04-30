@@ -1,24 +1,54 @@
 package Core.Spark
 
-import Config.ConstantsV2._
+import Config.{GlobalConf, SparkConf}
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
 import Utils.JSONUtils
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{DataType, DoubleType, IntegerType, StringType, StructField, StructType, TimestampType}
+import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Column, DataFrame, SaveMode, SparkSession}
 import org.apache.spark.storage.StorageLevel
 
 object SparkManager {
-  private val ctsStorageDataAemetAllStationInfo = Storage.DataAemet.AllStationInfo
-  private val ctsStorageDataAemetAllMeteoInfo = Storage.DataAemet.AllMeteoInfo
-  private val ctsStorageDataIfapaAemetFormatSingleStationInfo = Storage.DataIfapaAemetFormat.SingleStationInfo
-  private val ctsStorageDataIfapaAemetFormatSingleStationMeteoInfo = Storage.DataIfapaAemetFormat.SingleStationMeteoInfo
+  private val ctsExecutionDataframeConf = SparkConf.Constants.init.execution.dataframeConf
+  private val ctsSchemaAemetAllMeteoInfo = GlobalConf.Constants.schema.aemetConf.allMeteoInfo
+  private val ctsSchemaAemetAllStation = GlobalConf.Constants.schema.aemetConf.allStationInfo
+  private val ctsSchemaSparkMeteo = GlobalConf.Constants.schema.sparkConf.meteoDf
+  private val ctsSchemaSparkAllStation = GlobalConf.Constants.schema.sparkConf.stationsDf
 
   private object SparkCore {
-    val sparkSession: SparkSession = createSparkSession("AEMET Spark Study", "local[*]", "ERROR")
+    private val ctsExecutionSessionConf = SparkConf.Constants.init.execution.sessionConf
+    private val ctsExecutionGlobalConf = SparkConf.Constants.init.execution.globalConf
+    private val ctsInitLogs = SparkConf.Constants.init.log
+    private val ctsAllMeteoInfoSpecialValues = ctsExecutionDataframeConf.allMeteoInfoDf.specialValues
+    private val ctsAllStationSpecialValues = ctsExecutionDataframeConf.allStationsDf.specialValues
 
-    // TODO antes de realizar cualquier query mostrar info de spark.
+    val sparkSession: SparkSession = createSparkSession(
+      ctsExecutionSessionConf.sessionName,
+      ctsExecutionSessionConf.sessionMaster,
+      ctsExecutionSessionConf.sessionLogLevel
+    )
+
+    def startSparkSession(): Unit = {
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.startSparkSession)
+      SparkCore.sparkSession.conf.getAll.foreach {case (k, v) => printlnConsoleMessage(NotificationType.Information, s"$k = $v")}
+      SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName).count()
+      SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName).count()
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSession)
+    }
+
+    def saveDataframeAsParquet(dataframe: DataFrame, path: String): Either[Exception, String] = {
+      try {
+        dataframe.write
+          .mode(SaveMode.Overwrite)
+          .parquet(path)
+
+        Right(path)
+      } catch {
+        case exception: Exception => Left(exception)
+      }
+    }
+
     private def createSparkSession(name: String, master: String, logLevel: String): SparkSession = {
       val spark = SparkSession.builder()
         .appName(name)
@@ -39,21 +69,20 @@ object SparkManager {
       metadataPath: String
     ): Either[Exception, DataFrame] = {
       def createDataframeSchemaAemet(metadataJSON: ujson.Value): StructType = {
-        val ctsRemoteReqAemetParamsGlobalMetadataSchemaJSONKeys = RemoteRequest.AemetAPI.Params.Global.Metadata.SchemaJSONKeys
         StructType(
-          metadataJSON(ctsRemoteReqAemetParamsGlobalMetadataSchemaJSONKeys.fieldDefJKey).arr.map(field => {
+          metadataJSON(ctsExecutionDataframeConf.aemetMetadataStructure.schemaDef).arr.map(field => {
             StructField(
-              field(ctsRemoteReqAemetParamsGlobalMetadataSchemaJSONKeys.DataFieldsJSONKeys.idJKey).str,
+              field(ctsExecutionDataframeConf.aemetMetadataStructure.fieldId).str,
               StringType,
-              !field(ctsRemoteReqAemetParamsGlobalMetadataSchemaJSONKeys.DataFieldsJSONKeys.requiredJKey).bool
+              !field(ctsExecutionDataframeConf.aemetMetadataStructure.fieldRequired).bool
             )
           }).toArray
         )
       }
 
       Right(session
-        .read.format("json")
-        .option("multiline", value = true)
+        .read.format(ctsExecutionGlobalConf.readFormat)
+        .option(ctsExecutionGlobalConf.readMode, value = true)
         .schema(
           createDataframeSchemaAemet(
             JSONUtils.readJSON(
@@ -67,136 +96,128 @@ object SparkManager {
         .json(sourcePath))
     }
 
-    def saveDataframeAsParquet(dataframe: DataFrame, path: String): Either[Exception, String] = {
-      try {
-        dataframe.write
-          .mode(SaveMode.Overwrite)
-          .parquet(path)
-
-        Right(path)
-      } catch {
-        case exception: Exception => Left(exception)
-      }
-    }
-
     object dataframes {
-      private def formatAllMeteoInfoDataframe(dataframe: DataFrame): DataFrame = {
-        val ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Metadata.DataFieldsJSONKeys
-        val ctsRemoteReqAemetParamsAllMeteoInfoExecFormat = RemoteRequest.AemetAPI.Params.AllMeteoInfo.Execution.Format
+      private val ctsStorageAemet = SparkConf.Constants.init.storage.aemetConf
+      private val ctsStorageIfapaAemetFormat = SparkConf.Constants.init.storage.ifapaAemetFormatConf
+      private val ctsUtils = GlobalConf.Constants.utils
 
+      private def formatAllMeteoInfoDataframe(dataframe: DataFrame): DataFrame = {
         val formatters: Map[String, String => Column] = Map(
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.fechaJKey ->
-            (column => to_date(col(column), ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.provinciaJKey ->
+          ctsSchemaAemetAllMeteoInfo.fecha ->
+            (column => to_date(col(column), ctsUtils.formats.dateFormat)),
+          ctsSchemaAemetAllMeteoInfo.provincia ->
             (column => udf((value: String) => Map(
-              "STA. CRUZ DE TENERIFE" -> "SANTA CRUZ DE TENERIFE",
-              "BALEARES" -> "ILLES BALEARS",
-              "ALMERÍA" -> "ALMERIA"
+              ctsAllMeteoInfoSpecialValues.provincia.staCruzDeTenerife ->
+                ctsAllMeteoInfoSpecialValues.provincia.santaCruzDeTenerife,
+              ctsAllMeteoInfoSpecialValues.provincia.baleares ->
+                ctsAllMeteoInfoSpecialValues.provincia.illesBalears,
+              ctsAllMeteoInfoSpecialValues.provincia.almeriaSc ->
+                ctsAllMeteoInfoSpecialValues.provincia.almeria
             ).getOrElse(value, value)).apply(col(column))),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.altitudJKey ->
+          ctsSchemaAemetAllMeteoInfo.altitud ->
             (column => col(column).cast(IntegerType)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmedJKey ->
+          ctsSchemaAemetAllMeteoInfo.tMed ->
             (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.precJKey ->
+          ctsSchemaAemetAllMeteoInfo.prec ->
             (column => {
-              when(col(column) === "Acum", lit(null).cast(DoubleType))
+              when(col(column) === ctsAllMeteoInfoSpecialValues.prec.acum, lit(null).cast(DoubleType))
                 .otherwise(
-                  when(col(column) === "Ip", lit(0.0).cast(DoubleType))
+                  when(col(column) === ctsAllMeteoInfoSpecialValues.prec.ip, lit(0.0).cast(DoubleType))
                     .otherwise(round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1))
                 )
             }),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tminJKey ->
+          ctsSchemaAemetAllMeteoInfo.tMin ->
             (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatminJKey ->
+          ctsSchemaAemetAllMeteoInfo.horaTMin ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast(TimestampType))
+              when(col(column) === ctsAllMeteoInfoSpecialValues.genericHour.varias, lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
-                    concat_ws(" ", col("fecha"), col(column)),
-                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                    concat_ws(" ", col(ctsSchemaAemetAllMeteoInfo.fecha), col(column)),
+                    s"${ctsUtils.formats.dateFormat} ${ctsUtils.formats.hourMinuteFormat}"
                   )
                 )
             }),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.tmaxJKey ->
+          ctsSchemaAemetAllMeteoInfo.tMax ->
             (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horatmaxJKey ->
+          ctsSchemaAemetAllMeteoInfo.horaTMax ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast(TimestampType))
+              when(col(column) === ctsAllMeteoInfoSpecialValues.genericHour.varias, lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
-                    concat_ws(" ", col("fecha"), col(column)),
-                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                    concat_ws(" ", col(ctsSchemaAemetAllMeteoInfo.fecha), col(column)),
+                    s"${ctsUtils.formats.dateFormat} ${ctsUtils.formats.hourMinuteFormat}"
                   )
                 )
             }),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.dirJKey ->
+          ctsSchemaAemetAllMeteoInfo.dir ->
             (column => {
-              when(col(column) === "99" || col(column) === "88", lit(null).cast(IntegerType))
+              when(col(column) === ctsAllMeteoInfoSpecialValues.dir.noData || col(column) === ctsAllMeteoInfoSpecialValues.dir.variable, lit(null).cast(IntegerType))
                 .otherwise(regexp_replace(col(column), ",", "").cast(IntegerType))
             }),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.velmediaJKey ->
+          ctsSchemaAemetAllMeteoInfo.velMedia ->
             (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.rachaJKey ->
+          ctsSchemaAemetAllMeteoInfo.racha ->
             (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horarachaJKey ->
+          ctsSchemaAemetAllMeteoInfo.horaRacha ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast(TimestampType))
+              when(col(column) === ctsAllMeteoInfoSpecialValues.genericHour.varias, lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
-                    concat_ws(" ", col("fecha"), col(column)),
-                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                    concat_ws(" ", col(ctsSchemaAemetAllMeteoInfo.fecha), col(column)),
+                    s"${ctsUtils.formats.dateFormat} ${ctsUtils.formats.hourMinuteFormat}"
                   )
                 )
             }),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.solJKey ->
+          ctsSchemaAemetAllMeteoInfo.sol ->
             (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.presmaxJKey ->
+          ctsSchemaAemetAllMeteoInfo.presMax ->
             (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horapresmaxJKey ->
+          ctsSchemaAemetAllMeteoInfo.horaPresMax ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast(TimestampType))
+              when(col(column) === ctsAllMeteoInfoSpecialValues.genericHour.varias, lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
-                    concat_ws(" ", col("fecha"), col(column)),
-                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                    concat_ws(" ", col(ctsSchemaAemetAllMeteoInfo.fecha), col(column)),
+                    s"${ctsUtils.formats.dateFormat} ${ctsUtils.formats.hourMinuteFormat}"
                   )
                 )
             }),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.presminJKey ->
+          ctsSchemaAemetAllMeteoInfo.presMin ->
             (column => round(regexp_replace(col(column), ",", ".").cast(DoubleType), 1)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horapresminJKey ->
+          ctsSchemaAemetAllMeteoInfo.horaPresMin ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast(TimestampType))
+              when(col(column) === ctsAllMeteoInfoSpecialValues.genericHour.varias, lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
-                    concat_ws(" ", col("fecha"), col(column)),
-                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                    concat_ws(" ", col(ctsSchemaAemetAllMeteoInfo.fecha), col(column)),
+                    s"${ctsUtils.formats.dateFormat} ${ctsUtils.formats.hourMinuteFormat}"
                   )
                 )
             }),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmediaJKey ->
+          ctsSchemaAemetAllMeteoInfo.hrMedia ->
             (column => col(column).cast(IntegerType)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrmaxJKey ->
+          ctsSchemaAemetAllMeteoInfo.hrMax ->
             (column => col(column).cast(IntegerType)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrmaxJKey ->
+          ctsSchemaAemetAllMeteoInfo.horaHrMax ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast(TimestampType))
+              when(col(column) === ctsAllMeteoInfoSpecialValues.genericHour.varias, lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
-                    concat_ws(" ", col("fecha"), col(column)),
-                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                    concat_ws(" ", col(ctsSchemaAemetAllMeteoInfo.fecha), col(column)),
+                    s"${ctsUtils.formats.dateFormat} ${ctsUtils.formats.hourMinuteFormat}"
                   )
                 )
             }),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.hrminJKey ->
+          ctsSchemaAemetAllMeteoInfo.hrMin ->
             (column => col(column).cast(IntegerType)),
-          ctsRemoteReqAemetParamsAllMeteoInfoMetadataDataFieldsJSONKeys.horahrminJKey ->
+          ctsSchemaAemetAllMeteoInfo.horaHrMin ->
             (column => {
-              when(col(column) === "Varias", lit(null).cast(TimestampType))
+              when(col(column) === ctsAllMeteoInfoSpecialValues.genericHour.varias, lit(null).cast(TimestampType))
                 .otherwise(
                   to_timestamp(
-                    concat_ws(" ", col("fecha"), col(column)),
-                    s"${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.dateFormat} ${ctsRemoteReqAemetParamsAllMeteoInfoExecFormat.hourMinuteFormat}"
+                    concat_ws(" ", col(ctsSchemaAemetAllMeteoInfo.fecha), col(column)),
+                    s"${ctsUtils.formats.dateFormat} ${ctsUtils.formats.hourMinuteFormat}"
                   )
                 )
             }),
@@ -209,35 +230,40 @@ object SparkManager {
       }
 
       private def formatAllStationsDataframe(dataframe: DataFrame): DataFrame = {
-        val ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys = RemoteRequest.AemetAPI.Params.AllStationInfo.Metadata.DataFieldsJSONKeys
-
         val formatters: Map[String, String => Column] = Map(
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.provinciaJKey ->
+          ctsSchemaAemetAllStation.provincia ->
             (column => udf((value: String) => Map(
-              "SANTA CRUZ DE TENERIFE" -> "STA. CRUZ DE TENERIFE",
-              "BALEARES" -> "ILLES BALEARS",
-              "ALMERÍA" -> "ALMERIA"
+              ctsAllStationSpecialValues.provincia.staCruzDeTenerife ->
+                ctsAllStationSpecialValues.provincia.santaCruzDeTenerife,
+              ctsAllStationSpecialValues.provincia.baleares ->
+                ctsAllStationSpecialValues.provincia.illesBalears,
+              ctsAllStationSpecialValues.provincia.almeriaSc ->
+                ctsAllStationSpecialValues.provincia.almeria
             ).getOrElse(value, value)).apply(col(column))),
-          ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.altitudJKey ->
+          ctsSchemaAemetAllStation.altitud ->
             (column => col(column).cast(IntegerType)),
-          "lat_dec" ->
+          ctsSchemaSparkAllStation.latDec ->
             (_ => round(udf((dms: String) => {
               val degrees = dms.substring(0, 2).toInt
               val minutes = dms.substring(2, 4).toInt
               val seconds = dms.substring(4, 6).toInt
               val direction = dms.last
               val decimal = degrees + (minutes / 60.0) + (seconds / 3600.0)
-              if (direction == 'S' || direction == 'W') -decimal else decimal
-            }).apply(col(ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.latitudJKey)), 6)),
-          "long_dec" ->
+              if (direction == ctsAllStationSpecialValues.genericCardinalCoord.south ||
+                direction == ctsAllStationSpecialValues.genericCardinalCoord.west
+              ) -decimal else decimal
+            }).apply(col(ctsSchemaAemetAllStation.latitud)), 6)),
+          ctsSchemaSparkAllStation.longDec ->
             (_ => round(udf((dms: String) => {
               val degrees = dms.substring(0, 2).toInt
               val minutes = dms.substring(2, 4).toInt
               val seconds = dms.substring(4, 6).toInt
               val direction = dms.last
               val decimal = degrees + (minutes / 60.0) + (seconds / 3600.0)
-              if (direction == 'S' || direction == 'W') -decimal else decimal
-            }).apply(col(ctsRemoteReqAemetParamsAllStationInfoMetadataDataFieldsJSONKeys.longitudJKey)), 6)),
+              if (direction == ctsAllStationSpecialValues.genericCardinalCoord.south ||
+                direction == ctsAllStationSpecialValues.genericCardinalCoord.west
+              ) -decimal else decimal
+            }).apply(col(ctsSchemaAemetAllStation.longitud)), 6)),
         )
 
         formatters.foldLeft(dataframe) {
@@ -250,14 +276,14 @@ object SparkManager {
         formatAllMeteoInfoDataframe(
           createDataframeFromJSONAndAemetMetadata(
             sparkSession,
-            ctsStorageDataAemetAllMeteoInfo.Dirs.dataRegistry,
-            ctsStorageDataAemetAllMeteoInfo.FilePaths.metadata
+            ctsStorageAemet.allMeteoInfo.dirs.data,
+            ctsStorageAemet.allMeteoInfo.filepaths.metadata
           ) match {
             case Left(exception) => throw exception
             case Right(df) => df.union(createDataframeFromJSONAndAemetMetadata(
               sparkSession,
-              ctsStorageDataIfapaAemetFormatSingleStationMeteoInfo.Dirs.dataRegistry,
-              ctsStorageDataIfapaAemetFormatSingleStationMeteoInfo.FilePaths.metadata
+              ctsStorageIfapaAemetFormat.singleStationMeteoInfo.dirs.data,
+              ctsStorageIfapaAemetFormat.singleStationMeteoInfo.filepaths.metadata
             ) match {
               case Left(exception) => throw exception
               case Right(df) => df
@@ -269,14 +295,14 @@ object SparkManager {
         formatAllStationsDataframe(
           createDataframeFromJSONAndAemetMetadata(
             sparkSession,
-            ctsStorageDataAemetAllStationInfo.Dirs.dataRegistry,
-            ctsStorageDataAemetAllStationInfo.FilePaths.metadata
+            ctsStorageAemet.allStationInfo.dirs.data,
+            ctsStorageAemet.allStationInfo.filepaths.metadata
           ) match {
             case Left(exception) => throw exception
             case Right(df) => df.union(createDataframeFromJSONAndAemetMetadata(
               sparkSession,
-              ctsStorageDataIfapaAemetFormatSingleStationInfo.Dirs.dataRegistry,
-              ctsStorageDataIfapaAemetFormatSingleStationInfo.FilePaths.metadata
+              ctsStorageIfapaAemetFormat.singleStationInfo.dirs.data,
+              ctsStorageIfapaAemetFormat.singleStationInfo.filepaths.metadata
             ) match {
               case Left(exception) => throw exception
               case Right(df) => df
@@ -290,25 +316,23 @@ object SparkManager {
 
     import SparkCore.sparkSession.implicits._
 
-    private val ctsLogsSparkQueriesStudiesGlobal = Logs.SparkQueries.Studies.Global
-
-    private case class FetchAndSaveInfo(
-      dataframe: DataFrame,
-      pathToSave: String,
-      title: String = "",
-      showInfoMessage: String = ctsLogsSparkQueriesStudiesGlobal.showInfo,
-      saveInfoMessage: String = ctsLogsSparkQueriesStudiesGlobal.saveInfo
-    )
+    private val ctsGlobalLogs = SparkConf.Constants.queries.log.globalConf
 
     def execute(): Unit = {
-      SparkCore.dataframes.allStations.as("stations").count()
-      SparkCore.dataframes.allMeteoInfo.as("meteo").count()
-
+      SparkCore.startSparkSession()
       Stations.execute()
       Climograph.execute()
       SingleParamStudies.execute()
       InterestingStudies.execute()
     }
+
+    private case class FetchAndSaveInfo(
+      dataframe: DataFrame,
+      pathToSave: String,
+      title: String = "",
+      showInfoMessage: String = ctsGlobalLogs.showInfo,
+      saveInfoMessage: String = ctsGlobalLogs.saveInfo
+    )
 
     private def simpleFetchAndSave(
       queryTitle: String = "",
@@ -316,13 +340,13 @@ object SparkManager {
       encloseHalfLengthStart: Int = 35
     ): Seq[DataFrame] = {
       if (queryTitle != "")
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startQuery.format(
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startQuery.format(
           queryTitle
         ), encloseHalfLength = encloseHalfLengthStart)
 
       queries.foreach(subQuery => {
         if (subQuery.title != "")
-          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startSubQuery.format(
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startSubQuery.format(
             subQuery.title
           ), encloseHalfLength = encloseHalfLengthStart + 5)
 
@@ -338,13 +362,13 @@ object SparkManager {
         }
 
         if (subQuery.title != "")
-          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endSubQuery.format(
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.endSubQuery.format(
             subQuery.title
           ), encloseHalfLength = encloseHalfLengthStart + 5)
       })
 
       if (queryTitle != "")
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endQuery.format(
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.endQuery.format(
           queryTitle
         ), encloseHalfLength = encloseHalfLengthStart)
 
@@ -352,97 +376,97 @@ object SparkManager {
     }
 
     object Stations {
-      private val ctsSparkQueriesStations = Spark.Queries.Stations
-      private val ctsLogsSparkQueriesStudiesStations = Logs.SparkQueries.Studies.Stations
-      private val ctsStorageDataSparkStations = Storage.DataSpark.Stations
+      private val ctsExecution = SparkConf.Constants.queries.execution.stationsConf
+      private val ctsLogs = SparkConf.Constants.queries.log.stationsConf
+      private val ctsStorage = SparkConf.Constants.queries.storage.stationsConf
 
       def execute(): Unit = {
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startStudy.format(
-          ctsLogsSparkQueriesStudiesStations.studyName
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startStudy.format(
+          ctsLogs.studyName
         ))
 
         // Station count evolution from the start of registers
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesStations.Execution.stationCountEvolFromStart,
+          ctsLogs.stationCountEvolFromStart,
           List(
             FetchAndSaveInfo(
               getStationCountByColumnInLapse(
                 column = (
-                  year(col(ctsSparkQueriesStations.Execution.CountEvolFromStart.param)),
-                  ctsSparkQueriesStations.Execution.CountEvolFromStart.paramGroupName
+                  year(col(ctsExecution.countEvolFromStart.param)),
+                  ctsExecution.countEvolFromStart.paramSelectName
                 ),
-                startDate = ctsSparkQueriesStations.Execution.CountEvolFromStart.startDate,
-                endDate = Some(ctsSparkQueriesStations.Execution.CountEvolFromStart.endDate)) match {
+                startDate = ctsExecution.countEvolFromStart.startDate,
+                endDate = Some(ctsExecution.countEvolFromStart.endDate)) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkStations.StationCountEvolFromStart.Dirs.result
+              ctsStorage.countEvolFromStart.data
             )
           )
         )
 
         // Count of stations by state in 2024
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesStations.Execution.stationCountByState2024,
+          ctsLogs.stationCountByState2024,
           List(
             FetchAndSaveInfo(
               getStationCountByColumnInLapse(
                 column = (
-                  col(ctsSparkQueriesStations.Execution.StationCountByState2024.param),
-                  ctsSparkQueriesStations.Execution.StationCountByState2024.paramGroupName
+                  col(ctsExecution.countByState2024.param),
+                  ctsExecution.countByState2024.paramSelectName
                 ),
-                startDate = ctsSparkQueriesStations.Execution.StationCountByState2024.startDate) match {
+                startDate = ctsExecution.countByState2024.startDate) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkStations.StationCountByState2024.Dirs.result
+              ctsStorage.countByState2024.data
             )
           )
         )
 
         // Count of stations by altitude in 2024
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesStations.Execution.stationCountByAltitude2024,
+          ctsLogs.stationCountByAltitude2024,
           List(
             FetchAndSaveInfo(
               getStationsCountByParamIntervalsInALapse(
-                paramIntervals = ctsSparkQueriesStations.Execution.StationCountByAltitude2024.intervals,
-                startDate = ctsSparkQueriesStations.Execution.StationCountByAltitude2024.startDate) match {
+                paramIntervals = ctsExecution.countByAltitude2024.intervals,
+                startDate = ctsExecution.countByAltitude2024.startDate) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkStations.StationCountByAltitude2024.Dirs.result
+              ctsStorage.countByAltitude2024.data
             )
           )
         )
 
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endStudy.format(
-          ctsLogsSparkQueriesStudiesStations.studyName
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.endStudy.format(
+          ctsLogs.studyName
         ))
       }
     }
 
     object Climograph {
-      private val ctsSparkQueriesClimograph = Spark.Queries.Climograph
-      private val ctsLogsSparkQueriesStudiesClimograph = Logs.SparkQueries.Studies.Climograph
-      private val ctsStorageDataSparkClimograph = Storage.DataSpark.Climograph
+      private val ctsExecution = SparkConf.Constants.queries.execution.climographConf
+      private val ctsLogs = SparkConf.Constants.queries.log.climographConf
+      private val ctsStorage = SparkConf.Constants.queries.storage.climographConf
 
       def execute(): Unit = {
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startStudy.format(
-          ctsLogsSparkQueriesStudiesClimograph.studyName
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startStudy.format(
+          ctsLogs.studyName
         ))
 
-        ctsSparkQueriesClimograph.stationsRegistries.foreach(climateGroup => {
-          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.startFetchingClimateGroup.format(
+        ctsExecution.stationsRegistries.foreach(climateGroup => {
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.startFetchingClimateGroup.format(
             climateGroup.climateGroupName
           ), encloseHalfLength = 35)
 
           climateGroup.climates.foreach(climateRegistry => {
             simpleFetchAndSave(
-              ctsLogsSparkQueriesStudiesClimograph.Execution.fetchingClimate.format(
+              ctsLogs.fetchingClimate.format(
                 climateRegistry.climateName
               ),
               climateRegistry.registries.flatMap(registry => {
@@ -453,31 +477,31 @@ object SparkManager {
                         return
                       case Right(dataFrame: DataFrame) => dataFrame
                     },
-                    ctsStorageDataSparkClimograph.Dirs.resultStation.format(
+                    ctsStorage.climograph.dataStation.format(
                       climateGroup.climateGroupName,
                       climateRegistry.climateName,
-                      registry.location.toString.replace(" ", "_")
+                      registry.location.replace(" ", "_")
                     ),
-                    ctsLogsSparkQueriesStudiesClimograph.Execution.fetchingClimateLocationStation.format(
-                      registry.location.toString.capitalize,
+                    ctsLogs.fetchingClimateLocationStation.format(
+                      registry.location.capitalize,
                     )
                   ),
                   FetchAndSaveInfo(
                     getStationMonthlyAvgTempAndSumPrecInAYear(
                       registry.stationId,
-                      ctsSparkQueriesClimograph.observationYear
+                      ctsExecution.observationYear
                     ) match {
                       case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                         return
                       case Right(dataFrame: DataFrame) => dataFrame
                     },
-                    ctsStorageDataSparkClimograph.Dirs.resultTempPrec.format(
+                    ctsStorage.climograph.dataTempAndPrec.format(
                       climateGroup.climateGroupName,
                       climateRegistry.climateName,
-                      registry.location.toString.replace(" ", "_")
+                      registry.location.replace(" ", "_")
                     ),
-                    ctsLogsSparkQueriesStudiesClimograph.Execution.fetchingClimateLocationTempPrec.format(
-                      registry.location.toString.capitalize,
+                    ctsLogs.fetchingClimateLocationTempPrec.format(
+                      registry.location.capitalize,
                     )
                   )
                 )
@@ -486,31 +510,31 @@ object SparkManager {
             )
           })
 
-          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesClimograph.Execution.startFetchingClimateGroup.format(
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.startFetchingClimateGroup.format(
             climateGroup.climateGroupName
           ), encloseHalfLength = 35)
         })
 
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endStudy.format(
-          ctsLogsSparkQueriesStudiesClimograph.studyName
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.endStudy.format(
+          ctsLogs.studyName
         ))
       }
     }
 
     object SingleParamStudies {
-      private val ctsSparkQueriesSingleParamStudies = Spark.Queries.SingleParamStudies
-      private val ctsLogsSparkQueriesStudiesSingleParamStudies = Logs.SparkQueries.Studies.SingleParamStudies
-      private val ctsStorageDataSparkSingleParamStudies = Storage.DataSpark.SingleParamStudies
+      private val ctsExecution = SparkConf.Constants.queries.execution.singleParamStudiesConf
+      private val ctsLogs = SparkConf.Constants.queries.log.singleParamStudiesConf
+      private val ctsStorage = SparkConf.Constants.queries.storage.singleParamStudiesConf
 
       def execute(): Unit = {
-        ctsSparkQueriesSingleParamStudies.singleParamStudiesValues.foreach(study => {
-          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startStudy.format(
+        ctsExecution.singleParamStudiesValues.foreach(study => {
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startStudy.format(
             study.studyParam.replace("_", " ")
           ))
 
           // Top 10 places with the highest eratures in 2024
           simpleFetchAndSave(
-            ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.top10Highest2024.format(
+            ctsLogs.top10Highest2024.format(
               study.studyParam
             ),
             List(
@@ -518,13 +542,13 @@ object SparkManager {
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
-                  startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10Highest2024.startDate,
+                  startDate = ctsExecution.top10Highest2024.startDate,
                   endDate = None) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkSingleParamStudies.Top10.Dirs.resultHighest2024.format(
+                ctsStorage.top10.dataHighest2024.format(
                   study.studyParamAbbrev
                 )
               )
@@ -533,7 +557,7 @@ object SparkManager {
 
           // Top 10 places with the highest eratures in the last decade
           simpleFetchAndSave(
-            ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.top10HighestDecade.format(
+            ctsLogs.top10HighestDecade.format(
               study.studyParam
             ),
             List(
@@ -541,13 +565,13 @@ object SparkManager {
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
-                  startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10HighestDecade.startDate,
-                  endDate = Some(ctsSparkQueriesSingleParamStudies.Execution.Top10HighestDecade.endDate)) match {
+                  startDate = ctsExecution.top10HighestDecade.startDate,
+                  endDate = Some(ctsExecution.top10HighestDecade.endDate)) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkSingleParamStudies.Top10.Dirs.resultHighestDecade.format(
+                ctsStorage.top10.dataHighestDecade.format(
                   study.studyParamAbbrev
                 )
               )
@@ -556,7 +580,7 @@ object SparkManager {
 
           // Top 10 places with the highest eratures from the start of registers
           simpleFetchAndSave(
-            ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.top10HighestGlobal.format(
+            ctsLogs.top10HighestGlobal.format(
               study.studyParam
             ),
             List(
@@ -564,13 +588,13 @@ object SparkManager {
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
-                  startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10HighestGlobal.startDate,
-                  endDate = Some(ctsSparkQueriesSingleParamStudies.Execution.Top10HighestGlobal.endDate)) match {
+                  startDate = ctsExecution.top10HighestGlobal.startDate,
+                  endDate = Some(ctsExecution.top10HighestGlobal.endDate)) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkSingleParamStudies.Top10.Dirs.resultHighestGlobal.format(
+                ctsStorage.top10.dataHighestGlobal.format(
                   study.studyParamAbbrev
                 )
               )
@@ -579,7 +603,7 @@ object SparkManager {
 
           // Top 10 places with the lowest eratures in 2024
           simpleFetchAndSave(
-            ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.top10Lowest2024.format(
+            ctsLogs.top10Lowest2024.format(
               study.studyParam
             ),
             List(
@@ -587,7 +611,7 @@ object SparkManager {
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
-                  startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10Lowest2024.startDate,
+                  startDate = ctsExecution.top10Lowest2024.startDate,
                   endDate = None,
                   highest = false
                 ) match {
@@ -595,7 +619,7 @@ object SparkManager {
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkSingleParamStudies.Top10.Dirs.resultLowest2024.format(
+                ctsStorage.top10.dataLowest2024.format(
                   study.studyParamAbbrev
                 )
               )
@@ -604,7 +628,7 @@ object SparkManager {
 
           // Top 10 places with the lowest eratures in the last decade
           simpleFetchAndSave(
-            ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.top10LowestDecade.format(
+            ctsLogs.top10LowestDecade.format(
               study.studyParam
             ),
             List(
@@ -612,15 +636,15 @@ object SparkManager {
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
-                  startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10LowestDecade.startDate,
-                  endDate = Some(ctsSparkQueriesSingleParamStudies.Execution.Top10LowestDecade.endDate),
+                  startDate = ctsExecution.top10LowestDecade.startDate,
+                  endDate = Some(ctsExecution.top10LowestDecade.endDate),
                   highest = false
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkSingleParamStudies.Top10.Dirs.resultLowestDecade.format(
+                ctsStorage.top10.dataLowestDecade.format(
                   study.studyParamAbbrev
                 )
               )
@@ -629,7 +653,7 @@ object SparkManager {
 
           // Top 10 places with the lowest eratures from the start of registers
           simpleFetchAndSave(
-            ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.top10LowestGlobal.format(
+            ctsLogs.top10LowestGlobal.format(
               study.studyParam
             ),
             List(
@@ -637,15 +661,15 @@ object SparkManager {
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
-                  startDate = ctsSparkQueriesSingleParamStudies.Execution.Top10LowestGlobal.startDate,
-                  endDate = Some(ctsSparkQueriesSingleParamStudies.Execution.Top10LowestGlobal.endDate),
+                  startDate = ctsExecution.top10LowestGlobal.startDate,
+                  endDate = Some(ctsExecution.top10LowestGlobal.endDate),
                   highest = false
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkSingleParamStudies.Top10.Dirs.resultLowestGlobal.format(
+                ctsStorage.top10.dataLowestGlobal.format(
                   study.studyParamAbbrev
                 )
               )
@@ -654,7 +678,7 @@ object SparkManager {
 
           // erature evolution from the start of registers for each state
           val regressionModelDf: DataFrame = simpleFetchAndSave(
-            ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.evolFromStartForEachState.format(
+            ctsLogs.evolFromStartForEachState.format(
               study.studyParam.capitalize
             ),
             study.reprStationRegs.flatMap(registry => {
@@ -665,11 +689,11 @@ object SparkManager {
                       return
                     case Right(dataFrame: DataFrame) => dataFrame
                   },
-                  ctsStorageDataSparkSingleParamStudies.EvolFromStartForEachState.Dirs.resultStation.format(
+                  ctsStorage.evolFromStartForEachState.dataStation.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSC.replace(" ", "_")
+                    registry.stateNameNoSc.replace(" ", "_")
                   ),
-                  ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.evolFromStartForEachStateStartStation.format(
+                  ctsLogs.evolFromStartForEachStateStartStation.format(
                     registry.stateName.capitalize
                   )
                 ),
@@ -686,11 +710,11 @@ object SparkManager {
                       return
                     case Right(dataFrame: DataFrame) => dataFrame
                   },
-                  ctsStorageDataSparkSingleParamStudies.EvolFromStartForEachState.Dirs.resultEvol.format(
+                  ctsStorage.evolFromStartForEachState.dataEvol.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSC.replace(" ", "_")
+                    registry.stateNameNoSc.replace(" ", "_")
                   ),
-                  ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.evolFromStartForEachStateStart.format(
+                  ctsLogs.evolFromStartForEachStateStart.format(
                     registry.stateName,
                     study.studyParam.replace("_", " ")
                   )
@@ -706,11 +730,11 @@ object SparkManager {
                       return
                     case Right(dataFrame: DataFrame) => dataFrame
                   },
-                  ctsStorageDataSparkSingleParamStudies.EvolFromStartForEachState.Dirs.resultEvolRegression.format(
+                  ctsStorage.evolFromStartForEachState.dataEvolRegression.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSC.replace(" ", "_")
+                    registry.stateNameNoSc.replace(" ", "_")
                   ),
-                  ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.evolFromStartForEachStateStartRegression.format(
+                  ctsLogs.evolFromStartForEachStateStartRegression.format(
                     registry.stateName.capitalize,
                     study.studyParam.replace("_", " ")
                   )
@@ -725,7 +749,7 @@ object SparkManager {
 
           // Top 5 highest increment of erature
           simpleFetchAndSave(
-            ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.top5HighestInc.format(
+            ctsLogs.top5HighestInc.format(
               study.studyParam
             ),
             List(
@@ -735,14 +759,14 @@ object SparkManager {
                   regressionModels = regressionModelDf,
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
-                  startYear = ctsSparkQueriesSingleParamStudies.Execution.Top5HighestInc.startYear,
-                  endYear = ctsSparkQueriesSingleParamStudies.Execution.Top5HighestInc.endYear
+                  startYear = ctsExecution.top5HighestInc.startYear,
+                  endYear = ctsExecution.top5HighestInc.endYear
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkSingleParamStudies.Top5Inc.Dirs.resultHighest.format(
+                ctsStorage.top5Inc.dataHighest.format(
                   study.studyParamAbbrev
                 )
               )
@@ -751,7 +775,7 @@ object SparkManager {
 
           // Top 5 lowest increment of erature
           simpleFetchAndSave(
-            ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.top5LowestInc.format(
+            ctsLogs.top5LowestInc.format(
               study.studyParam
             ),
             List(
@@ -761,15 +785,15 @@ object SparkManager {
                   regressionModels = regressionModelDf,
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
-                  startYear = ctsSparkQueriesSingleParamStudies.Execution.Top5LowestInc.startYear,
-                  endYear = ctsSparkQueriesSingleParamStudies.Execution.Top5LowestInc.endYear,
+                  startYear = ctsExecution.top5LowestInc.startYear,
+                  endYear = ctsExecution.top5LowestInc.endYear,
                   highest = false
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkSingleParamStudies.Top5Inc.Dirs.resultLowest.format(
+                ctsStorage.top5Inc.dataLowest.format(
                   study.studyParamAbbrev
                 )
               )
@@ -780,7 +804,7 @@ object SparkManager {
 
           // Get average erature in 2024 for all station in the spanish continental territory
           simpleFetchAndSave(
-            ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.avg2024AllStationSpainContinental.format(
+            ctsLogs.avg2024AllStationSpainContinental.format(
               study.studyParam
             ),
             List(
@@ -788,13 +812,13 @@ object SparkManager {
                 getAllStationsByStatesAvgClimateParamInALapse(
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
-                  startDate = ctsSparkQueriesSingleParamStudies.Execution.Avg2024AllStationSpain.startDate
+                  startDate = ctsExecution.avg2024AllStationSpain.startDate
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkSingleParamStudies.Avg2024AllStationSpain.Dirs.resultContinental.format(
+                ctsStorage.avg2024AllStationsSpain.dataContinental.format(
                   study.studyParamAbbrev
                 )
               )
@@ -803,7 +827,7 @@ object SparkManager {
 
           // Get average erature in 2024 for all station in the canary islands territory
           simpleFetchAndSave(
-            ctsLogsSparkQueriesStudiesSingleParamStudies.Execution.avg2024AllStationSpainCanary.format(
+            ctsLogs.avg2024AllStationSpainCanary.format(
               study.studyParam
             ),
             List(
@@ -811,21 +835,21 @@ object SparkManager {
                 getAllStationsByStatesAvgClimateParamInALapse(
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
-                  startDate = ctsSparkQueriesSingleParamStudies.Execution.Avg2024AllStationSpain.startDate,
-                  states = Some(ctsSparkQueriesSingleParamStudies.Execution.Avg2024AllStationSpain.canaryIslandStates),
+                  startDate = ctsExecution.avg2024AllStationSpain.startDate,
+                  states = Some(ctsExecution.avg2024AllStationSpain.canaryIslandStates),
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkSingleParamStudies.Avg2024AllStationSpain.Dirs.resultCanary.format(
+                ctsStorage.avg2024AllStationsSpain.dataCanary.format(
                   study.studyParamAbbrev
                 )
               )
             )
           )
 
-          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endStudy.format(
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.endStudy.format(
             study.studyParam
           ))
         })
@@ -833,19 +857,19 @@ object SparkManager {
     }
 
     object InterestingStudies {
-      private val ctsSparkQueriesInterestingStudies = Spark.Queries.InterestingStudies
-      private val ctsLogsSparkQueriesStudiesInterestingStudies = Logs.SparkQueries.Studies.InterestingStudies
-      private val ctsStorageDataSparkInterestingStudies = Storage.DataSpark.InterestingStudies
+      private val ctsExecution = SparkConf.Constants.queries.execution.interestingStudiesConf
+      private val ctsLogs = SparkConf.Constants.queries.log.interestingStudiesConf
+      private val ctsStorage = SparkConf.Constants.queries.storage.interestingStudiesConf
 
       def execute(): Unit = {
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.startStudy.format(
-          ctsLogsSparkQueriesStudiesInterestingStudies.studyName
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startStudy.format(
+          ctsLogs.studyName
         ))
 
         // Precipitation and pressure evolution from the start of registers for each state
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesInterestingStudies.Execution.precAndPressureEvolFromStartForEachState,
-          ctsSparkQueriesInterestingStudies.stationRegistries.flatMap(registry => {
+          ctsLogs.precAndPressureEvolFromStartForEachState,
+          ctsExecution.stationRegistries.flatMap(registry => {
             List(
               FetchAndSaveInfo(
                 getStationInfoById(registry.stationId) match {
@@ -853,17 +877,17 @@ object SparkManager {
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkInterestingStudies.PrecAndPressionEvolFromStartForEachState.Dirs.resultStation.format(
-                  registry.stateNameNoSC.replace(" ", "_")
+                ctsStorage.precAndPressEvol.dataStation.format(
+                  registry.stateNameNoSc.replace(" ", "_")
                 ),
-                ctsLogsSparkQueriesStudiesInterestingStudies.Execution.precAndPressureEvolFromStartForEachStateStartStation.format(
+                ctsLogs.precAndPressureEvolFromStartForEachStateStartStation.format(
                   registry.stateName.capitalize
                 )
               ),
               FetchAndSaveInfo(
                 getClimateParamInALapseById(
                   registry.stationId,
-                  ctsSparkQueriesInterestingStudies.Execution.PrecAndPressEvolFromStartForEachState.climateParams,
+                  ctsExecution.precAndPressEvolFromStartForEachState.climateParams,
                   registry.startDate,
                   Some(registry.endDate)
                 ) match {
@@ -871,10 +895,10 @@ object SparkManager {
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorageDataSparkInterestingStudies.PrecAndPressionEvolFromStartForEachState.Dirs.resultEvol.format(
-                  registry.stateNameNoSC.replace(" ", "_")
+                ctsStorage.precAndPressEvol.dataEvol.format(
+                  registry.stateNameNoSc.replace(" ", "_")
                 ),
-                ctsLogsSparkQueriesStudiesInterestingStudies.Execution.precAndPressureEvolFromStartForEachStateStartEvol.format(
+                ctsLogs.precAndPressureEvolFromStartForEachStateStartEvol.format(
                   registry.stateName
                 )
               )
@@ -884,186 +908,186 @@ object SparkManager {
 
         // Top 10 better places for wind power generation in the last decade
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesInterestingStudies.Execution.top10BetterWindPower,
+          ctsLogs.top10BetterWindPower,
           List(
             FetchAndSaveInfo(
               getTopNClimateConditionsInALapse(
-                climateParams = ctsSparkQueriesInterestingStudies.Execution.Top10BetterWindPower.climateParams,
-                startDate = ctsSparkQueriesInterestingStudies.Execution.Top10BetterWindPower.startDate,
-                endDate = Some(ctsSparkQueriesInterestingStudies.Execution.Top10BetterWindPower.endDate),
+                climateParams = ctsExecution.top10BetterWindPower.climateParams,
+                startDate = ctsExecution.top10BetterWindPower.startDate,
+                endDate = Some(ctsExecution.top10BetterWindPower.endDate),
                 groupByState = true
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkInterestingStudies.Top10InterestingStudies.Dirs.resultBetterWindPower
+              ctsStorage.top10.dataBetterWindPower
             )
           )
         )
 
         // Top 10 better places for sun power generation in the last decade
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesInterestingStudies.Execution.top10BetterSunPower,
+          ctsLogs.top10BetterSunPower,
           List(
             FetchAndSaveInfo(
               getTopNClimateConditionsInALapse(
-                climateParams = ctsSparkQueriesInterestingStudies.Execution.Top10BetterSunPower.climateParams,
-                startDate = ctsSparkQueriesInterestingStudies.Execution.Top10BetterSunPower.startDate,
-                endDate = Some(ctsSparkQueriesInterestingStudies.Execution.Top10BetterSunPower.endDate),
+                climateParams = ctsExecution.top10BetterSunPower.climateParams,
+                startDate = ctsExecution.top10BetterSunPower.startDate,
+                endDate = Some(ctsExecution.top10BetterSunPower.endDate),
                 groupByState = true
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkInterestingStudies.Top10InterestingStudies.Dirs.resultBetterSunPower
+              ctsStorage.top10.dataBetterSunPower
             )
           )
         )
 
         // Top 10 places with the highest incidence of torrential rains in the last decade
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesInterestingStudies.Execution.top10TorrentialRains,
+          ctsLogs.top10TorrentialRains,
           List(
             FetchAndSaveInfo(
               getTopNClimateConditionsInALapse(
-                climateParams = ctsSparkQueriesInterestingStudies.Execution.Top10TorrentialRains.climateParams,
-                startDate = ctsSparkQueriesInterestingStudies.Execution.Top10TorrentialRains.startDate,
-                endDate = Some(ctsSparkQueriesInterestingStudies.Execution.Top10TorrentialRains.endDate),
+                climateParams = ctsExecution.top10TorrentialRains.climateParams,
+                startDate = ctsExecution.top10TorrentialRains.startDate,
+                endDate = Some(ctsExecution.top10TorrentialRains.endDate),
                 groupByState = true
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkInterestingStudies.Top10InterestingStudies.Dirs.resultTorrentialRains
+              ctsStorage.top10.dataTorrentialRains
             )
           )
         )
 
         // Top 10 the highest incidence of storms in the last decade
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesInterestingStudies.Execution.top10Storms,
+          ctsLogs.top10Storms,
           List(
             FetchAndSaveInfo(
               getTopNClimateConditionsInALapse(
-                climateParams = ctsSparkQueriesInterestingStudies.Execution.Top10Storms.climateParams,
-                startDate = ctsSparkQueriesInterestingStudies.Execution.Top10Storms.startDate,
-                endDate = Some(ctsSparkQueriesInterestingStudies.Execution.Top10Storms.endDate),
+                climateParams = ctsExecution.top10Storms.climateParams,
+                startDate = ctsExecution.top10Storms.startDate,
+                endDate = Some(ctsExecution.top10Storms.endDate),
                 groupByState = true
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkInterestingStudies.Top10InterestingStudies.Dirs.resultStorms
+              ctsStorage.top10.dataStorms
             )
           )
         )
 
         // Top 10 better places for agriculture in the last decade
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesInterestingStudies.Execution.top10Agriculture,
+          ctsLogs.top10Agriculture,
           List(
             FetchAndSaveInfo(
               getTopNClimateConditionsInALapse(
-                climateParams = ctsSparkQueriesInterestingStudies.Execution.Top10Agriculture.climateParams,
-                startDate = ctsSparkQueriesInterestingStudies.Execution.Top10Agriculture.startDate,
-                endDate = Some(ctsSparkQueriesInterestingStudies.Execution.Top10Agriculture.endDate),
+                climateParams = ctsExecution.top10Agriculture.climateParams,
+                startDate = ctsExecution.top10Agriculture.startDate,
+                endDate = Some(ctsExecution.top10Agriculture.endDate),
                 groupByState = true
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkInterestingStudies.Top10InterestingStudies.Dirs.resultAgriculture
+              ctsStorage.top10.dataAgriculture
             )
           )
         )
 
         // Top 10 the highest incidence of droughts in the last decade
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesInterestingStudies.Execution.top10Droughts,
+          ctsLogs.top10Droughts,
           List(
             FetchAndSaveInfo(
               getTopNClimateConditionsInALapse(
-                climateParams = ctsSparkQueriesInterestingStudies.Execution.Top10Droughts.climateParams,
-                startDate = ctsSparkQueriesInterestingStudies.Execution.Top10Droughts.startDate,
-                endDate = Some(ctsSparkQueriesInterestingStudies.Execution.Top10Droughts.endDate),
+                climateParams = ctsExecution.top10Droughts.climateParams,
+                startDate = ctsExecution.top10Droughts.startDate,
+                endDate = Some(ctsExecution.top10Droughts.endDate),
                 groupByState = true
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkInterestingStudies.Top10InterestingStudies.Dirs.resultDroughts
+              ctsStorage.top10.dataDroughts
             )
           )
         )
 
         // Top 10 the highest incidence of fires in the last decade
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesInterestingStudies.Execution.top10Fires,
+          ctsLogs.top10Fires,
           List(
             FetchAndSaveInfo(
               getTopNClimateConditionsInALapse(
-                climateParams = ctsSparkQueriesInterestingStudies.Execution.Top10Fires.climateParams,
-                startDate = ctsSparkQueriesInterestingStudies.Execution.Top10Fires.startDate,
-                endDate = Some(ctsSparkQueriesInterestingStudies.Execution.Top10Fires.endDate),
+                climateParams = ctsExecution.top10Fires.climateParams,
+                startDate = ctsExecution.top10Fires.startDate,
+                endDate = Some(ctsExecution.top10Fires.endDate),
                 groupByState = true
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkInterestingStudies.Top10InterestingStudies.Dirs.resultFires
+              ctsStorage.top10.dataFires
             )
           )
         )
 
         // Top 10 the highest incidence of heat waves in the last decade
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesInterestingStudies.Execution.top10HeatWaves,
+          ctsLogs.top10HeatWaves,
           List(
             FetchAndSaveInfo(
               getTopNClimateConditionsInALapse(
-                climateParams = ctsSparkQueriesInterestingStudies.Execution.Top10HeatWaves.climateParams,
-                startDate = ctsSparkQueriesInterestingStudies.Execution.Top10HeatWaves.startDate,
-                endDate = Some(ctsSparkQueriesInterestingStudies.Execution.Top10HeatWaves.endDate),
+                climateParams = ctsExecution.top10HeatWaves.climateParams,
+                startDate = ctsExecution.top10HeatWaves.startDate,
+                endDate = Some(ctsExecution.top10HeatWaves.endDate),
                 groupByState = true
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkInterestingStudies.Top10InterestingStudies.Dirs.resultHeatWaves
+              ctsStorage.top10.dataHeatWaves
             )
           )
         )
 
         // Top 10 the highest incidence of frosts in the last decade
         simpleFetchAndSave(
-          ctsLogsSparkQueriesStudiesInterestingStudies.Execution.top10Frosts,
+          ctsLogs.top10Frosts,
           List(
             FetchAndSaveInfo(
               getTopNClimateConditionsInALapse(
-                climateParams = ctsSparkQueriesInterestingStudies.Execution.Top10Frosts.climateParams,
-                startDate = ctsSparkQueriesInterestingStudies.Execution.Top10Frosts.startDate,
-                endDate = Some(ctsSparkQueriesInterestingStudies.Execution.Top10Frosts.endDate),
+                climateParams = ctsExecution.top10Frosts.climateParams,
+                startDate = ctsExecution.top10Frosts.startDate,
+                endDate = Some(ctsExecution.top10Frosts.endDate),
                 groupByState = true
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   return
                 case Right(dataFrame: DataFrame) => dataFrame
               },
-              ctsStorageDataSparkInterestingStudies.Top10InterestingStudies.Dirs.resultFrosts
+              ctsStorage.top10.dataFrosts
             )
           )
         )
 
-        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogsSparkQueriesStudiesGlobal.endStudy.format(
-          ctsLogsSparkQueriesStudiesInterestingStudies.studyName
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.endStudy.format(
+          ctsLogs.studyName
         ))
       }
     }
@@ -1073,18 +1097,18 @@ object SparkManager {
     )
     : Either[Exception, DataFrame] = {
       try {
-        val allStationsDf: DataFrame = SparkCore.dataframes.allStations.as("stations")
+        val allStationsDf: DataFrame = SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName)
 
         Right(
           allStationsDf
-            .filter($"indicativo" === stationId)
+            .filter(col(ctsSchemaAemetAllStation.indicativo) === stationId)
             .select(
-              $"indicativo".alias("station_id"),
-              $"nombre".alias("station_name"),
-              $"provincia".alias("state"),
-              $"latitud".alias("lat_dms"),
-              $"longitud".alias("long_dms"),
-              $"altitud".alias("altitude")
+              col(ctsSchemaAemetAllStation.indicativo).alias(ctsSchemaSparkAllStation.stationId),
+              col(ctsSchemaAemetAllStation.nombre).alias(ctsSchemaSparkAllStation.stationName),
+              col(ctsSchemaAemetAllStation.provincia).alias(ctsSchemaSparkAllStation.state),
+              col(ctsSchemaAemetAllStation.latitud).alias(ctsSchemaSparkAllStation.latDms),
+              col(ctsSchemaAemetAllStation.longitud).alias(ctsSchemaSparkAllStation.longDms),
+              col(ctsSchemaAemetAllStation.altitud).alias(ctsSchemaSparkAllStation.altitude)
             )
         )
       } catch {
@@ -1098,19 +1122,19 @@ object SparkManager {
       endDate: Option[String] = None,
     ): Either[Exception, DataFrame] = {
       try {
-        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
 
         Right(
           meteoDf.filter(
             endDate match {
-              case Some(end) => $"fecha".between(lit(startDate), lit(end))
-              case None => year($"fecha") === startDate.toInt
+              case Some(end) => col(ctsSchemaAemetAllMeteoInfo.fecha).between(lit(startDate), lit(end))
+              case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startDate.toInt
             }
           ).groupBy(column._1.as(column._2))
-          .agg(countDistinct($"indicativo").as("count"))
+          .agg(countDistinct(col(ctsSchemaAemetAllMeteoInfo.indicativo)).as(ctsExecutionDataframeConf.specialColumns.count))
           .select(
             col(column._2),
-            $"count"
+            col(ctsExecutionDataframeConf.specialColumns.count)
           )
           .orderBy(column._2)
         )
@@ -1125,17 +1149,17 @@ object SparkManager {
       endDate: Option[String] = None
     ): Either[Exception, DataFrame] = {
       try {
-        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
 
         val param = col(paramIntervals.head._1)
 
         val filteredDf = meteoDf.filter(
           endDate match {
-            case Some(end) => $"fecha".between(lit(startDate), lit(end))
-            case None => year($"fecha") === startDate.toInt
+            case Some(end) => col(ctsSchemaAemetAllMeteoInfo.fecha).between(lit(startDate), lit(end))
+            case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startDate.toInt
           }
         ).select(
-          $"indicativo",
+          col(ctsSchemaAemetAllMeteoInfo.indicativo),
           col(paramIntervals.head._1).cast(DoubleType)
         )
 
@@ -1150,11 +1174,11 @@ object SparkManager {
               else
                 param > actualMin && param <= actualMax
             ).agg(
-              lit(actualMin).as("min_value"),
-              lit(actualMax).as("max_value"),
-              countDistinct("indicativo").as("count")
+              lit(actualMin).as(ctsExecutionDataframeConf.specialColumns.minValue),
+              lit(actualMax).as(ctsExecutionDataframeConf.specialColumns.maxValue),
+              countDistinct(ctsSchemaAemetAllMeteoInfo.indicativo).as(ctsExecutionDataframeConf.specialColumns.count)
             )
-          }.reduce(_.union(_)).orderBy("min_value")
+          }.reduce(_.union(_)).orderBy(ctsExecutionDataframeConf.specialColumns.minValue)
         )
       } catch {
         case exception: Exception => Left(exception)
@@ -1166,21 +1190,21 @@ object SparkManager {
       observationYear: Int
     ): Either[Exception, DataFrame] = {
       try {
-        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
 
         Right(
           meteoDf
             .filter(
-              $"tmed".isNotNull &&
-                $"prec".isNotNull &&
-                $"indicativo" === stationId &&
-                year($"fecha") === observationYear
+              col(ctsSchemaAemetAllMeteoInfo.tMed).isNotNull &&
+                col(ctsSchemaAemetAllMeteoInfo.prec).isNotNull &&
+                col(ctsSchemaAemetAllMeteoInfo.indicativo) === stationId &&
+                year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === observationYear
             ).groupBy(
-              month($"fecha").as("month")
+              month(col(ctsSchemaAemetAllMeteoInfo.fecha)).as(ctsExecutionDataframeConf.specialColumns.month)
             ).agg(
-              round(avg($"tmed"), 1).as("temp_monthly_avg"),
-              round(sum($"prec"), 1).as("prec_monthly_sum")
-            ).orderBy($"month")
+              round(avg(col(ctsSchemaAemetAllMeteoInfo.tMed)), 1).as(ctsExecutionDataframeConf.specialColumns.tempMonthlyAvg),
+              round(sum(col(ctsSchemaAemetAllMeteoInfo.prec)), 1).as(ctsExecutionDataframeConf.specialColumns.precMonthlySum)
+            ).orderBy(col(ctsExecutionDataframeConf.specialColumns.month))
         )
       } catch {
         case exception: Exception => Left(exception)
@@ -1196,28 +1220,47 @@ object SparkManager {
       highest: Boolean = true
     ): Either[Exception, DataFrame] = {
       try {
-        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
-        val stationDf: DataFrame = SparkCore.dataframes.allStations.as("stations")
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
+        val stationDf: DataFrame = SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName)
 
         Right(
           meteoDf.filter(endDate match {
-            case Some(endDate) => $"fecha".between(lit(startDate), lit(endDate))
-            case None => year($"fecha") === startDate.toInt
+            case Some(endDate) => col(ctsSchemaAemetAllMeteoInfo.fecha).between(lit(startDate), lit(endDate))
+            case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startDate.toInt
           }).filter(col(climateParam).isNotNull)
-          .groupBy($"indicativo")
-          .agg(avg(col(climateParam)).as(s"${climateParam}_avg"))
-          .join(stationDf, Seq("indicativo"), "inner")
+          .groupBy(col(ctsSchemaAemetAllMeteoInfo.indicativo))
+          .agg(avg(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colAvg.format(climateParam)))
+          .join(stationDf, Seq(ctsSchemaAemetAllStation.indicativo), "inner")
           .select(
-            $"stations.indicativo".alias("station_id"),
-            $"stations.nombre".alias("station_name"),
-            $"stations.provincia".alias("state"),
-            col(s"${climateParam}_avg").alias(s"${paramNameToShow}_daily_avg"),
-            $"stations.latitud".alias("lat_dms"),
-            $"stations.longitud".alias("long_dms"),
-            $"stations.altitud".alias("altitude")
-          ).orderBy(if (highest) col(s"${paramNameToShow}_daily_avg").desc else col(s"${paramNameToShow}_daily_avg").asc)
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.indicativo
+            )).alias(ctsSchemaSparkAllStation.stationId),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.nombre
+            )).alias(ctsSchemaSparkAllStation.stationName),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.provincia
+            )).alias(ctsSchemaSparkAllStation.state),
+            col(ctsExecutionDataframeConf.specialColumns.colAvg.format(
+              climateParam
+            )).alias(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(paramNameToShow)),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.latitud
+            )).alias(ctsSchemaSparkAllStation.latDms),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.longitud
+            )).alias(ctsSchemaSparkAllStation.longDms),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.altitud
+            )).alias(ctsSchemaSparkAllStation.altitude),
+          ).orderBy(
+            if (highest)
+              col(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(paramNameToShow)).desc
+            else
+              col(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(paramNameToShow)).asc
+          )
           .limit(topN)
-          .withColumn("top", monotonically_increasing_id() + 1)
+          .withColumn(ctsExecutionDataframeConf.specialColumns.top, monotonically_increasing_id() + 1)
         )
       } catch {
         case exception: Exception => Left(exception)
@@ -1233,12 +1276,12 @@ object SparkManager {
       highest: Boolean = true
     ): Either[Exception, DataFrame] = {
       try {
-        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
-        val stationDf: DataFrame = SparkCore.dataframes.allStations.as("stations")
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
+        val stationDf: DataFrame = SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName)
 
         val filteredDf = meteoDf.filter(endDate match {
-          case Some(end) => $"fecha".between(lit(startDate), lit(end))
-          case None => year($"fecha") === startDate.toInt
+          case Some(end) => col(ctsSchemaAemetAllMeteoInfo.fecha).between(lit(startDate), lit(end))
+          case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startDate.toInt
         })
         .filter(climateParams.map { case (paramName, minValue, maxValue) =>
           col(paramName).isNotNull && col(paramName).between(minValue, maxValue)
@@ -1247,32 +1290,54 @@ object SparkManager {
         Right(
           (if (groupByState) {
             filteredDf
-              .groupBy("provincia")
-              .agg(count("fecha").alias("days_with_conds"))
-              .orderBy(if (highest) col("days_with_conds").desc else col("days_with_conds").asc)
-              .withColumn("top", monotonically_increasing_id() + 1)
+              .groupBy(ctsSchemaAemetAllMeteoInfo.provincia)
+              .agg(count(ctsSchemaAemetAllMeteoInfo.fecha).alias(ctsExecutionDataframeConf.specialColumns.daysWithConds))
+              .orderBy(
+                if (highest)
+                  col(ctsExecutionDataframeConf.specialColumns.daysWithConds).desc
+                else
+                  col(ctsExecutionDataframeConf.specialColumns.daysWithConds).asc
+              )
+              .withColumn(ctsExecutionDataframeConf.specialColumns.top, monotonically_increasing_id() + 1)
               .select(
-                $"provincia".alias("state"),
-                $"top"
+                col(ctsSchemaAemetAllMeteoInfo.provincia).alias(ctsSchemaSparkAllStation.state),
+                col(ctsExecutionDataframeConf.specialColumns.top)
               )
           } else {
             filteredDf
-              .groupBy("indicativo")
-              .agg(countDistinct("fecha").alias("days_with_conds"))
-              .join(stationDf, Seq("indicativo"), "inner")
-              .orderBy(if (highest) col("days_with_conds").desc else col("days_with_conds").asc)
-              .withColumn("top", monotonically_increasing_id() + 1)
+              .groupBy(ctsSchemaAemetAllMeteoInfo.indicativo)
+              .agg(countDistinct(ctsSchemaAemetAllMeteoInfo.fecha).alias(ctsExecutionDataframeConf.specialColumns.daysWithConds))
+              .join(stationDf, Seq(ctsSchemaAemetAllStation.indicativo), "inner")
+              .orderBy(
+                if (highest)
+                  col(ctsExecutionDataframeConf.specialColumns.daysWithConds).desc
+                else
+                  col(ctsExecutionDataframeConf.specialColumns.daysWithConds).asc
+              )
+              .withColumn(ctsExecutionDataframeConf.specialColumns.top, monotonically_increasing_id() + 1)
               .select(
-                $"stations.indicativo".alias("station_id"),
-                $"stations.nombre".alias("station_name"),
-                $"stations.provincia".alias("state"),
-                $"stations.latitud".alias("lat_dms"),
-                $"stations.longitud".alias("long_dms"),
-                $"stations.altitud".alias("altitude"),
-                $"top"
+                col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                  ctsSchemaAemetAllStation.indicativo
+                )).alias(ctsSchemaSparkAllStation.stationId),
+                col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                  ctsSchemaAemetAllStation.nombre
+                )).alias(ctsSchemaSparkAllStation.stationName),
+                col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                  ctsSchemaAemetAllStation.provincia
+                )).alias(ctsSchemaSparkAllStation.state),
+                col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                  ctsSchemaAemetAllStation.latitud
+                )).alias(ctsSchemaSparkAllStation.latDms),
+                col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                  ctsSchemaAemetAllStation.longitud
+                )).alias(ctsSchemaSparkAllStation.longDms),
+                col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                  ctsSchemaAemetAllStation.altitud
+                )).alias(ctsSchemaSparkAllStation.altitude),
+                col(ctsExecutionDataframeConf.specialColumns.top)
               )
           })
-          .orderBy($"top".asc)
+          .orderBy(col(ctsExecutionDataframeConf.specialColumns.top).asc)
           .limit(topN)
         )
       } catch {
@@ -1287,20 +1352,25 @@ object SparkManager {
       endDate: Option[String] = None
     ): Either[Exception, DataFrame] = {
       try {
-        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
         
         Right(
           climateParams.foldLeft(
             meteoDf.filter(endDate match {
-              case Some(endDate) => $"fecha".between(lit(startDate), lit(endDate))
-              case None => year($"fecha") === startDate.toInt
+              case Some(endDate) => col(ctsSchemaAemetAllMeteoInfo.fecha).between(lit(startDate), lit(endDate))
+              case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startDate.toInt
             })
           ) { (acc, climateParam) =>
             acc.filter(col(climateParam._1).isNotNull)
           }
-          .filter($"indicativo" === stationId)
-          .select(Seq(col("fecha").alias("date")) ++ climateParams.map(param => round(col(param._1), 1).alias(s"${param._2}_daily_avg")): _*)
-          .orderBy("date")
+          .filter(col(ctsSchemaAemetAllMeteoInfo.indicativo) === stationId)
+          .select(
+            Seq(col(ctsSchemaAemetAllMeteoInfo.fecha).alias(ctsExecutionDataframeConf.specialColumns.date)) ++
+            climateParams.map(param => round(col(param._1), 1).alias(
+              ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(param._2)
+            )): _*
+          )
+          .orderBy(ctsExecutionDataframeConf.specialColumns.date)
         )
       } catch {
         case exception: Exception => Left(exception)
@@ -1315,28 +1385,42 @@ object SparkManager {
       states: Option[Seq[String]] = None
     ): Either[Exception, DataFrame] = {
       try {
-        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
-        val stationDf: DataFrame = SparkCore.dataframes.allStations.as("stations")
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
+        val stationDf: DataFrame = SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName)
 
         Right(
           meteoDf.filter(endDate match {
-            case Some(end) => $"fecha".between(lit(startDate), lit(end))
-            case None => year($"fecha") === startDate.toInt
+            case Some(end) => col(ctsSchemaAemetAllMeteoInfo.fecha).between(lit(startDate), lit(end))
+            case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startDate.toInt
           }).filter(states match {
-            case Some(stateList) => $"provincia".isin(stateList: _*)
+            case Some(stateList) => col(ctsSchemaAemetAllMeteoInfo.provincia).isin(stateList: _*)
             case None => lit(true)
           }).filter(col(climateParam).isNotNull)
-          .groupBy($"indicativo")
-          .agg(avg(col(climateParam)).as(s"${climateParam}_avg"))
-          .join(stationDf, Seq("indicativo"), "inner")
+          .groupBy(col(ctsSchemaAemetAllMeteoInfo.indicativo))
+          .agg(avg(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colAvg.format(climateParam)))
+          .join(stationDf, Seq(ctsSchemaAemetAllStation.indicativo), "inner")
           .select(
-            $"stations.indicativo".alias("station_id"),
-            $"stations.nombre".alias("station_name"),
-            $"stations.provincia".alias("state"),
-            round(col(s"${climateParam}_avg"), 1).alias(s"${paramNameToShow}_daily_avg"),
-            $"stations.lat_dec".alias("lat_dec"),
-            $"stations.long_dec".alias("long_dec"),
-            $"stations.altitud".alias("altitude")
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.indicativo
+            )).alias(ctsSchemaSparkAllStation.stationId),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.nombre
+            )).alias(ctsSchemaSparkAllStation.stationName),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.provincia
+            )).alias(ctsSchemaSparkAllStation.state),
+            round(
+              col(ctsExecutionDataframeConf.specialColumns.colAvg.format(climateParam)), 1
+            ).alias(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(paramNameToShow)),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.latitud
+            )).alias(ctsSchemaSparkAllStation.latDec),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.longitud
+            )).alias(ctsSchemaSparkAllStation.longDec),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaAemetAllStation.altitud
+            )).alias(ctsSchemaSparkAllStation.altitude),
           )
         )
       } catch {
@@ -1351,32 +1435,43 @@ object SparkManager {
       endYear: Option[String] = None
     ): Either[Exception, DataFrame] = {
       try {
-        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
 
         val filteredDF = meteoDf
-          .filter($"indicativo" === stationId)
+          .filter(col(ctsSchemaAemetAllMeteoInfo.indicativo) === stationId)
           .filter(endYear match {
-            case Some(end) => $"fecha".between(lit(startYear), lit(end))
-            case None => year($"fecha") === startYear
+            case Some(end) => col(ctsSchemaAemetAllMeteoInfo.fecha).between(lit(startYear), lit(end))
+            case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startYear
           })
           .filter(col(climateParam).isNotNull)
-          .withColumn("year", year($"fecha"))
-          .groupBy("year")
-          .agg(avg(col(climateParam)).as("climate_param_avg"))
+          .withColumn(ctsExecutionDataframeConf.specialColumns.year, year(col(ctsSchemaAemetAllMeteoInfo.fecha)))
+          .groupBy(ctsExecutionDataframeConf.specialColumns.year)
+          .agg(avg(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.climateParamAvg))
           .select(
-            $"year".alias("x"),
-            $"climate_param_avg".alias("y")
+            col(ctsExecutionDataframeConf.specialColumns.year).alias(ctsExecutionDataframeConf.specialColumns.x),
+            col(ctsExecutionDataframeConf.specialColumns.climateParamAvg).alias(ctsExecutionDataframeConf.specialColumns.y)
           )
 
-        val (meanX, meanY) = filteredDF.agg(avg("x"), avg("y")).as[(Double, Double)].first() match {
+        val (meanX, meanY) = filteredDF.agg(
+          avg(ctsExecutionDataframeConf.specialColumns.x),
+          avg(ctsExecutionDataframeConf.specialColumns.y)
+        ).as[(Double, Double)].first() match {
           case (mx, my) => (mx, my)
         }
 
-        val (beta1, beta0) = filteredDF.withColumn("x_diff", $"x" - meanX)
-          .withColumn("y_diff", $"y" - meanY)
+        val (beta1, beta0) = filteredDF.withColumn(
+            ctsExecutionDataframeConf.specialColumns.xDiff, col(ctsExecutionDataframeConf.specialColumns.x) - meanX
+          )
+          .withColumn(
+            ctsExecutionDataframeConf.specialColumns.yDiff, col(ctsExecutionDataframeConf.specialColumns.y) - meanY
+          )
           .agg(
-            sum($"x_diff" * $"y_diff").as("num"),
-            sum($"x_diff" * $"x_diff").as("den")
+            sum(
+              col(ctsExecutionDataframeConf.specialColumns.xDiff) * col(ctsExecutionDataframeConf.specialColumns.yDiff)
+            ).as(ctsExecutionDataframeConf.specialColumns.num),
+            sum(
+              col(ctsExecutionDataframeConf.specialColumns.xDiff) * col(ctsExecutionDataframeConf.specialColumns.xDiff)
+            ).as(ctsExecutionDataframeConf.specialColumns.den)
           ).as[(Double, Double)].first() match {
           case (num, den) =>
             val b1 = num / den
@@ -1384,8 +1479,11 @@ object SparkManager {
             (b1, b0)
         }
 
-        Right(Seq((stationId, beta1, beta0)).toDF("station_id", "beta_1", "beta_0"))
-
+        Right(Seq((stationId, beta1, beta0)).toDF(
+          ctsSchemaSparkMeteo.stationId,
+          ctsExecutionDataframeConf.specialColumns.beta1,
+          ctsExecutionDataframeConf.specialColumns.beta0
+        ))
       } catch {
         case exception: Exception => Left(exception)
       }
@@ -1402,44 +1500,61 @@ object SparkManager {
       topN: Int = 5
     ): Either[Exception, DataFrame] = {
       try {
-        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as("meteo")
-        val stationDf: DataFrame = SparkCore.dataframes.allStations.as("stations")
+        val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
+        val stationDf: DataFrame = SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName)
 
         Right(
           regressionModels
-            .filter($"station_id".isin(stationIds: _*))
+            .filter(col(ctsSchemaSparkMeteo.stationId).isin(stationIds: _*))
             .withColumn(
-              "inc",
-              ($"beta_1" * lit(endYear) + $"beta_0") - ($"beta_1" * lit(startYear) + $"beta_0")
+              ctsExecutionDataframeConf.specialColumns.inc,
+              (col(ctsExecutionDataframeConf.specialColumns.beta1) * lit(endYear) + col(ctsExecutionDataframeConf.specialColumns.beta0)) - (col(ctsExecutionDataframeConf.specialColumns.beta1) * lit(startYear) + col(ctsExecutionDataframeConf.specialColumns.beta0))
             )
-            .select($"station_id".as("indicativo"), $"inc")
+            .select(col(ctsSchemaSparkMeteo.stationId).as(ctsSchemaAemetAllMeteoInfo.indicativo), col(ctsExecutionDataframeConf.specialColumns.inc))
             .join(
               meteoDf
-                .filter($"indicativo".isin(stationIds: _*))
+                .filter(col(ctsSchemaAemetAllMeteoInfo.indicativo).isin(stationIds: _*))
                 .filter(col(climateParam).isNotNull)
-                .withColumn("year", year($"fecha"))
-                .filter($"year".between(startYear, endYear))
-                .groupBy("indicativo")
-                .agg(avg(col(climateParam)).as(s"${climateParam}_daily_avg")),
-              Seq("indicativo"),
+                .withColumn(ctsExecutionDataframeConf.specialColumns.year, year(col(ctsSchemaAemetAllMeteoInfo.fecha)))
+                .filter(col(ctsExecutionDataframeConf.specialColumns.year).between(startYear, endYear))
+                .groupBy(ctsSchemaAemetAllMeteoInfo.indicativo)
+                .agg(avg(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(climateParam))),
+              Seq(ctsSchemaAemetAllMeteoInfo.indicativo),
               "inner"
             )
-            .join(stationDf, Seq("indicativo"), "inner")
-            .withColumn("inc_perc", $"inc" / col(s"${climateParam}_daily_avg") * 100)
+            .join(stationDf, Seq(ctsSchemaAemetAllStation.indicativo), "inner")
+            .withColumn(ctsExecutionDataframeConf.specialColumns.incPerc, col(ctsExecutionDataframeConf.specialColumns.inc) / col(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(climateParam)) * 100)
             .select(
-              round($"inc", 1).alias("inc"),
-              round($"inc_perc", 1).alias("inc_prec"),
-              round(col(s"${climateParam}_daily_avg"), 1).alias(s"${paramNameToShow}_daily_avg"),
-              $"stations.indicativo".alias("station_id"),
-              $"stations.nombre".alias("station_name"),
-              $"stations.provincia".alias("state"),
-              $"stations.latitud".alias("lat_dms"),
-              $"stations.longitud".alias("long_dms"),
-              $"stations.altitud".alias("altitude")
+              round(col(ctsExecutionDataframeConf.specialColumns.inc), 1).alias(ctsExecutionDataframeConf.specialColumns.inc),
+              round(col(ctsExecutionDataframeConf.specialColumns.incPerc), 1).alias(ctsExecutionDataframeConf.specialColumns.incPerc),
+              round(col(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(climateParam)), 1).alias(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(paramNameToShow)),
+              col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                ctsSchemaAemetAllStation.indicativo
+              )).alias(ctsSchemaSparkAllStation.stationId),
+              col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                ctsSchemaAemetAllStation.nombre
+              )).alias(ctsSchemaSparkAllStation.stationName),
+              col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                ctsSchemaAemetAllStation.provincia
+              )).alias(ctsSchemaSparkAllStation.state),
+              col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                ctsSchemaAemetAllStation.latitud
+              )).alias(ctsSchemaSparkAllStation.latDms),
+              col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                ctsSchemaAemetAllStation.longitud
+              )).alias(ctsSchemaSparkAllStation.longDms),
+              col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+                ctsSchemaAemetAllStation.altitud
+              )).alias(ctsSchemaSparkAllStation.altitude),
             )
-            .orderBy(if (highest) $"inc".desc else $"inc".asc)
+            .orderBy(
+              if (highest)
+                col(ctsExecutionDataframeConf.specialColumns.inc).desc
+              else
+                col(ctsExecutionDataframeConf.specialColumns.inc).asc
+            )
             .limit(topN)
-            .withColumn("top", monotonically_increasing_id() + 1)
+            .withColumn(ctsExecutionDataframeConf.specialColumns.top, monotonically_increasing_id() + 1)
         )
       } catch {
         case exception: Exception => Left(exception)

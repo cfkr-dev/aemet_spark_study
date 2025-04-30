@@ -62,13 +62,13 @@ case class Top10LowestGlobal(
 )
 
 case class Top5HighestInc(
-  startYear: String,
-  endYear: String
+  startYear: Int,
+  endYear: Int
 )
 
 case class Top5LowestInc(
-  startYear: String,
-  endYear: String
+  startYear: Int,
+  endYear: Int
 )
 
 case class Avg2024AllStationSpain(

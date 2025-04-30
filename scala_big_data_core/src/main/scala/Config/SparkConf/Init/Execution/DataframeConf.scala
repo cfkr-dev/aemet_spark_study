@@ -38,14 +38,15 @@ case class AllMeteoInfoDfSpecialValues(
 
 case class AllMeteoInfoDf(
   aliasName: String,
-  spacialValues: AllMeteoInfoDfSpecialValues
+  aliasCol: String,
+  specialValues: AllMeteoInfoDfSpecialValues
 )
 
 case class GenericCardinalCoord(
-  north: String,
-  south: String,
-  east: String,
-  west: String
+  north: Char,
+  south: Char,
+  east: Char,
+  west: Char
 )
 
 case class AllStationsDfSpecialValues(
@@ -55,7 +56,8 @@ case class AllStationsDfSpecialValues(
 
 case class AllStationsDf(
   aliasName: String,
-  spacialValues: AllStationsDfSpecialValues
+  aliasCol: String,
+  specialValues: AllStationsDfSpecialValues
 )
 
 case class SpecialColumns(
@@ -63,16 +65,21 @@ case class SpecialColumns(
   top: String,
   minValue: String,
   maxValue: String,
+  date: String,
   year: String,
   yearly: String,
   month: String,
   monthly: String,
   day: String,
   daily: String,
+  tempMonthlyAvg: String,
+  precMonthlySum: String,
   colAvg: String,
   colSum: String,
+  colDailyAvg: String,
   daysWithConds: String,
   climateParam: String,
+  climateParamAvg: String,
   x: String,
   y: String,
   xDiff: String,
