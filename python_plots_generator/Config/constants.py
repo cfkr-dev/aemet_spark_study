@@ -19,9 +19,9 @@ MONTHS_SP = [
 
 #region Storage
 # Storage
-STORAGE_BASE_DIR = "../../data/results/"
+STORAGE_BASE_DIR = "E:/Escritorio/UNIVERSIDAD/TFG/TFG GII - Spark Big Data Study/data/"
 # -- Spark
-SPARK_BASE_DIR = STORAGE_BASE_DIR + "spark/"
+SPARK_BASE_DIR = STORAGE_BASE_DIR + "spark"
 # -- Python plots
 PY_PLOTS_BASE_DIR = STORAGE_BASE_DIR + "python_plots/"
 # ---- Climograph
@@ -73,7 +73,7 @@ DSB_NAME = "BWh"
 
 #region Storage
 # Storage
-STORAGE_BASE_DIR = "../../data/results/"
+STORAGE_BASE_DIR = "E:/Escritorio/UNIVERSIDAD/TFG/TFG GII - Spark Big Data Study/data/"
 # -- Spark
 PY_PLOTS_BASE_DIR = STORAGE_BASE_DIR + "python_plots/"
 # ---- Climograph
