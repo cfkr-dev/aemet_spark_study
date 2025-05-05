@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 import Config.constants as cts
-from Generators.plotter import Plotter
+from Plotters.plotter import Plotter
 
 
 class ClimographPlotter(Plotter):
@@ -26,8 +26,8 @@ class ClimographPlotter(Plotter):
         factor = 2
         visual_max = math.ceil(
             max(
-                self.dataframe_temp_and_prec["total_prec"].max() + 5,
-                ((self.dataframe_temp_and_prec["avg_tmed"].max() + 5) * factor)
+                self.dataframe_temp_and_prec["prec_monthly_sum"].max() + 5,
+                ((self.dataframe_temp_and_prec["temp_monthly_avg"].max() + 5) * factor)
             ) / 10
         ) * 10
 
@@ -39,7 +39,7 @@ class ClimographPlotter(Plotter):
         ).add_trace(
             go.Bar(
                 x=df_temp_and_prec["month"],
-                y=df_temp_and_prec["total_prec"],
+                y=df_temp_and_prec["prec_monthly_sum"],
                 name="Precipitaciones (mm)",
                 marker=dict(color="royalblue")
             ),
@@ -47,7 +47,7 @@ class ClimographPlotter(Plotter):
         ).add_trace(
             go.Scatter(
                 x=df_temp_and_prec["month"],
-                y=df_temp_and_prec["avg_tmed"],
+                y=df_temp_and_prec["temp_monthly_avg"],
                 name="Temperatura Media (°C)",
                 mode="lines+markers",
                 line=dict(color="firebrick", width=2),
@@ -64,7 +64,7 @@ class ClimographPlotter(Plotter):
         ).update_yaxes(
             title_text="Precipitaciones (mm)",
             range=[
-                (self.dataframe_temp_and_prec["avg_tmed"].min() - 5) * factor if self.dataframe_temp_and_prec["avg_tmed"].min() < 0 else 0,
+                (self.dataframe_temp_and_prec["temp_monthly_avg"].min() - 5) * factor if self.dataframe_temp_and_prec["temp_monthly_avg"].min() < 0 else 0,
                 visual_max
             ],
             dtick=dtick_prec,
@@ -74,7 +74,7 @@ class ClimographPlotter(Plotter):
         ).update_yaxes(
             title_text="Temperatura Media (°C)",
             range=[
-                self.dataframe_temp_and_prec["avg_tmed"].min() - 5 if self.dataframe_temp_and_prec["avg_tmed"].min() < 0 else 0,
+                self.dataframe_temp_and_prec["temp_monthly_avg"].min() - 5 if self.dataframe_temp_and_prec["temp_monthly_avg"].min() < 0 else 0,
                 visual_max / factor
             ],
             dtick=dtick_temp,
@@ -82,7 +82,7 @@ class ClimographPlotter(Plotter):
             secondary_y=True,
             tickmode="linear"
         ).update_layout(
-            title=f"Climograma 2024 {df_station["indicativo"].iloc[0]} ({self.climate})<br><sup>{df_station["nombre"].iloc[0]} ({df_station["provincia"].iloc[0]})</sup>",
+            title=f"Climograma 2024 {df_station["station_id"].iloc[0]} ({self.climate})<br><sup>{df_station["station_name"].iloc[0]} ({df_station["state"].iloc[0]})</sup>",
             legend=dict(
                 orientation="h",
                 yanchor="top",
@@ -95,8 +95,8 @@ class ClimographPlotter(Plotter):
 
     def save_plot(self):
         os.makedirs(self.path_to_save, exist_ok=True)
-        self.figure.write_image(self.path_to_save + self.dataframe_station["indicativo"].iloc[0] + ".png")
-        self.figure.write_html(self.path_to_save + self.dataframe_station["indicativo"].iloc[0] + ".html")
+        self.figure.write_image(self.path_to_save + self.dataframe_station["station_id"].iloc[0] + ".png")
+        self.figure.write_html(self.path_to_save + self.dataframe_station["station_id"].iloc[0] + ".html")
 
         return self.path_to_save
 

@@ -101,6 +101,44 @@ object SparkManager {
       private val ctsStorageIfapaAemetFormat = SparkConf.Constants.init.storage.ifapaAemetFormatConf
       private val ctsUtils = GlobalConf.Constants.utils
 
+      val allMeteoInfo: DataFrame =
+        formatAllMeteoInfoDataframe(
+          createDataframeFromJSONAndAemetMetadata(
+            sparkSession,
+            ctsStorageAemet.allMeteoInfo.dirs.data,
+            ctsStorageAemet.allMeteoInfo.filepaths.metadata
+          ) match {
+            case Left(exception) => throw exception
+            case Right(df) => df.union(createDataframeFromJSONAndAemetMetadata(
+              sparkSession,
+              ctsStorageIfapaAemetFormat.singleStationMeteoInfo.dirs.data,
+              ctsStorageIfapaAemetFormat.singleStationMeteoInfo.filepaths.metadata
+            ) match {
+              case Left(exception) => throw exception
+              case Right(df) => df
+            })
+          }
+        ).persist(StorageLevel.MEMORY_AND_DISK_SER)
+
+      val allStations: DataFrame =
+        formatAllStationsDataframe(
+          createDataframeFromJSONAndAemetMetadata(
+            sparkSession,
+            ctsStorageAemet.allStationInfo.dirs.data,
+            ctsStorageAemet.allStationInfo.filepaths.metadata
+          ) match {
+            case Left(exception) => throw exception
+            case Right(df) => df.union(createDataframeFromJSONAndAemetMetadata(
+              sparkSession,
+              ctsStorageIfapaAemetFormat.singleStationInfo.dirs.data,
+              ctsStorageIfapaAemetFormat.singleStationInfo.filepaths.metadata
+            ) match {
+              case Left(exception) => throw exception
+              case Right(df) => df
+            })
+          }
+        ).persist(StorageLevel.MEMORY_AND_DISK_SER)
+
       private def formatAllMeteoInfoDataframe(dataframe: DataFrame): DataFrame = {
         val formatters: Map[String, String => Column] = Map(
           ctsSchemaAemetAllMeteoInfo.fecha ->
@@ -271,44 +309,6 @@ object SparkManager {
             accumulatedDf.withColumn(colName, transformationFunc(colName))
         }
       }
-
-      val allMeteoInfo: DataFrame =
-        formatAllMeteoInfoDataframe(
-          createDataframeFromJSONAndAemetMetadata(
-            sparkSession,
-            ctsStorageAemet.allMeteoInfo.dirs.data,
-            ctsStorageAemet.allMeteoInfo.filepaths.metadata
-          ) match {
-            case Left(exception) => throw exception
-            case Right(df) => df.union(createDataframeFromJSONAndAemetMetadata(
-              sparkSession,
-              ctsStorageIfapaAemetFormat.singleStationMeteoInfo.dirs.data,
-              ctsStorageIfapaAemetFormat.singleStationMeteoInfo.filepaths.metadata
-            ) match {
-              case Left(exception) => throw exception
-              case Right(df) => df
-            })
-          }
-        ).persist(StorageLevel.MEMORY_AND_DISK_SER)
-
-      val allStations: DataFrame =
-        formatAllStationsDataframe(
-          createDataframeFromJSONAndAemetMetadata(
-            sparkSession,
-            ctsStorageAemet.allStationInfo.dirs.data,
-            ctsStorageAemet.allStationInfo.filepaths.metadata
-          ) match {
-            case Left(exception) => throw exception
-            case Right(df) => df.union(createDataframeFromJSONAndAemetMetadata(
-              sparkSession,
-              ctsStorageIfapaAemetFormat.singleStationInfo.dirs.data,
-              ctsStorageIfapaAemetFormat.singleStationInfo.filepaths.metadata
-            ) match {
-              case Left(exception) => throw exception
-              case Right(df) => df
-            })
-          }
-        ).persist(StorageLevel.MEMORY_AND_DISK_SER)
     }
   }
 

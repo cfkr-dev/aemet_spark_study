@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 
-from Generators.climograph import ClimographPlotter
+from Plotters.climograph import ClimographPlotter
 
 # Crear la aplicación Flask
 app = Flask(__name__)
