@@ -10,6 +10,7 @@ case class SingleParamStudiesConf(
   evolFromStartForEachState: String,
   evolFromStartForEachStateStartStation: String,
   evolFromStartForEachStateStart: String,
+  evolFromStartForEachStateYearlyGroup: String,
   evolFromStartForEachStateStartRegression: String,
   top5HighestInc: String,
   top5LowestInc: String,

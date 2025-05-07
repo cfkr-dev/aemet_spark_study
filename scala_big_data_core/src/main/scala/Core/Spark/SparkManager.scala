@@ -10,6 +10,7 @@ import org.apache.spark.sql.{Column, DataFrame, SaveMode, SparkSession}
 import org.apache.spark.storage.StorageLevel
 
 object SparkManager {
+  private val ctsExecutionGlobalConf = SparkConf.Constants.init.execution.globalConf
   private val ctsExecutionDataframeConf = SparkConf.Constants.init.execution.dataframeConf
   private val ctsSchemaAemetAllMeteoInfo = GlobalConf.Constants.schema.aemetConf.allMeteoInfo
   private val ctsSchemaAemetAllStation = GlobalConf.Constants.schema.aemetConf.allStationInfo
@@ -18,7 +19,6 @@ object SparkManager {
 
   private object SparkCore {
     private val ctsExecutionSessionConf = SparkConf.Constants.init.execution.sessionConf
-    private val ctsExecutionGlobalConf = SparkConf.Constants.init.execution.globalConf
     private val ctsInitLogs = SparkConf.Constants.init.log
     private val ctsAllMeteoInfoSpecialValues = ctsExecutionDataframeConf.allMeteoInfoDf.specialValues
     private val ctsAllStationSpecialValues = ctsExecutionDataframeConf.allStationsDf.specialValues
@@ -81,8 +81,8 @@ object SparkManager {
       }
 
       Right(session
-        .read.format(ctsExecutionGlobalConf.readFormat)
-        .option(ctsExecutionGlobalConf.readMode, value = true)
+        .read.format(ctsExecutionGlobalConf.readConfig.readFormat)
+        .option(ctsExecutionGlobalConf.readConfig.readMode, value = true)
         .schema(
           createDataframeSchemaAemet(
             JSONUtils.readJSON(
@@ -320,10 +320,10 @@ object SparkManager {
 
     def execute(): Unit = {
       SparkCore.startSparkSession()
-      Stations.execute()
-      Climograph.execute()
+      //Stations.execute()
+      //Climograph.execute()
       SingleParamStudies.execute()
-      InterestingStudies.execute()
+      //InterestingStudies.execute()
     }
 
     private case class FetchAndSaveInfo(
@@ -676,6 +676,7 @@ object SparkManager {
             )
           )
 
+          // TODO PONER EL EVOL NORMAL SOLO EN 2024, EL OTRO EN TODO EL PERIODO, LOG YA CAMBIADO
           // erature evolution from the start of registers for each state
           val regressionModelDf: DataFrame = simpleFetchAndSave(
             ctsLogs.evolFromStartForEachState.format(
@@ -720,9 +721,34 @@ object SparkManager {
                   )
                 ),
                 FetchAndSaveInfo(
+                  getClimateYearlyGroupById(
+                    registry.stationId,
+                    List(
+                      (study.dataframeColName, study.studyParamAbbrev)
+                    ),
+                    List(study.colAggMethod),
+                    registry.startDate,
+                    Some(registry.endDate)
+                  ) match {
+                    case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                      return
+                    case Right(dataFrame: DataFrame) => dataFrame
+                  },
+                  ctsStorage.evolFromStartForEachState.dataEvolYearlyGroup.format(
+                    study.studyParamAbbrev,
+                    registry.stateNameNoSc.replace(" ", "_")
+                  ),
+                  ctsLogs.evolFromStartForEachStateYearlyGroup.format(
+                    registry.stateName,
+                    study.studyParam.replace("_", " "),
+                    study.colAggMethod
+                  )
+                ),
+                FetchAndSaveInfo(
                   getStationClimateParamRegressionModelInALapse(
                     registry.stationId,
                     study.dataframeColName,
+                    study.colAggMethod,
                     registry.startDate,
                     Some(registry.endDate)
                   ) match {
@@ -742,7 +768,7 @@ object SparkManager {
               )
             })
           ).zipWithIndex.filter {
-            case (_, idx) => idx % 3 == 2
+            case (_, idx) => idx % 4 == 3
           }.map(_._1).reduce(_ union _).persist(StorageLevel.MEMORY_AND_DISK_SER)
 
           regressionModelDf.count()
@@ -759,6 +785,7 @@ object SparkManager {
                   regressionModels = regressionModelDf,
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
+                  aggMethodName = study.colAggMethod,
                   startYear = ctsExecution.top5HighestInc.startYear,
                   endYear = ctsExecution.top5HighestInc.endYear
                 ) match {
@@ -785,6 +812,7 @@ object SparkManager {
                   regressionModels = regressionModelDf,
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
+                  aggMethodName = study.colAggMethod,
                   startYear = ctsExecution.top5LowestInc.startYear,
                   endYear = ctsExecution.top5LowestInc.endYear,
                   highest = false
@@ -866,6 +894,8 @@ object SparkManager {
           ctsLogs.studyName
         ))
 
+        // TODO AÑADIR EVOLUCION CON AGRUPACION
+        // TODO EL PRIMER EVOL SOLO ES EN 2024
         // Precipitation and pressure evolution from the start of registers for each state
         simpleFetchAndSave(
           ctsLogs.precAndPressureEvolFromStartForEachState,
@@ -1377,6 +1407,55 @@ object SparkManager {
       }
     }
 
+    private def getClimateYearlyGroupById(
+      stationId: String,
+      climateParams: Seq[(String, String)],
+      aggMethodNames: Seq[String],
+      startDate: String,
+      endDate: Option[String] = None
+    ): Either[Exception, DataFrame] = {
+      try {
+        require(climateParams.length == aggMethodNames.length)
+
+        val meteoDf = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
+
+        val filteredDf = climateParams.foldLeft(
+          meteoDf
+            .filter(endDate match {
+              case Some(end) => col(ctsSchemaAemetAllMeteoInfo.fecha).between(lit(startDate), lit(end))
+              case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startDate.toInt
+            })
+            .filter(col(ctsSchemaAemetAllMeteoInfo.indicativo) === stationId)
+            .withColumn(ctsExecutionDataframeConf.specialColumns.year, year(col(ctsSchemaAemetAllMeteoInfo.fecha)))
+        ) { (acc, climateParam) =>
+          acc.filter(col(climateParam._1).isNotNull)
+        }
+
+        val aggColumns = climateParams.zip(aggMethodNames).map {
+          case ((colName, paramName), op) =>
+            val baseCol = col(colName)
+            val aggCol = op.toLowerCase match {
+              case ctsExecutionGlobalConf.groupMethods.avg => round(avg(baseCol), 1)
+              case ctsExecutionGlobalConf.groupMethods.sum => round(sum(baseCol), 1)
+              case ctsExecutionGlobalConf.groupMethods.min => round(min(baseCol), 1)
+              case ctsExecutionGlobalConf.groupMethods.max => round(max(baseCol), 1)
+              case other => throw new IllegalArgumentException(other)
+            }
+            aggCol.alias(ctsExecutionDataframeConf.specialColumns.colYearlyGrouped.format(paramName, op))
+        }
+
+        val resultDf = filteredDf
+          .groupBy(ctsExecutionDataframeConf.specialColumns.year)
+          .agg(aggColumns.head, aggColumns.tail: _*)
+          .orderBy(ctsExecutionDataframeConf.specialColumns.year)
+
+        Right(resultDf)
+
+      } catch {
+        case ex: Exception => Left(ex)
+      }
+    }
+
     private def getAllStationsByStatesAvgClimateParamInALapse(
       climateParam: String,
       paramNameToShow: String,
@@ -1431,11 +1510,20 @@ object SparkManager {
     private def getStationClimateParamRegressionModelInALapse(
       stationId: String,
       climateParam: String,
+      aggMethodName: String,
       startYear: String,
       endYear: Option[String] = None
     ): Either[Exception, DataFrame] = {
       try {
         val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
+
+        val aggMethod: Column => Column = aggMethodName.toLowerCase match {
+          case ctsExecutionGlobalConf.groupMethods.avg => avg
+          case ctsExecutionGlobalConf.groupMethods.sum => sum
+          case ctsExecutionGlobalConf.groupMethods.min => min
+          case ctsExecutionGlobalConf.groupMethods.max => max
+          case other => throw new IllegalArgumentException(other)
+        }
 
         val filteredDF = meteoDf
           .filter(col(ctsSchemaAemetAllMeteoInfo.indicativo) === stationId)
@@ -1446,7 +1534,7 @@ object SparkManager {
           .filter(col(climateParam).isNotNull)
           .withColumn(ctsExecutionDataframeConf.specialColumns.year, year(col(ctsSchemaAemetAllMeteoInfo.fecha)))
           .groupBy(ctsExecutionDataframeConf.specialColumns.year)
-          .agg(avg(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.climateParamAvg))
+          .agg(aggMethod(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.climateParamAvg))
           .select(
             col(ctsExecutionDataframeConf.specialColumns.year).alias(ctsExecutionDataframeConf.specialColumns.x),
             col(ctsExecutionDataframeConf.specialColumns.climateParamAvg).alias(ctsExecutionDataframeConf.specialColumns.y)
@@ -1494,6 +1582,7 @@ object SparkManager {
       regressionModels: DataFrame,
       climateParam: String,
       paramNameToShow: String,
+      aggMethodName: String,
       startYear: Int,
       endYear: Int,
       highest: Boolean = true,
@@ -1502,6 +1591,14 @@ object SparkManager {
       try {
         val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
         val stationDf: DataFrame = SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName)
+
+        val aggMethod: Column => Column = aggMethodName.toLowerCase match {
+          case ctsExecutionGlobalConf.groupMethods.avg => avg
+          case ctsExecutionGlobalConf.groupMethods.sum => sum
+          case ctsExecutionGlobalConf.groupMethods.min => min
+          case ctsExecutionGlobalConf.groupMethods.max => max
+          case other => throw new IllegalArgumentException(other)
+        }
 
         Right(
           regressionModels
@@ -1517,17 +1614,19 @@ object SparkManager {
                 .filter(col(climateParam).isNotNull)
                 .withColumn(ctsExecutionDataframeConf.specialColumns.year, year(col(ctsSchemaAemetAllMeteoInfo.fecha)))
                 .filter(col(ctsExecutionDataframeConf.specialColumns.year).between(startYear, endYear))
+                .groupBy(ctsSchemaAemetAllMeteoInfo.indicativo, ctsExecutionDataframeConf.specialColumns.year)
+                .agg(aggMethod(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colYearlyGrouped.format(climateParam, aggMethodName)))
                 .groupBy(ctsSchemaAemetAllMeteoInfo.indicativo)
-                .agg(avg(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(climateParam))),
+                .agg(avg(col(ctsExecutionDataframeConf.specialColumns.colYearlyGrouped.format(climateParam, aggMethodName))).as(ctsExecutionDataframeConf.specialColumns.globalColYearlyAvg.format(climateParam))),
               Seq(ctsSchemaAemetAllMeteoInfo.indicativo),
               "inner"
             )
             .join(stationDf, Seq(ctsSchemaAemetAllStation.indicativo), "inner")
-            .withColumn(ctsExecutionDataframeConf.specialColumns.incPerc, col(ctsExecutionDataframeConf.specialColumns.inc) / col(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(climateParam)) * 100)
+            .withColumn(ctsExecutionDataframeConf.specialColumns.incPerc, col(ctsExecutionDataframeConf.specialColumns.inc) / col(ctsExecutionDataframeConf.specialColumns.globalColYearlyAvg.format(climateParam, aggMethodName)) * 100)
             .select(
               round(col(ctsExecutionDataframeConf.specialColumns.inc), 1).alias(ctsExecutionDataframeConf.specialColumns.inc),
               round(col(ctsExecutionDataframeConf.specialColumns.incPerc), 1).alias(ctsExecutionDataframeConf.specialColumns.incPerc),
-              round(col(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(climateParam)), 1).alias(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(paramNameToShow)),
+              round(col(ctsExecutionDataframeConf.specialColumns.globalColYearlyAvg.format(climateParam, aggMethodName)), 1).alias(ctsExecutionDataframeConf.specialColumns.globalColYearlyAvg.format(paramNameToShow, aggMethodName)),
               col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
                 ctsSchemaAemetAllStation.indicativo
               )).alias(ctsSchemaSparkAllStation.stationId),
