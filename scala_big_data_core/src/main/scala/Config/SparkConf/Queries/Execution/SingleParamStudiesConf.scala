@@ -30,6 +30,7 @@ case class StudyRegistry(
   studyParam: String,
   studyParamAbbrev: String,
   dataframeColName: String,
+  colAggMethod: String,
   reprStationRegs: List[SingleParamStudyRepresentativeStationRegistry]
 )
 

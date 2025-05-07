@@ -77,6 +77,8 @@ case class SpecialColumns(
   colAvg: String,
   colSum: String,
   colDailyAvg: String,
+  colYearlyGrouped: String,
+  globalColYearlyAvg: String,
   daysWithConds: String,
   climateParam: String,
   climateParamAvg: String,
