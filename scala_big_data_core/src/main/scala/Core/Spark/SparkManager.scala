@@ -323,7 +323,7 @@ object SparkManager {
       //Stations.execute()
       //Climograph.execute()
       SingleParamStudies.execute()
-      //InterestingStudies.execute()
+      InterestingStudies.execute()
     }
 
     private case class FetchAndSaveInfo(
@@ -676,7 +676,6 @@ object SparkManager {
             )
           )
 
-          // TODO PONER EL EVOL NORMAL SOLO EN 2024, EL OTRO EN TODO EL PERIODO, LOG YA CAMBIADO
           // erature evolution from the start of registers for each state
           val regressionModelDf: DataFrame = simpleFetchAndSave(
             ctsLogs.evolFromStartForEachState.format(
@@ -704,8 +703,8 @@ object SparkManager {
                     List(
                       (study.dataframeColName, study.studyParamAbbrev)
                     ),
-                    registry.startDate,
-                    Some(registry.endDate)
+                    registry.startDateLatest,
+                    Some(registry.endDateLatest)
                   ) match {
                     case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                       return
@@ -727,8 +726,8 @@ object SparkManager {
                       (study.dataframeColName, study.studyParamAbbrev)
                     ),
                     List(study.colAggMethod),
-                    registry.startDate,
-                    Some(registry.endDate)
+                    registry.startDateGlobal,
+                    Some(registry.endDateGlobal)
                   ) match {
                     case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                       return
@@ -749,8 +748,8 @@ object SparkManager {
                     registry.stationId,
                     study.dataframeColName,
                     study.colAggMethod,
-                    registry.startDate,
-                    Some(registry.endDate)
+                    registry.startDateGlobal,
+                    Some(registry.endDateGlobal)
                   ) match {
                     case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                       return
@@ -894,8 +893,6 @@ object SparkManager {
           ctsLogs.studyName
         ))
 
-        // TODO AÑADIR EVOLUCION CON AGRUPACION
-        // TODO EL PRIMER EVOL SOLO ES EN 2024
         // Precipitation and pressure evolution from the start of registers for each state
         simpleFetchAndSave(
           ctsLogs.precAndPressureEvolFromStartForEachState,
@@ -918,8 +915,8 @@ object SparkManager {
                 getClimateParamInALapseById(
                   registry.stationId,
                   ctsExecution.precAndPressEvolFromStartForEachState.climateParams,
-                  registry.startDate,
-                  Some(registry.endDate)
+                  registry.startDateLatest,
+                  Some(registry.endDateLatest)
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
@@ -931,7 +928,26 @@ object SparkManager {
                 ctsLogs.precAndPressureEvolFromStartForEachStateStartEvol.format(
                   registry.stateName
                 )
-              )
+              ),
+              FetchAndSaveInfo(
+                getClimateYearlyGroupById(
+                  registry.stationId,
+                  ctsExecution.precAndPressEvolFromStartForEachState.climateParams,
+                  ctsExecution.precAndPressEvolFromStartForEachState.colAggMethods,
+                  registry.startDateGlobal,
+                  Some(registry.endDateGlobal)
+                ) match {
+                  case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                    return
+                  case Right(dataFrame: DataFrame) => dataFrame
+                },
+                ctsStorage.precAndPressEvol.dataEvolYearlyGroup.format(
+                  registry.stateNameNoSc.replace(" ", "_")
+                ),
+                ctsLogs.precAndPressureEvolFromStartForEachStateYearlyGroup.format(
+                  registry.stateName
+                )
+              ),
             )
           })
         )

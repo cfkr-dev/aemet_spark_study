@@ -5,6 +5,7 @@ case class InterestingStudiesConf(
   precAndPressureEvolFromStartForEachState: String,
   precAndPressureEvolFromStartForEachStateStartStation: String,
   precAndPressureEvolFromStartForEachStateStartEvol: String,
+  precAndPressureEvolFromStartForEachStateYearlyGroup: String,
   top10BetterWindPower: String,
   top10BetterSunPower: String,
   top10TorrentialRains: String,

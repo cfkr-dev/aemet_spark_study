@@ -14,7 +14,8 @@ case class InterestingStudiesTop10Dirs (
 
 case class PrecAndPressEvolDirs (
   dataStation: String,
-  dataEvol: String
+  dataEvol: String,
+  dataEvolYearlyGroup: String
 )
 
 case class InterestingStudiesConf(

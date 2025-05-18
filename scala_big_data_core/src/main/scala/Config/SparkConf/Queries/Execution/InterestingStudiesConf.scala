@@ -4,12 +4,15 @@ case class InterestingStudiesRepresentativeStationRegistry(
   stateName: String,
   stateNameNoSc: String,
   stationId: String,
-  startDate: String,
-  endDate: String
+  startDateLatest: String,
+  endDateLatest: String,
+  startDateGlobal: String,
+  endDateGlobal: String
 )
 
 case class PrecAndPressEvolFromStartForEachState(
-  climateParams: List[(String, String)]
+  climateParams: List[(String, String)],
+  colAggMethods: List[String]
 )
 
 case class InterestingStudyTop10(

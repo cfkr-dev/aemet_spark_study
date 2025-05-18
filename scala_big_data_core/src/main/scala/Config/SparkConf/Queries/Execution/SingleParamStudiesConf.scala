@@ -22,8 +22,10 @@ case class SingleParamStudyRepresentativeStationRegistry(
   stateName: String,
   stateNameNoSc: String,
   stationId: String,
-  startDate: String,
-  endDate: String
+  startDateLatest: String,
+  endDateLatest: String,
+  startDateGlobal: String,
+  endDateGlobal: String
 )
 
 case class StudyRegistry(
