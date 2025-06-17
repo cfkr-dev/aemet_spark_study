@@ -1,89 +1,93 @@
-# --------------------
-# ----   NAMING   ----
-# --------------------
-
-MONTHS_SP = [
-    "enero",
-    "febrero",
-    "marzo",
-    "abril",
-    "mayo",
-    "junio",
-    "julio",
-    "agosto",
-    "septiembre",
-    "octubre",
-    "noviembre",
-    "diciembre"
-]
-
-#region Storage
-# Storage
-STORAGE_BASE_DIR = "E:/Escritorio/UNIVERSIDAD/TFG/TFG GII - Spark Big Data Study/data/"
-# -- Spark
-SPARK_BASE_DIR = STORAGE_BASE_DIR + "spark"
-# -- Python plots
-PY_PLOTS_BASE_DIR = STORAGE_BASE_DIR + "python_plots/"
-# ---- Climograph
-CLIMOGRAPH_BASE_DIR = PY_PLOTS_BASE_DIR + "climograph/"
-# ------ Arid climates
-ARID_BASE_DIR = PY_PLOTS_BASE_DIR + "arid_climates/"
-# ------ Warm climates
-WARM_BASE_DIR = PY_PLOTS_BASE_DIR + "warm_climates/"
-# ------ Cold climates
-COLD_BASE_DIR = PY_PLOTS_BASE_DIR + "cold_climates/"
-#endregion
+import os
+from pathlib import Path
 
 
-
-
-
-
-
-
-
-#region Naming
-# -- Climograph
-# ---- Data
-TEMP_AND_PREC = "temp_and_prec"
-STATION = "station"
-# ---- Locations
-PENINSULA_LAND_NAME = "peninsula"
-CANARY_ISLANDS = "canary_islands"
-BALEAR_ISLANDS = "balear_islands"
-# ---- Climate groups
-ARID_CLIMATE = "arid"
-WARM_CLIMATE = "warm"
-COLD_CLIMATE = "cold"
-# ------ Arid climates
-BSH_NAME = "BSh"
-BSK_NAME = "BSK"
-BWH_NAME = "BWh"
-BWK_NAME = "BWk"
-# ------ Warm climates
-CFA_NAME = "BSh"
-CFB_NAME = "BSK"
-CSA_NAME = "BWh"
-CSB_NAME = "BWk"
-# ------ Cold climates
-DFB_NAME = "BSh"
-DFC_NAME = "BSK"
-DSB_NAME = "BWh"
-#endregion
-
-#region Storage
-# Storage
-STORAGE_BASE_DIR = "E:/Escritorio/UNIVERSIDAD/TFG/TFG GII - Spark Big Data Study/data/"
-# -- Spark
-PY_PLOTS_BASE_DIR = STORAGE_BASE_DIR + "python_plots/"
-# ---- Climograph
-CLIMOGRAPH_BASE_DIR = PY_PLOTS_BASE_DIR + "climograph/"
-# ------ Arid climates
-ARID_BASE_DIR = PY_PLOTS_BASE_DIR + "arid_climates/"
-# ------ Warm climates
-WARM_BASE_DIR = PY_PLOTS_BASE_DIR + "warm_climates/"
-# ------ Cold climates
-COLD_BASE_DIR = PY_PLOTS_BASE_DIR + "cold_climates/"
+# # --------------------
+# # ----   NAMING   ----
+# # --------------------
+#
+# MONTHS_SP = [
+#     "enero",
+#     "febrero",
+#     "marzo",
+#     "abril",
+#     "mayo",
+#     "junio",
+#     "julio",
+#     "agosto",
+#     "septiembre",
+#     "octubre",
+#     "noviembre",
+#     "diciembre"
+# ]
+#
+# #region Storage
+# # Storage
+# STORAGE_BASE_DIR = "E:/Escritorio/UNIVERSIDAD/TFG/TFG GII - Spark Big Data Study/data/"
+# # -- Spark
+# SPARK_BASE_DIR = STORAGE_BASE_DIR + "spark"
+# # -- Python plots
+# PY_PLOTS_BASE_DIR = STORAGE_BASE_DIR + "python_plots/"
+# # ---- Climograph
+# CLIMOGRAPH_BASE_DIR = PY_PLOTS_BASE_DIR + "climograph/"
+# # ------ Arid climates
+# ARID_BASE_DIR = PY_PLOTS_BASE_DIR + "arid_climates/"
+# # ------ Warm climates
+# WARM_BASE_DIR = PY_PLOTS_BASE_DIR + "warm_climates/"
+# # ------ Cold climates
+# COLD_BASE_DIR = PY_PLOTS_BASE_DIR + "cold_climates/"
+# #endregion
+#
+#
+#
+#
+#
+#
+#
+#
+#
+# #region Naming
+# # -- Climograph
+# # ---- Data
+# TEMP_AND_PREC = "temp_and_prec"
+# STATION = "station"
+# # ---- Locations
+# PENINSULA_LAND_NAME = "peninsula"
+# CANARY_ISLANDS = "canary_islands"
+# BALEAR_ISLANDS = "balear_islands"
+# # ---- Climate groups
+# ARID_CLIMATE = "arid"
+# WARM_CLIMATE = "warm"
+# COLD_CLIMATE = "cold"
+# # ------ Arid climates
+# BSH_NAME = "BSh"
+# BSK_NAME = "BSK"
+# BWH_NAME = "BWh"
+# BWK_NAME = "BWk"
+# # ------ Warm climates
+# CFA_NAME = "BSh"
+# CFB_NAME = "BSK"
+# CSA_NAME = "BWh"
+# CSB_NAME = "BWk"
+# # ------ Cold climates
+# DFB_NAME = "BSh"
+# DFC_NAME = "BSK"
+# DSB_NAME = "BWh"
+# #endregion
+#
+# #region Storage
+# # Storage
+# STORAGE_BASE_DIR = "E:/Escritorio/UNIVERSIDAD/TFG/TFG GII - Spark Big Data Study/data/"
+# # -- Spark
+# PY_PLOTS_BASE_DIR = STORAGE_BASE_DIR + "python_plots/"
+# # ---- Climograph
+# CLIMOGRAPH_BASE_DIR = PY_PLOTS_BASE_DIR + "climograph/"
+# # ------ Arid climates
+# ARID_BASE_DIR = PY_PLOTS_BASE_DIR + "arid_climates/"
+# # ------ Warm climates
+# WARM_BASE_DIR = PY_PLOTS_BASE_DIR + "warm_climates/"
+# # ------ Cold climates
+# COLD_BASE_DIR = PY_PLOTS_BASE_DIR + "cold_climates/"
 #endregion
 
 # ARID_DIRS = {
@@ -114,3 +118,30 @@ COLD_BASE_DIR = PY_PLOTS_BASE_DIR + "cold_climates/"
 #     PENINSULA_LAND_NAME: ARID_DIRS.get(BWK_NAME) + PENINSULA_LAND_NAME + "/",
 #     CANARY_ISLANDS: ARID_DIRS.get(BWK_NAME) + CANARY_ISLANDS + "/",
 # }
+
+
+
+
+# ------------------------
+# ----   KEY NAMES   ----
+# ------------------------
+
+# ENV
+K_STORAGE_BASE_DIR          = "STORAGE_BASE_DIR"
+
+# FORMATTERS
+K_FORMATTER_TIMESTAMP       = "timestamp"
+K_FORMATTER_TIMESTAMP_YEAR  = "timestamp_year"
+
+k_formatters = [
+    K_FORMATTER_TIMESTAMP,
+    K_FORMATTER_TIMESTAMP_YEAR
+]
+
+# ---------------------
+# ----   STORAGE   ----
+# ---------------------
+
+STORAGE_BASE_DIR = Path(os.getenv("STORAGE_BASE_DIR")).resolve()
+OUTPUT_BASE_DIR = (STORAGE_BASE_DIR / Path("output")).resolve()
+
