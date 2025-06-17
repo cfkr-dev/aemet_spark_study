@@ -1,32 +1,27 @@
 import os
-from datetime import datetime
+from pathlib import Path
 
-import pandas as pd
 import plotly.graph_objects as go
+from plotly.graph_objs import Figure
 
-import Config.constants as cts
+from Server.Models.LinearModel import LinearModel
 from .plotter import Plotter
-from PlotterStyles import LinearPlotterStyle
-from Utils import *
+from Utils.DataframeFormatter import format_df
 
-# todo añadir centralizar
-# todo añadir en evolucion la recta de regresion
 class LinearPlotter(Plotter):
-    def __init__(self, src_path: str, src_x_col: str, src_y_col: str, src_format_schema: dict, dest_path: str,
-                 plot_filename: str, style: LinearPlotterStyle):
-        self.src_x_col = src_x_col
-        self.src_y_col = src_y_col
-        self.dataframe = format_df(self.load_dataframe(src_path), src_format_schema)
-        self.style = style
-        self.figure = self.create_plot()
-        self.path_to_save = cts.SPARK_BASE_DIR + dest_path
-        self.dest_filename = plot_filename
+    def __init__(self, linear_model: LinearModel):
+        self.model = linear_model
+        self.dataframe = format_df(self.load_dataframe(linear_model.src.path), {
+            linear_model.src.axis.x.name: linear_model.src.axis.x.format
+        })
 
     def create_plot(self):
-        x_min = datetime(2024, 1, 1)
+        x_col = self.model.src.axis.x.name
+        y_col = self.model.src.axis.y.name
+        style = self.model.style
 
-        # Fecha final basada en los datos
-        x_max = self.dataframe[self.src_x_col].max()
+        x_min = self.dataframe[x_col].min()
+        x_max = self.dataframe[x_col].max()
 
         # Calcular margen
         margin = (x_max - x_min) * 0.1  # 10% de margen
@@ -34,32 +29,38 @@ class LinearPlotter(Plotter):
 
         return go.Figure().add_trace(
             go.Scattergl(
-                x=self.dataframe[self.src_x_col],
-                y=self.dataframe[self.src_y_col],
+                x=self.dataframe[x_col],
+                y=self.dataframe[y_col],
                 mode='lines',
-                name=self.style.get_figure_name(),
-                showlegend=self.style.get_show_legend(),
-                line=dict(color=self.style.get_figure_color(), width=1),
+                name=style.figure.name,
+                showlegend=style.legend.show_legend,
+                line=dict(color=style.figure.color, width=1),
             )
         ).update_layout(
-            title=self.style.get_title(),
-            xaxis_title=self.style.get_xaxis_label(),
-            yaxis_title=self.style.get_yaxis_label(),
+            title=f"{style.lettering.title}<br><sup>{style.lettering.subtitle}</sup>" if style.lettering.subtitle else f"{style.lettering.title}",
+            xaxis_title=style.lettering.x_label,
+            yaxis_title=style.lettering.y_label,
             template='plotly_white',
             hovermode='x unified',
             xaxis_range=x_range,  # Aquí se centra la vista
             legend=dict(
                 orientation='h',
                 yanchor='bottom',
-                y=-0.3,
+                y=style.legend.y_offset,
                 xanchor='center',
                 x=0.5
-            )
+            ),
+            margin=dict(l=style.margin.left, r=style.margin.right, t=style.margin.top, b=style.margin.bottom)
         )
 
-    def save_plot(self):
-        os.makedirs(self.path_to_save, exist_ok=True)
-        self.figure.write_image(self.path_to_save + self.dest_filename + ".png")
-        self.figure.write_html(self.path_to_save + self.dest_filename + ".html")
+    def save_plot(self, figure: Figure):
+        if figure is None:
+            return None
 
-        return self.path_to_save
+        os.makedirs(str(self.model.dest.path), exist_ok=True)
+
+        figure.write_html(str((self.model.dest.path / Path(self.model.dest.filename + ".html")).resolve()))
+        if self.model.dest.export_png:
+            figure.write_image(str((self.model.dest.path / Path(self.model.dest.filename + ".png")).resolve()))
+
+        return str(self.model.dest.path)
