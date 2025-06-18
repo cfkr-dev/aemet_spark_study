@@ -1,0 +1,133 @@
+from flask_restx import fields, Namespace
+
+from Config.constants import k_formatters
+
+"""
+
+    {
+        "src": {
+            "path": "spark/temp/evol/cadiz/evol",
+            "axis": {
+                "x": {
+                    "name": "top"
+                },
+                "y": {
+                    "name": "inc"
+                }
+            }
+        },
+        "dest" : {
+            "path": "temp/evol/cadiz/evol",
+            "filename": "plot_test",
+            "export_png": true
+        },
+        "style": {
+            "lettering": {
+                "title": "TITLE TEST",
+                "subtitle": "SUBTITLE TEST",
+                "x_label": "Date",
+                "y_label": "Var (u)",
+                "inside_info": [
+                    {
+                        "label": "Station",
+                        "build": [
+                            {
+                                "text_before": "",
+                                "name": "station_id", 
+                                "text_after": ""
+                            },
+                            {
+                                "text_before": "(",
+                                "name": "state", 
+                                "text_after": ")."
+                            }
+                        ]
+                    },
+                    {
+                        "label": "Location",
+                        "build": [
+                            {
+                                "text_before": "",
+                                "name": "lat_dms", 
+                                "text_after": ""
+                            },
+                            {
+                                "text_before": "",
+                                "name": "long_dms", 
+                                "text_after": ""
+                            },
+                            {
+                                "text_before": "(",
+                                "name": "altitude", 
+                                "text_after": " m)."
+                            }
+                        ]
+                    }
+                ]
+            },
+            "figure": {
+                "inverted_y": false
+                "color": "#4169e1"
+            },
+            "margin": {
+                "left": 120,
+                "right": 120,
+                "top": 100,
+                "bottom": 100
+            }
+        }
+    }
+
+
+"""
+
+class BarDTO:
+    def __init__(self, ns: Namespace):
+        self.post_input = _create_input_post_dto(ns)
+
+
+def _create_input_post_dto(ns: Namespace):
+    return ns.model('BarInput', {
+        'src': fields.Nested(ns.model('BarSrc', {
+            'path': fields.String(required=True, description="Relative route to data"),
+            'axis': fields.Nested(ns.model('BarSrcAxis', {
+                'x': fields.Nested(ns.model('BarSrcAxisX', {
+                    'name': fields.String(reqired=True, description="X Column name")
+                }), required=True),
+                'y': fields.Nested(ns.model('BarSrcAxisY', {
+                    'name': fields.String(reqired=True, description="Y Column name")
+                }), required=True)
+            }), required=True)
+        })),
+        'dest': fields.Nested(ns.model('BarDest', {
+            'path': fields.String(required=True, description="Relative output route"),
+            'filename': fields.String(required=True, description="Filename of the chart"),
+            'export_png': fields.Boolean(required=True, description="Export png"),
+        }), required=True),
+        'style': fields.Nested(ns.model('BarStyle', {
+            'lettering': fields.Nested(ns.model('BarStyleLettering', {
+                'title': fields.String(required=True, description="Title of the chart"),
+                'subtitle': fields.String(required=False, description="Subtitle of the chart"),
+                'x_label': fields.String(required=True, description="X axis label"),
+                'y_label': fields.String(required=True, description="Y axis label"),
+                "inside_info": fields.List(fields.Nested(ns.model('BarStyleLetteringInsideInfoItem', {
+                    'label': fields.String(required=True, description="Label for information"),
+                    'build': fields.List(fields.Nested(ns.model('BarStyleLetteringInsideInfoItemBuildItem', {
+                        'text_before': fields.String(required=True, description="Text before"),
+                        'name': fields.String(required=True, description="Name of the column"),
+                        'text_after': fields.String(required=True, description="Text after"),
+                    })), required=True)
+                })), required=False),
+            }), required=True),
+            'figure': fields.Nested(ns.model('BarStyleFigure', {
+                'inverted_y': fields.Boolean(required=True, description="Inverted Y axis"),
+                'color': fields.String(required=True, description="Figure color"),
+            }), required=True),
+            'margin': fields.Nested(ns.model('BarStyleMargin', {
+                'left': fields.Float(required=True, description="Margin left"),
+                'right': fields.Float(required=True, description="Margin right"),
+                'top': fields.Float(required=True, description="Margin top"),
+                'bottom': fields.Float(required=True, description="Margin bottom")
+            }), required=False)
+        }), required=True)
+    })
