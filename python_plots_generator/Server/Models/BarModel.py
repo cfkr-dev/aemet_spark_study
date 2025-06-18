@@ -126,16 +126,30 @@ class Lettering:
 class Figure:
     def __init__(self):
         self.color = ""
-        self.inverted_y = False
+        self.inverted_horizontal_axis = False
+        self.threshold_limit_max_min = 0.0
+        self.threshold_perc_limit_outside_text = 0.0
+        self.range_margin_perc = 0.0
 
     def setup(self, data: dict):
         self.color = data['color']
-        self.inverted_y = data['inverted_y']
+        self.inverted_horizontal_axis = data['inverted_horizontal_axis']
+        self.threshold_limit_max_min = data['threshold_limit_max_min']
+        self.threshold_perc_limit_outside_text = data['threshold_perc_limit_outside_text']
+        self.range_margin_perc = data['range_margin_perc']
 
     def validate(self, validator: Validator):
         if not bool(re.fullmatch(r'#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})', self.color)):
             validator.set_invalid()
             validator.add_error_msg('Color must be a valid hex color')
+
+        if 0 >= self.threshold_perc_limit_outside_text >= 1:
+            validator.set_invalid()
+            validator.add_error_msg('threshold_perc_limit_outside_text must be between 0 and 1')
+
+        if 0 >= self.range_margin_perc >= 1:
+            validator.set_invalid()
+            validator.add_error_msg('range_margin_perc must be between 0 and 1')
 
 
 class Margin:
