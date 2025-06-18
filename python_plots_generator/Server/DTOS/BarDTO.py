@@ -66,7 +66,10 @@ from Config.constants import k_formatters
                 ]
             },
             "figure": {
-                "inverted_y": false
+                "inverted_horizontal_axis": false,
+                "threshold_limit_max_min": 0.5,
+                "threshold_perc_limit_outside_text": 0.3,
+                "range_margin_perc": 0.05,
                 "color": "#4169e1"
             },
             "margin": {
@@ -120,7 +123,10 @@ def _create_input_post_dto(ns: Namespace):
                 })), required=False),
             }), required=True),
             'figure': fields.Nested(ns.model('BarStyleFigure', {
-                'inverted_y': fields.Boolean(required=True, description="Inverted Y axis"),
+                'inverted_horizontal_axis': fields.Boolean(required=True, description="Inverted horizontal axis"),
+                'threshold_limit_max_min': fields.Float(required=True, description="Threshold limit of extension between the maximum and minimum value to zoom the chart"),
+                'threshold_perc_limit_outside_text': fields.Float(required=True, description="Threshold percentage limit for putting text outside the bars"),
+                'range_margin_perc': fields.Float(required=True, description="Percentage margin of the value ranges"),
                 'color': fields.String(required=True, description="Figure color"),
             }), required=True),
             'margin': fields.Nested(ns.model('BarStyleMargin', {

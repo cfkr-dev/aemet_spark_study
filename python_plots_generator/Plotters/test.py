@@ -1,4 +1,4 @@
-import plotly.graph_objects as go
+"""import plotly.graph_objects as go
 
 # Datos
 productos = ['Producto A', 'Producto B', 'Producto C']
@@ -24,6 +24,41 @@ fig.update_layout(
     yaxis_title='Ventas',
     uniformtext_minsize=8,
     uniformtext_mode='hide'
+)
+
+fig.show()"""
+
+import plotly.graph_objects as go
+
+# Datos para la tabla
+header = ["País", "Capital", "Población (millones)", "Área (km²)"]
+data = [
+    ["España", "Madrid", 47.4, 505990],
+    ["Francia", "París", 67.8, 551695],
+    ["Alemania", "Berlín", 83.2, 357386],
+    ["Italia", "Roma", 59.3, 301340],
+]
+
+# Transponer datos para columnas
+columns = list(zip(*data))
+
+# Crear gráfico tipo tabla
+fig = go.Figure(data=[go.Table(
+    header=dict(
+        values=header,
+        align='left',
+        font=dict(color='black', size=14)
+    ),
+    cells=dict(
+        values=columns,
+        align='left',
+        font=dict(color='black', size=12)
+    )
+)])
+
+fig.update_layout(
+    title="Datos de países europeos",
+    margin=dict(l=10, r=10, t=50, b=10)
 )
 
 fig.show()
