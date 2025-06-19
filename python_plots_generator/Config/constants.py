@@ -133,9 +133,20 @@ K_STORAGE_BASE_DIR          = "STORAGE_BASE_DIR"
 K_FORMATTER_TIMESTAMP       = "timestamp"
 K_FORMATTER_TIMESTAMP_YEAR  = "timestamp_year"
 
-k_formatters = [
+FORMATTERS_LIST = [
     K_FORMATTER_TIMESTAMP,
     K_FORMATTER_TIMESTAMP_YEAR
+]
+
+# TABLE ALIGNS
+K_TABLE_ALIGNS_LEFT         = "left"
+K_TABLE_ALIGNS_CENTER       = "center"
+K_TABLE_ALIGNS_RIGHT        = "right"
+
+TABLE_ALIGNS_LIST = [
+    K_TABLE_ALIGNS_LEFT,
+    K_TABLE_ALIGNS_CENTER,
+    K_TABLE_ALIGNS_RIGHT
 ]
 
 # ---------------------
