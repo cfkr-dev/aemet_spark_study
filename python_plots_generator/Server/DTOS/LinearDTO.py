@@ -1,6 +1,6 @@
 from flask_restx import fields, Namespace
 
-from Config.constants import k_formatters
+from Config.constants import FORMATTERS_LIST
 
 """
 
@@ -60,7 +60,7 @@ def _create_input_post_dto(ns: Namespace):
             'axis': fields.Nested(ns.model('LinearSrcAxis', {
                 'x': fields.Nested(ns.model('LinearSrcAxisX', {
                     'name': fields.String(reqired=True, description="X Column name"),
-                    'format': fields.String(reqired=False, description="Column format", enum=k_formatters),
+                    'format': fields.String(reqired=False, description="Column format", enum=FORMATTERS_LIST),
                 }), required=True),
                 'y': fields.Nested(ns.model('LinearSrcAxisY', {
                     'name': fields.String(reqired=True, description="Y Column name")
