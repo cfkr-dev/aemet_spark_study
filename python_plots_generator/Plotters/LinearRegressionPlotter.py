@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from plotly.graph_objs import Figure
 
 from Server.Models.LinearRegressionModel import LinearRegressionModel
-from .plotter import Plotter
+from .AbstractPlotter import Plotter
 from Utils.DataframeFormatter import format_df
 
 class LinearRegressionParams:

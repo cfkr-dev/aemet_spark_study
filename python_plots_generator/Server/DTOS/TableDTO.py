@@ -1,6 +1,6 @@
 from flask_restx import fields, Namespace
 
-from Config.constants import TABLE_ALIGNS_LIST
+from Config.Constants import TABLE_ALIGNS_LIST
 
 """
 

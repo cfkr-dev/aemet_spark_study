@@ -19,15 +19,18 @@ class AxisComponent:
 class Axis:
     def __init__(self):
         self.x = AxisComponent()
-        self.y = AxisComponent()
+        self.y_temp = AxisComponent()
+        self.y_prec = AxisComponent()
 
     def setup(self, data: dict):
         self.x.setup(data['x'])
-        self.y.setup(data['y'])
+        self.y_temp.setup(data['y_temp'])
+        self.y_prec.setup(data['y_prec'])
 
     def validate(self, validator: Validator):
         self.x.validate(validator)
-        self.y.validate(validator)
+        self.y_temp.validate(validator)
+        self.y_prec.validate(validator)
 
 
 class Src:
@@ -61,95 +64,39 @@ class Dest:
     def validate(self, validator: Validator):
         return
 
-class BuildItem:
-    def __init__(self):
-        self.text_before = ""
-        self.name = ""
-        self.text_after = ""
-
-    def setup(self, data: dict):
-        self.text_before = data['text_before']
-        self.name = data['name']
-        self.text_after = data['text_after']
-
-    def validate(self, validator: Validator):
-        return
-
-
-class InsideInfoItem:
-    def __init__(self):
-        self.label = ""
-        self.build = []
-
-    def setup(self, data: dict):
-        self.label = data['label']
-
-        for item in data['build']:
-            new_item = BuildItem()
-            new_item.setup(item)
-            self.build.append(new_item)
-
-    def validate(self, validator: Validator):
-        if not len(self.build) > 0:
-            validator.set_invalid()
-            validator.add_error_msg('Build must contain at least one item')
-
-        for item in self.build:
-            item.validate(validator)
-
 
 class Lettering:
     def __init__(self):
         self.title = ""
         self.subtitle = None
         self.x_label = ""
-        self.y_label = ""
-        self.inside_info = []
+        self.y_temp_label = ""
+        self.y_prec_label = ""
 
     def setup(self, data: dict):
         self.title = data['title']
         self.subtitle = data.get('subtitle', None)
         self.x_label = data['x_label']
-        self.y_label = data['y_label']
-
-        if data.get('inside_info'):
-            for item in data['inside_info']:
-                new_item = InsideInfoItem()
-                new_item.setup(item)
-                self.inside_info.append(new_item)
+        self.y_temp_label = data['y_temp_label']
+        self.y_prec_label = data['y_prec_label']
 
     def validate(self, validator: Validator):
-        for item in self.inside_info:
-            item.validate(validator)
+        return
 
 
 class Figure:
     def __init__(self):
+        self.name = ""
         self.color = ""
-        self.inverted_horizontal_axis = False
-        self.threshold_limit_max_min = 0.0
-        self.threshold_perc_limit_outside_text = 0.0
-        self.range_margin_perc = 0.0
 
     def setup(self, data: dict):
+        self.name = data['name']
         self.color = data['color']
-        self.inverted_horizontal_axis = data['inverted_horizontal_axis']
-        self.threshold_limit_max_min = data['threshold_limit_max_min']
-        self.threshold_perc_limit_outside_text = data['threshold_perc_limit_outside_text']
-        self.range_margin_perc = data['range_margin_perc']
 
     def validate(self, validator: Validator):
         if not bool(re.fullmatch(r'#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})', self.color)):
             validator.set_invalid()
             validator.add_error_msg('Color must be a valid hex color')
-
-        if 0 >= self.threshold_perc_limit_outside_text >= 1:
-            validator.set_invalid()
-            validator.add_error_msg('threshold_perc_limit_outside_text must be between 0 and 1')
-
-        if 0 >= self.range_margin_perc >= 1:
-            validator.set_invalid()
-            validator.add_error_msg('range_margin_perc must be between 0 and 1')
 
 
 class Margin:
@@ -169,24 +116,43 @@ class Margin:
         return
 
 
+class Legend:
+    def __init__(self):
+        self.show_legend = True
+        self.y_offset = 0.0
+
+    def setup(self, data: dict):
+        self.show_legend = True if data.get('y_offset') else False
+        self.y_offset = data.get('y_offset', -0.3)
+
+    def validate(self, validator: Validator):
+        return
+
+
 class Style:
     def __init__(self):
         self.lettering = Lettering()
-        self.figure = Figure()
+        self.figure_temp = Figure()
+        self.figure_prec = Figure()
         self.margin = Margin()
+        self.legend = Legend()
 
     def setup(self, data: dict):
         self.lettering.setup(data['lettering'])
-        self.figure.setup(data['figure'])
+        self.figure_temp.setup(data['figure_temp'])
+        self.figure_prec.setup(data['figure_prec'])
         self.margin.setup(data.get('margin', {}))
+        self.legend.setup(data.get('legend', {}))
 
     def validate(self, validator: Validator):
         self.lettering.validate(validator)
-        self.figure.validate(validator)
+        self.figure_temp.validate(validator)
+        self.figure_prec.validate(validator)
         self.margin.validate(validator)
+        self.legend.validate(validator)
 
 
-class BarModel:
+class ClimographModel:
     def __init__(self):
         self.src = Src()
         self.dest = Dest()

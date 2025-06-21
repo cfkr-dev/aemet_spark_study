@@ -1,6 +1,6 @@
 from flask_restx import fields, Namespace
 
-from Config.constants import FORMATTERS_LIST
+from Config.Constants import FORMATTERS_LIST
 
 """
 

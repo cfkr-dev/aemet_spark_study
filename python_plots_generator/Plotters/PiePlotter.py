@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from plotly.graph_objs import Figure
 
 from Server.Models.PieModel import PieModel
-from .plotter import Plotter
+from .AbstractPlotter import Plotter
 
 
 class PiePlotter(Plotter):

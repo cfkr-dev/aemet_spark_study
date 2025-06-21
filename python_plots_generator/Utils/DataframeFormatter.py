@@ -1,6 +1,6 @@
 import pandas as pd
 
-from Config.enumerations import Formatters
+from Config.Enumerations import Formatters
 
 def format_df(df: pd.DataFrame, name_to_format: dict) -> pd.DataFrame:
     format_functions = {
