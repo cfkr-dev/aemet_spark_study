@@ -1,5 +1,5 @@
 from pathlib import Path
-from Config.constants import STORAGE_BASE_DIR, OUTPUT_BASE_DIR
+from Config.Constants import STORAGE_BASE_DIR, OUTPUT_BASE_DIR
 
 def get_src_path(src_path: str):
     return (STORAGE_BASE_DIR / Path(src_path)).resolve()

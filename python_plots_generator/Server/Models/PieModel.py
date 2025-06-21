@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from Config.enumerations import *
+from Config.Enumerations import *
 from Utils.FileUtils import get_src_path, get_dest_path
 from Utils.Validator import Validator
 

@@ -7,6 +7,7 @@ from Controllers.LinearRegressionController import ns as linear_regression_ns
 from Controllers.PieController import ns as pie_linear_ns
 from Controllers.BarController import ns as bar_model_bar_ns
 from Controllers.TableController import ns as table_linear_ns
+from Controllers.ClimographController import ns as climograph_ns
 
 # Init Flask App
 app = Flask(__name__)
@@ -19,6 +20,7 @@ api.add_namespace(linear_regression_ns, path='/linear-regression')
 api.add_namespace(pie_linear_ns, path='/pie')
 api.add_namespace(bar_model_bar_ns, path='/bar')
 api.add_namespace(table_linear_ns, path='/table')
+api.add_namespace(climograph_ns, path='/climograph')
 
 # Ejecutar la aplicación
 if __name__ == '__main__':

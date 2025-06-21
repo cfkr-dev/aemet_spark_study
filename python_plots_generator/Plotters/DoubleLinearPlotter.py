@@ -6,7 +6,7 @@ from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
 
 from Server.Models.DoubleLinearModel import DoubleLinearModel
-from .plotter import Plotter
+from .AbstractPlotter import Plotter
 from Utils.DataframeFormatter import format_df
 
 class DoubleLinearPlotter(Plotter):
