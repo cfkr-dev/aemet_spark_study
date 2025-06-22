@@ -16,12 +16,12 @@ object SparkManager {
   private val ctsSchemaAemetAllStation = GlobalConf.Constants.schema.aemetConf.allStationInfo
   private val ctsSchemaSparkMeteo = GlobalConf.Constants.schema.sparkConf.meteoDf
   private val ctsSchemaSparkAllStation = GlobalConf.Constants.schema.sparkConf.stationsDf
+  private val ctsAllStationSpecialValues = ctsExecutionDataframeConf.allStationsDf.specialValues
 
   private object SparkCore {
     private val ctsExecutionSessionConf = SparkConf.Constants.init.execution.sessionConf
     private val ctsInitLogs = SparkConf.Constants.init.log
     private val ctsAllMeteoInfoSpecialValues = ctsExecutionDataframeConf.allMeteoInfoDf.specialValues
-    private val ctsAllStationSpecialValues = ctsExecutionDataframeConf.allStationsDf.specialValues
 
     val sparkSession: SparkSession = createSparkSession(
       ctsExecutionSessionConf.sessionName,
@@ -323,7 +323,7 @@ object SparkManager {
       //Stations.execute()
       //Climograph.execute()
       SingleParamStudies.execute()
-      InterestingStudies.execute()
+      //InterestingStudies.execute()
     }
 
     private case class FetchAndSaveInfo(
@@ -1509,9 +1509,15 @@ object SparkManager {
             ).alias(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(paramNameToShow)),
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
               ctsSchemaAemetAllStation.latitud
-            )).alias(ctsSchemaSparkAllStation.latDec),
+            )).alias(ctsSchemaSparkAllStation.latDms),
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
               ctsSchemaAemetAllStation.longitud
+            )).alias(ctsSchemaSparkAllStation.longDms),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaSparkAllStation.latDec
+            )).alias(ctsSchemaSparkAllStation.latDec),
+            col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
+              ctsSchemaSparkAllStation.longDec
             )).alias(ctsSchemaSparkAllStation.longDec),
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
               ctsSchemaAemetAllStation.altitud
