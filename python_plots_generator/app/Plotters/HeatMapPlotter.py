@@ -35,8 +35,11 @@ class HeatMapPlotter(Plotter):
         self.dataframe = self.load_dataframe(heat_map_model.src.path)
 
     def _generate_point_info(self):
+        long_col = self.model.src.names.longitude
+        lat_col = self.model.src.names.latitude
         style = self.model.style
-        point_infos = []
+
+        point_infos = {}
 
         for _, row in self.dataframe.iterrows():
             text = ""
@@ -47,7 +50,7 @@ class HeatMapPlotter(Plotter):
 
                 text += "<br>"
 
-            point_infos.append(text)
+            point_infos[(row[long_col], row[lat_col])] = text
 
         return point_infos
 
@@ -60,7 +63,7 @@ class HeatMapPlotter(Plotter):
 
         # Constants
         knn_max_dist = 0.05
-        interpolation_grid_size = 300
+        interpolation_grid_size = 1000
 
         if self.model.src.location == SpainGeographicLocations.CONTINENTAL:
             long_lb, long_ub = LONG_LOWER_BOUND_SPAIN_CONTINENTAL, LONG_UPPER_BOUND_SPAIN_CONTINENTAL
@@ -85,7 +88,8 @@ class HeatMapPlotter(Plotter):
         long_coords = np.array(long_coords_list)
         lat_coords = np.array(lat_coords_list)
         values = np.array(values_list)
-        point_infos = self._generate_point_info()
+
+        long_lat_to_point_infos = self._generate_point_info()
 
         # Filter near points using KNN algorithm
         tree = cKDTree(np.column_stack((long_coords, lat_coords)))
@@ -93,6 +97,8 @@ class HeatMapPlotter(Plotter):
         unique_idx = np.unique([min(i) for i in filtered_idx])
         filtered_long_coords, filtered_lat_coords, filtered_values = long_coords[unique_idx], lat_coords[unique_idx], \
             values[unique_idx]
+
+        filtered_point_infos = [long_lat_to_point_infos.get((long, lat)) for long, lat in zip(filtered_long_coords, filtered_lat_coords)]
 
         # Create interpolation grid
         grid_x = np.linspace(long_lb, long_ub, interpolation_grid_size)
@@ -148,11 +154,11 @@ class HeatMapPlotter(Plotter):
         return go.Figure().add_trace(
             go.Scatter(
                 x=filtered_long_coords,
-                y=filtered_long_coords,
+                y=filtered_lat_coords,
                 mode='markers',
                 marker=dict(
                     size=style.figure.point_size,
-                    color=values,
+                    color=filtered_values,
                     colorscale='jet',
                     colorbar=dict(title=style.lettering.legend_label),
                     opacity=0
@@ -171,7 +177,7 @@ class HeatMapPlotter(Plotter):
                     color=style.figure.color,
                     opacity=style.figure.color_opacity
                 ),
-                hovertext=point_infos,
+                hovertext=filtered_point_infos,
                 name=style.figure.name,
                 showlegend=False,
                 hoverlabel=dict(namelength=0)
@@ -183,8 +189,8 @@ class HeatMapPlotter(Plotter):
                 yref="y",
                 x=long_lb,
                 y=lat_ub,
-                sizex=abs(long_ub) - abs(long_lb),
-                sizey=abs(lat_lb) + abs(lat_ub),
+                sizex=abs(long_lb) + abs(long_ub) if self.model.src.location == SpainGeographicLocations.CONTINENTAL else abs(long_lb) - abs(long_ub),
+                sizey=abs(lat_ub) - abs(lat_lb),
                 sizing="stretch",
                 opacity=0.5,
                 layer="below"
@@ -231,6 +237,10 @@ class HeatMapPlotter(Plotter):
 
         figure.write_html(str((self.model.dest.path / Path(self.model.dest.filename + ".html")).resolve()))
         if self.model.dest.export_png:
-            figure.write_image(str((self.model.dest.path / Path(self.model.dest.filename + ".png")).resolve()))
+            figure.write_image(
+                str((self.model.dest.path / Path(self.model.dest.filename + ".png")).resolve()),
+                width=1280,
+                height=720,
+            )
 
         return str(self.model.dest.path)
