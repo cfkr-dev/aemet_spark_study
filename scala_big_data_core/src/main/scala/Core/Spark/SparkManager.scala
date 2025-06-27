@@ -839,7 +839,8 @@ object SparkManager {
                 getAllStationsByStatesAvgClimateParamInALapse(
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
-                  startDate = ctsExecution.avg2024AllStationSpain.startDate
+                  startDate = ctsExecution.avg2024AllStationSpain.startDate,
+                  states = Some(ctsExecution.avg2024AllStationSpain.continentalStates)
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
@@ -863,7 +864,7 @@ object SparkManager {
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsExecution.avg2024AllStationSpain.startDate,
-                  states = Some(ctsExecution.avg2024AllStationSpain.canaryIslandStates),
+                  states = Some(ctsExecution.avg2024AllStationSpain.canaryIslandStates)
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
