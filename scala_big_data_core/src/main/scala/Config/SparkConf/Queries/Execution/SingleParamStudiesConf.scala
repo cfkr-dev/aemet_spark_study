@@ -76,7 +76,8 @@ case class Top5LowestInc(
 
 case class Avg2024AllStationSpain(
   startDate: String,
-  canaryIslandStates: List[String]
+  canaryIslandStates: List[String],
+  continentalStates: List[String],
 )
 
 
