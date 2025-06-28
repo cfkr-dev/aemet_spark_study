@@ -12,3 +12,6 @@
 Thumbs.db
 ehcache*
 hsperfdata*
+
+# Secrets
+.env
