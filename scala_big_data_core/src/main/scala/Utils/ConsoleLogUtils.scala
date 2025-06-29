@@ -10,14 +10,26 @@ import java.time.format.DateTimeFormatter
 object ConsoleLogUtils {
 
   object Method {
-    def printlnGet(uri: Uri): Unit = println(
+    object HTTPMethod extends Enumeration {
+      type HTTPMethod = Value
+      val GET: HTTPMethod = Value("GET")
+      val POST: HTTPMethod = Value("POST")
+    }
+
+    import HTTPMethod._
+
+    def printlnHTTPMethod(uri: Uri, httpMethod: HTTPMethod): Unit = println(
       Color.Magenta(ZonedDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss"))).overlay(Bold.On) +
         " | " +
-        Color.Yellow("GET").overlay(Bold.On) +
+        Color.Yellow(httpMethod.toString).overlay(Bold.On) +
         " => " +
         uri.toString() +
         "\n"
     )
+
+    def printlnGet(uri: Uri): Unit = printlnHTTPMethod(uri, HTTPMethod.GET)
+
+    def printlnPost(uri: Uri): Unit = printlnHTTPMethod(uri, HTTPMethod.POST)
   }
 
   object Response {

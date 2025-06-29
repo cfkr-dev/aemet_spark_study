@@ -45,7 +45,7 @@ object AemetAPIClient {
     uri: Uri,
     isMetadata: Boolean = false
   ): Either[Exception, ujson.Value] = {
-    sendRequest(uri) match {
+    sendGetRequest(uri) match {
       case Right(response) =>
         val dataParsedToJSON = ujson.read(response.body)
         dataParsedToJSON(ctsExecutionAemet.reqResp.response.stateNumber).num.toInt match {
@@ -56,7 +56,7 @@ object AemetAPIClient {
               ctsExecutionAemet.reqResp.response.data
             }
 
-            sendRequest(uri"${dataParsedToJSON(requestURIResource).str}") match {
+            sendGetRequest(uri"${dataParsedToJSON(requestURIResource).str}") match {
               case Right(response) => Right(ujson.read(response.body))
               case Left(exception) => Left(exception)
             }
