@@ -4,7 +4,7 @@ import Config.DataExtractionConf
 import Utils.ChronoUtils.{await, executeAndAwaitIfTimeNotExceedMinimum}
 import Utils.ConsoleLogUtils.Message._
 import Utils.FileUtils.saveContentToPath
-import Utils.HTTPUtils.{buildUrl, sendRequest}
+import Utils.HTTPUtils.{buildUrl, sendGetRequest}
 import Utils.JSONUtils.{lowercaseKeys, writeJSON}
 import sttp.model.Uri
 import ujson.{Value, read}
@@ -19,7 +19,7 @@ object IfapaAPIClient {
   private val ctsUrl = DataExtractionConf.Constants.url.ifapaConf
 
   private def getIfapaAPIResource(uri: Uri): Either[Exception, Value] = {
-    sendRequest(uri) match {
+    sendGetRequest(uri) match {
       case Left(exception: Exception) => Left(exception)
       case Right(response) => Right(read(response.body))
     }
