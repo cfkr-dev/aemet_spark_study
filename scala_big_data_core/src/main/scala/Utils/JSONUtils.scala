@@ -1,6 +1,6 @@
 package Utils
 
-import ujson.write
+import ujson.{Obj, write}
 
 import java.io.{BufferedWriter, File, FileWriter}
 import scala.collection.mutable
@@ -88,6 +88,19 @@ object JSONUtils {
       )
       case other => other
     }
+  }
+
+  def removeNullKeys(json: ujson.Value): ujson.Value = json match {
+    case obj: ujson.Obj =>
+      ujson.Obj.from(
+        obj.value.toSeq.collect {
+          case (key, value) if value != ujson.Null =>
+            key -> removeNullKeys(value)
+        }
+      )
+    case arr: ujson.Arr =>
+      ujson.Arr(arr.value.map(removeNullKeys))
+    case other => other
   }
 
 }

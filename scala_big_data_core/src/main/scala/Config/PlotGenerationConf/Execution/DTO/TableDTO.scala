@@ -1,55 +1,59 @@
 package Config.PlotGenerationConf.Execution.DTO
 
+import upickle.default.{ReadWriter, macroRW}
+import upickle.implicits.key
 
-case class AxisComponent(
-  name: String,
-  format: Option[String]
+
+case class TableDTOSrc(
+  @key("path") path: String,
+  @key("col_names") colNames: List[String]
 )
+object TableDTOSrc { implicit val rw: ReadWriter[TableDTOSrc] = macroRW }
 
-case class Axis(
-  x: AxisComponent,
-  y: AxisComponent
+case class TableDTODest(
+  @key("path") path: String,
+  @key("filename") filename: String,
+  @key("export_png") exportPng: Boolean
 )
+object TableDTODest { implicit val rw: ReadWriter[TableDTODest] = macroRW }
 
-case class Src(
-  path: String,
-  axis: Axis
+case class TableDTOLettering(
+  @key("title") title: String,
+  @key("subtitle") subtitle: String,
+  @key("headers") headers: List[String]
 )
+object TableDTOLettering { implicit val rw: ReadWriter[TableDTOLettering] = macroRW }
 
-case class Dest(
-  path: String,
-  filename: String,
-  exportPng: Boolean
+case class TableDTOFigureComponent(
+  @key("align") align: String,
+  @key("color") color: String
 )
+object TableDTOFigureComponent { implicit val rw: ReadWriter[TableDTOFigureComponent] = macroRW }
 
-case class Lettering(
-  title: String,
-  subtitle: String,
-  xLabel: String,
-  yLabel: String
+case class TableDTOFigure(
+  @key("headers") headers: TableDTOFigureComponent,
+  @key("cells") cells: TableDTOFigureComponent
 )
+object TableDTOFigure { implicit val rw: ReadWriter[TableDTOFigure] = macroRW }
 
-case class Figure(
-  name: String,
-  color: String
+case class TableDTOMargin(
+  @key("left") left: Float,
+  @key("right") right: Float,
+  @key("top") top: Float,
+  @key("bottom") bottom: Float
 )
+object TableDTOMargin { implicit val rw: ReadWriter[TableDTOMargin] = macroRW }
 
-case class Margin(
-  left: Float,
-  right: Float,
-  top: Float,
-  bottom: Float
+case class TableDTOStyle(
+  @key("lettering") lettering: TableDTOLettering,
+  @key("figure") figure: TableDTOFigure,
+  @key("margin") margin: Option[TableDTOMargin]
 )
+object TableDTOStyle { implicit val rw: ReadWriter[TableDTOStyle] = macroRW }
 
-case class Legend(
-  yOffset: Float
+case class TableDTO(
+  @key("src") src: TableDTOSrc, 
+  @key("dest") dest: TableDTODest, 
+  @key("style") style: TableDTOStyle
 )
-
-case class Style(
-  lettering: Lettering,
-  figure: Figure,
-  margin: Option[Margin],
-  legend: Option[Legend]
-)
-
-case class LinearDTO (src: Src, dest: Dest, style: Style)
+object TableDTO { implicit val rw: ReadWriter[TableDTO] = macroRW }

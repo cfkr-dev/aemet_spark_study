@@ -5,6 +5,7 @@ import pureconfig.generic.auto._
 
 case class ExecutionConf(stationsConf: Execution.StationsConf)
 case class StorageConf(stationsConf: Storage.StationsConf, globalConf: Storage.GlobalConf)
+case class LogConf(stationsConf: Log.StationsConf, globalConf: Log.GlobalConf)
 case class UrlConf(globalConf: Url.GlobalConf)
 
 object Constants {
@@ -15,6 +16,11 @@ object Constants {
   val storage: StorageConf = StorageConf(
     stationsConf = readConfigFromFile[Storage.StationsConf]("config/plot_generation/storage/stations.conf"),
     globalConf = readConfigFromFile[Storage.GlobalConf]("config/plot_generation/storage/global.conf")
+  )
+
+  val log: LogConf = LogConf(
+    stationsConf = readConfigFromFile[Log.StationsConf]("config/plot_generation/log/stations.conf"),
+    globalConf = readConfigFromFile[Log.GlobalConf]("config/plot_generation/log/global.conf")
   )
 
   val url: UrlConf = UrlConf(
