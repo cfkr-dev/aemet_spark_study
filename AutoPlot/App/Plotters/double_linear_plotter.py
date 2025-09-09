@@ -8,6 +8,8 @@ from plotly.subplots import make_subplots
 from App.Plotters.abstract_plotter import Plotter
 from App.Api.Models.double_linear_model import DoubleLinearModel
 from App.Utils.dataframe_formatter import format_df
+from App.Utils.file_utils import get_response_dest_path
+
 
 class DoubleLinearPlotter(Plotter):
     def __init__(self, double_linear_model: DoubleLinearModel):
@@ -95,4 +97,4 @@ class DoubleLinearPlotter(Plotter):
         if self.model.dest.export_png:
             figure.write_image(str((self.model.dest.path / Path(self.model.dest.filename + ".png")).resolve()))
 
-        return str(self.model.dest.path)
+        return get_response_dest_path(self.model.dest.path)

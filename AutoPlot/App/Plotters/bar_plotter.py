@@ -6,6 +6,7 @@ from plotly.graph_objs import Figure
 
 from App.Plotters.abstract_plotter import Plotter
 from App.Api.Models.bar_model import BarModel
+from App.Utils.file_utils import get_response_dest_path
 
 
 class BarPlotter(Plotter):
@@ -122,4 +123,4 @@ class BarPlotter(Plotter):
         if self.model.dest.export_png:
             figure.write_image(str((self.model.dest.path / Path(self.model.dest.filename + ".png")).resolve()))
 
-        return str(self.model.dest.path)
+        return get_response_dest_path(self.model.dest.path)

@@ -26,6 +26,7 @@ from App.Config.constants import (
     LAT_LOWER_BOUND_SPAIN_CANARY_ISLAND,
     LAT_UPPER_BOUND_SPAIN_CANARY_ISLAND,
 )
+from App.Utils.file_utils import get_response_dest_path
 
 
 class HeatMapPlotter(Plotter):
@@ -242,4 +243,4 @@ class HeatMapPlotter(Plotter):
                 height=720,
             )
 
-        return str(self.model.dest.path)
+        return get_response_dest_path(self.model.dest.path)

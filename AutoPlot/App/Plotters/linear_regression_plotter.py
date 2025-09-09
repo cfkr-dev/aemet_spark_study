@@ -7,6 +7,8 @@ from plotly.graph_objs import Figure
 from App.Plotters.abstract_plotter import Plotter
 from App.Api.Models.linear_regression_model import LinearRegressionModel
 from App.Utils.dataframe_formatter import format_df
+from App.Utils.file_utils import get_response_dest_path
+
 
 class LinearRegressionParams:
     def __init__(self, df, model: LinearRegressionModel):
@@ -95,4 +97,4 @@ class LinearRegressionPlotter(Plotter):
         if self.model.dest.export_png:
             figure.write_image(str((self.model.dest.path / Path(self.model.dest.filename + ".png")).resolve()))
 
-        return str(self.model.dest.path)
+        return get_response_dest_path(self.model.dest.path)
