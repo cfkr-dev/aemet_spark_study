@@ -9,6 +9,7 @@ from plotly.subplots import make_subplots
 from App.Plotters.abstract_plotter import Plotter
 from App.Api.Models.climograph_model import ClimographModel
 from App.Config.constants import MONTHS_SP_LIST
+from App.Utils.file_utils import get_response_dest_path
 
 
 class ClimographPlotter(Plotter):
@@ -108,4 +109,4 @@ class ClimographPlotter(Plotter):
         if self.model.dest.export_png:
             figure.write_image(str((self.model.dest.path / Path(self.model.dest.filename + ".png")).resolve()))
 
-        return str(self.model.dest.path)
+        return get_response_dest_path(self.model.dest.path)
