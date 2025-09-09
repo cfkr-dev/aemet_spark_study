@@ -72,6 +72,7 @@ object HTTPUtils {
         .body(write(body, 2))
         .header(HTTPHeaderAccept._1, HTTPHeaderAccept._2)
         .header(HTTPHeaderUserAgent._1, HTTPHeaderUserAgent._2)
+        .contentType("application/json")
         .send(backend)
 
       ConsoleLogUtils.Response.printlnResponse(response)

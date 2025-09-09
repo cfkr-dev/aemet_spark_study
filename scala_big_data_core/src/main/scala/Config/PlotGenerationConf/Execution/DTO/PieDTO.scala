@@ -1,54 +1,53 @@
 package Config.PlotGenerationConf.Execution.DTO
 
-case class AxisComponent(
-  name: String,
-  format: Option[String]
-)
+import upickle.default.{ReadWriter, macroRW}
+import upickle.implicits.key
 
-case class Axis(
-  x: AxisComponent,
-  y: AxisComponent
-)
 
-case class Src(
-  path: String,
-  axis: Axis
+case class PieDTOSrcNamesComponent(
+  @key("lower_bound") lowerBound: String,
+  @key("upper_bound") upperBound: String,
+  @key("value") value: String
 )
+object PieDTOSrcNamesComponent { implicit val rw: ReadWriter[PieDTOSrcNamesComponent] = macroRW }
 
-case class Dest(
-  path: String,
-  filename: String,
-  exportPng: Boolean
+case class PieDTOSrc(
+  @key("path") path: String,
+  @key("names") names: PieDTOSrcNamesComponent
 )
+object PieDTOSrc { implicit val rw: ReadWriter[PieDTOSrc] = macroRW }
 
-case class Lettering(
-  title: String,
-  subtitle: String,
-  xLabel: String,
-  yLabel: String
+case class PieDTODest(
+  @key("path") path: String,
+  @key("filename") filename: String,
+  @key("export_png") exportPng: Boolean
 )
+object PieDTODest { implicit val rw: ReadWriter[PieDTODest] = macroRW }
 
-case class Figure(
-  name: String,
-  color: String
+case class PieDTOLettering(
+  @key("title") title: String,
+  @key("subtitle") subtitle: String
 )
+object PieDTOLettering { implicit val rw: ReadWriter[PieDTOLettering] = macroRW }
 
-case class Margin(
-  left: Float,
-  right: Float,
-  top: Float,
-  bottom: Float
+case class PieDTOMargin(
+  @key("left") left: Float,
+  @key("right") right: Float,
+  @key("top") top: Float,
+  @key("bottom") bottom: Float
 )
+object PieDTOMargin { implicit val rw: ReadWriter[PieDTOMargin] = macroRW }
 
-case class Legend(
-  yOffset: Float
+case class PieDTOStyle(
+  @key("lettering") lettering: PieDTOLettering,
+  @key("margin") margin: Option[PieDTOMargin],
+  @key("show_legend") showLegend: Boolean
 )
+object PieDTOStyle { implicit val rw: ReadWriter[PieDTOStyle] = macroRW }
 
-case class Style(
-  lettering: Lettering,
-  figure: Figure,
-  margin: Option[Margin],
-  legend: Option[Legend]
+case class PieDTO (
+  @key("src") src: PieDTOSrc, 
+  @key("dest") dest: PieDTODest, 
+  @key("style") style: PieDTOStyle
 )
-
-case class LinearDTO (src: Src, dest: Dest, style: Style)
+object PieDTO { implicit val rw: ReadWriter[PieDTO] = macroRW }
