@@ -49,6 +49,18 @@ object SparkManager {
       }
     }
 
+    def saveDataframeAsJSON(dataframe: DataFrame, path: String): Either[Exception, String] = {
+      try {
+        dataframe.write
+          .mode(SaveMode.Overwrite)
+          .json(path)
+
+        Right(path)
+      } catch {
+        case exception: Exception => Left(exception)
+      }
+    }
+
     private def createSparkSession(name: String, master: String, logLevel: String): SparkSession = {
       val spark = SparkSession.builder()
         .appName(name)
@@ -320,10 +332,10 @@ object SparkManager {
 
     def execute(): Unit = {
       SparkCore.startSparkSession()
-      //Stations.execute()
-      //Climograph.execute()
+      Stations.execute()
+      Climograph.execute()
       SingleParamStudies.execute()
-      //InterestingStudies.execute()
+      InterestingStudies.execute()
     }
 
     private case class FetchAndSaveInfo(
@@ -331,7 +343,8 @@ object SparkManager {
       pathToSave: String,
       title: String = "",
       showInfoMessage: String = ctsGlobalLogs.showInfo,
-      saveInfoMessage: String = ctsGlobalLogs.saveInfo
+      saveInfoMessage: String = ctsGlobalLogs.saveInfo,
+      saveAsJSON: Boolean = false
     )
 
     private def simpleFetchAndSave(
@@ -356,10 +369,17 @@ object SparkManager {
         printlnConsoleMessage(NotificationType.Information, subQuery.saveInfoMessage.format(
           subQuery.pathToSave
         ))
-        SparkCore.saveDataframeAsParquet(subQuery.dataframe, subQuery.pathToSave) match {
-          case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-          case Right(_) => ()
-        }
+
+        if (!subQuery.saveAsJSON)
+          SparkCore.saveDataframeAsParquet(subQuery.dataframe, subQuery.pathToSave) match {
+            case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+            case Right(_) => ()
+          }
+        else
+          SparkCore.saveDataframeAsJSON(subQuery.dataframe, subQuery.pathToSave) match {
+            case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+            case Right(_) => ()
+          }
 
         if (subQuery.title != "")
           printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.endSubQuery.format(
@@ -484,7 +504,8 @@ object SparkManager {
                     ),
                     ctsLogs.fetchingClimateLocationStation.format(
                       registry.location.capitalize,
-                    )
+                    ),
+                    saveAsJSON = true
                   ),
                   FetchAndSaveInfo(
                     getStationMonthlyAvgTempAndSumPrecInAYear(
@@ -509,10 +530,6 @@ object SparkManager {
               encloseHalfLengthStart = 40
             )
           })
-
-          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.startFetchingClimateGroup.format(
-            climateGroup.climateGroupName
-          ), encloseHalfLength = 35)
         })
 
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.endStudy.format(
@@ -532,7 +549,7 @@ object SparkManager {
             study.studyParam.replace("_", " ")
           ))
 
-          // Top 10 places with the highest eratures in 2024
+          // Top 10 places with the highest temperatures in 2024
           simpleFetchAndSave(
             ctsLogs.top10Highest2024.format(
               study.studyParam
@@ -676,7 +693,7 @@ object SparkManager {
             )
           )
 
-          // erature evolution from the start of registers for each state
+          // temperature evolution from the start of registers for each state
           val regressionModelDf: DataFrame = simpleFetchAndSave(
             ctsLogs.evolFromStartForEachState.format(
               study.studyParam.capitalize
@@ -695,7 +712,8 @@ object SparkManager {
                   ),
                   ctsLogs.evolFromStartForEachStateStartStation.format(
                     registry.stateName.capitalize
-                  )
+                  ),
+                  saveAsJSON = true
                 ),
                 FetchAndSaveInfo(
                   getClimateParamInALapseById(
@@ -772,7 +790,7 @@ object SparkManager {
 
           regressionModelDf.count()
 
-          // Top 5 highest increment of erature
+          // Top 5 highest increment of temperature
           simpleFetchAndSave(
             ctsLogs.top5HighestInc.format(
               study.studyParam
@@ -799,7 +817,7 @@ object SparkManager {
             )
           )
 
-          // Top 5 lowest increment of erature
+          // Top 5 lowest increment of temperature
           simpleFetchAndSave(
             ctsLogs.top5LowestInc.format(
               study.studyParam
@@ -829,7 +847,7 @@ object SparkManager {
 
           regressionModelDf.unpersist()
 
-          // Get average erature in 2024 for all station in the spanish continental territory
+          // Get average temperature in 2024 for all station in the spanish continental territory
           simpleFetchAndSave(
             ctsLogs.avg2024AllStationSpainContinental.format(
               study.studyParam
@@ -853,7 +871,7 @@ object SparkManager {
             )
           )
 
-          // Get average erature in 2024 for all station in the canary islands territory
+          // Get average temperature in 2024 for all station in the canary islands territory
           simpleFetchAndSave(
             ctsLogs.avg2024AllStationSpainCanary.format(
               study.studyParam
@@ -910,7 +928,8 @@ object SparkManager {
                 ),
                 ctsLogs.precAndPressureEvolFromStartForEachStateStartStation.format(
                   registry.stateName.capitalize
-                )
+                ),
+                saveAsJSON = true
               ),
               FetchAndSaveInfo(
                 getClimateParamInALapseById(
