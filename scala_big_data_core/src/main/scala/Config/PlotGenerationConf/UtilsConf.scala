@@ -17,7 +17,7 @@ case class ColumnNames(
   precMonthlySum: String,
   colAvg: String,
   colSum: String,
-  colDailyAvg: String,
+  colDailyGrouped: String,
   colYearlyGrouped: String,
   globalColYearlyAvg: String,
   daysWithConds: String,
@@ -35,9 +35,16 @@ case class ColumnNames(
   incPerc: String,
 )
 
+case class GroupMethods(
+  sum: String,
+  avg: String,
+  max: String,
+  min: String
+)
+
 case class Formatters(
   timestamp: String,
   timestampYear: String
 )
 
-case class UtilsConf(columnNames: ColumnNames, formatters: Formatters)
+case class UtilsConf(columnNames: ColumnNames, groupMethods: GroupMethods, formatters: Formatters)
