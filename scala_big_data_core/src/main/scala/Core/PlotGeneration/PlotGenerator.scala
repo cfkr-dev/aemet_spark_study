@@ -2,7 +2,7 @@ package Core.PlotGeneration
 
 import Config.GlobalConf
 import Config.PlotGenerationConf
-import Config.PlotGenerationConf.Execution.DTO.ClimographDTO
+import Config.PlotGenerationConf.Execution.DTO.{ClimographDTO, BarDTO}
 import Utils.ConsoleLogUtils
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage}
 import Utils.HTTPUtils.{buildUrl, sendPostRequest}
@@ -169,6 +169,115 @@ object PlotGenerator {
 
   }
 
+  object SingleParamStudies {
+    private case class MeteoParamInfo(meteoParam: String, meteoParamAbbrev: String, units: String, colAggMethod: String)
+    private case class Top10TemporalInfo(value: String, title: String)
+    private case class Top10FormatInfo(meteoParamInfo: MeteoParamInfo, order: String, temporal: Top10TemporalInfo)
+
+    private val ctsExecution = PlotGenerator.ctsExecution.singleParamStudiesConf
+    private val ctsStorage = PlotGenerator.ctsStorage.singleParamStudiesConf
+    private val ctsLogs = PlotGenerator.ctsLogs.singleParamStudiesConf
+
+    private def BarDTOTop10Formatter(dto: BarDTO, formatInfo: Top10FormatInfo): BarDTO = {
+      dto.copy(
+        src = dto.src.copy(
+          path = dto.src.path.format(
+            formatInfo.meteoParamInfo.meteoParamAbbrev,
+            formatInfo.order,
+            formatInfo.temporal.value
+          ),
+          axis = dto.src.axis.copy(
+            y = dto.src.axis.y.copy(
+              name = dto.src.axis.y.name.format(
+                formatInfo.meteoParamInfo.meteoParamAbbrev,
+                formatInfo.meteoParamInfo.colAggMethod
+              )
+            )
+          )
+        ),
+        dest = dto.dest.copy(
+          path = dto.dest.path.format(
+            formatInfo.meteoParamInfo.meteoParamAbbrev,
+            formatInfo.order,
+            formatInfo.temporal.value
+          )
+        ),
+        style = dto.style.copy(
+          lettering = dto.style.lettering.copy(
+            title = dto.style.lettering.title.format(
+              formatInfo.order,
+              formatInfo.meteoParamInfo.meteoParam
+            ),
+            subtitle = dto.style.lettering.subtitle.format(
+              formatInfo.temporal.title
+            ),
+            yLabel = dto.style.lettering.yLabel.format(
+              formatInfo.meteoParamInfo.meteoParam.capitalize,
+              formatInfo.meteoParamInfo.units
+            )
+          )
+        )
+      )
+    }
+
+    def generate(): Unit = {
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startPlotGeneration.format(
+        ctsLogs.studyName
+      ))
+
+      ctsExecution.studyParamsValues.foreach(studyParamValue => {
+
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.meteoParamStudy.format(
+          studyParamValue.studyParamName.capitalize
+        ), encloseHalfLength = encloseHalfLength + 5)
+
+        // TOP 10
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.top10Study.format(
+          studyParamValue.studyParamName
+        ), encloseHalfLength = encloseHalfLength + 10)
+
+        ctsExecution.top10Values.order.foreach(top10Order => {
+
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.top10Order.format(
+            top10Order, studyParamValue.studyParamName
+          ), encloseHalfLength = encloseHalfLength + 15)
+
+          ctsExecution.top10Values.temporal.foreach(top10Temporal => {
+
+            printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.top10Temporal.format(
+              top10Temporal.title.capitalize
+            ), encloseHalfLength = encloseHalfLength + 20)
+
+            generatePlot(
+              buildUrl(ctsExecution.top10.uri),
+              BarDTOTop10Formatter(
+                ctsExecution.top10.body,
+                Top10FormatInfo(
+                  MeteoParamInfo(
+                    studyParamValue.studyParamName,
+                    studyParamValue.studyParamAbbrev,
+                    studyParamValue.studyParamUnit,
+                    studyParamValue.colAggMethod
+                  ),
+                  top10Order,
+                  Top10TemporalInfo(
+                    top10Temporal.value,
+                    top10Temporal.title
+                  )
+                )
+              )
+            )
+
+          })
+        })
+      })
+
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.endPlotGeneration.format(
+        ctsLogs.studyName
+      ))
+    }
+  }
+
 
 
   private def generateRequestBody[T: ReadWriter](dto: T): Value = {
@@ -187,10 +296,13 @@ object PlotGenerator {
 
   def generate(): Unit = {
     // STATIONS
-    Stations.generate()
+    //Stations.generate()
 
     // CLIMOGRAPH
-    Climograph.generate()
+    //Climograph.generate()
+
+    // SINGLE PARAM STUDIES
+    SingleParamStudies.generate()
   }
 }
 
