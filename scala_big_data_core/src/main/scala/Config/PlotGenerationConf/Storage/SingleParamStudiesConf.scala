@@ -5,8 +5,14 @@ case class Top10(
   dataDest: String
 )
 
+case class Top5Inc(
+  dataSrc: String,
+  dataDest: String
+)
+
 case class SingleParamStudiesConf(
   baseSrcDir: String,
   baseDestDir: String,
-  top10: Top10
+  top10: Top10,
+  top5Inc: Top5Inc
 )
