@@ -173,6 +173,7 @@ object PlotGenerator {
     private case class MeteoParamInfo(meteoParam: String, meteoParamAbbrev: String, units: String, colAggMethod: String)
     private case class Top10TemporalInfo(value: String, title: String)
     private case class Top10FormatInfo(meteoParamInfo: MeteoParamInfo, order: String, temporal: Top10TemporalInfo)
+    private case class Top5IncFormatInfo(meteoParamInfo: MeteoParamInfo, order: String)
 
     private val ctsExecution = PlotGenerator.ctsExecution.singleParamStudiesConf
     private val ctsStorage = PlotGenerator.ctsStorage.singleParamStudiesConf
@@ -220,6 +221,35 @@ object PlotGenerator {
       )
     }
 
+    private def BarDTOTop5IncFormatter(dto: BarDTO, formatInfo: Top5IncFormatInfo): BarDTO = {
+      dto.copy(
+        src = dto.src.copy(
+          path = dto.src.path.format(
+            formatInfo.meteoParamInfo.meteoParamAbbrev,
+            formatInfo.order
+          )
+        ),
+        dest = dto.dest.copy(
+          path = dto.dest.path.format(
+            formatInfo.meteoParamInfo.meteoParamAbbrev,
+            formatInfo.order
+          )
+        ),
+        style = dto.style.copy(
+          lettering = dto.style.lettering.copy(
+            title = dto.style.lettering.title.format(
+              formatInfo.order,
+              formatInfo.meteoParamInfo.meteoParam
+            ),
+            yLabel = dto.style.lettering.yLabel.format(
+              formatInfo.meteoParamInfo.meteoParam.capitalize,
+              formatInfo.meteoParamInfo.units
+            )
+          )
+        )
+      )
+    }
+
     def generate(): Unit = {
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startPlotGeneration.format(
         ctsLogs.studyName
@@ -231,7 +261,7 @@ object PlotGenerator {
           studyParamValue.studyParamName.capitalize
         ), encloseHalfLength = encloseHalfLength + 5)
 
-        // TOP 10
+        // -- TOP 10 --
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.top10Study.format(
           studyParamValue.studyParamName
         ), encloseHalfLength = encloseHalfLength + 10)
@@ -269,6 +299,34 @@ object PlotGenerator {
             )
 
           })
+        })
+
+        // -- TOP 5 INC --
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.top5IncStudy.format(
+          studyParamValue.studyParamName
+        ), encloseHalfLength = encloseHalfLength + 10)
+
+        ctsExecution.top5IncValues.order.foreach(top5IncOrder => {
+
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.top5IncOrder.format(
+            top5IncOrder, studyParamValue.studyParamName
+          ), encloseHalfLength = encloseHalfLength + 15)
+
+          generatePlot(
+            buildUrl(ctsExecution.top5Inc.uri),
+            BarDTOTop5IncFormatter(
+              ctsExecution.top5Inc.body,
+              Top5IncFormatInfo(
+                MeteoParamInfo(
+                  studyParamValue.studyParamName,
+                  studyParamValue.studyParamAbbrev,
+                  studyParamValue.studyParamUnit,
+                  studyParamValue.colAggMethod
+                ),
+                top5IncOrder
+              )
+            )
+          )
         })
       })
 

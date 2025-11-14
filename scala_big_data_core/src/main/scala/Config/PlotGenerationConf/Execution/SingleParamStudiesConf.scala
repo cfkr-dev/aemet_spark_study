@@ -24,8 +24,19 @@ case class Top10(
   body: BarDTO
 )
 
+case class Top5IncValues(
+  order: List[String]
+)
+
+case class Top5Inc(
+  uri: String,
+  body: BarDTO
+)
+
 case class SingleParamStudiesConf(
   studyParamsValues: List[StudyParamsValues],
   top10Values: Top10Values,
-  top10: Top10
+  top10: Top10,
+  top5IncValues: Top5IncValues,
+  top5Inc: Top5Inc
 )
