@@ -7,5 +7,8 @@ case class SingleParamStudiesConf(
   top10Order: String,
   top10Temporal: String,
   top5IncStudy: String,
-  top5IncOrder: String
+  top5IncOrder: String,
+  evolStudy: String,
+  evolState: String,
+  evol2024: String
 )
