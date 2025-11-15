@@ -2,7 +2,7 @@ package Core.PlotGeneration
 
 import Config.GlobalConf
 import Config.PlotGenerationConf
-import Config.PlotGenerationConf.Execution.DTO.{ClimographDTO, BarDTO}
+import Config.PlotGenerationConf.Execution.DTO.{BarDTO, ClimographDTO, LinearDTO}
 import Utils.ConsoleLogUtils
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage}
 import Utils.HTTPUtils.{buildUrl, sendPostRequest}
@@ -17,6 +17,7 @@ object PlotGenerator {
   private val ctsExecution = PlotGenerationConf.Constants.execution
   private val ctsStorage = PlotGenerationConf.Constants.storage
   private val ctsLogs = PlotGenerationConf.Constants.log
+  private val ctsUtils = PlotGenerationConf.Constants.utils
   private val ctsGlobalLogs = PlotGenerator.ctsLogs.globalConf
   private val encloseHalfLength = 35
 
@@ -174,6 +175,8 @@ object PlotGenerator {
     private case class Top10TemporalInfo(value: String, title: String)
     private case class Top10FormatInfo(meteoParamInfo: MeteoParamInfo, order: String, temporal: Top10TemporalInfo)
     private case class Top5IncFormatInfo(meteoParamInfo: MeteoParamInfo, order: String)
+    private case class StationInfo(stationName: String, stationId: String, state: String, stateNoSc: String, latitude: String, longitude: String, altitude: Int)
+    private case class Evol2024FormatInfo(meteoParamInfo: MeteoParamInfo, stationInfo: StationInfo)
 
     private val ctsExecution = PlotGenerator.ctsExecution.singleParamStudiesConf
     private val ctsStorage = PlotGenerator.ctsStorage.singleParamStudiesConf
@@ -250,6 +253,55 @@ object PlotGenerator {
       )
     }
 
+    private def LinearDTOEvol2024Formatter(dto: LinearDTO, formatInfo: Evol2024FormatInfo): LinearDTO = {
+      dto.copy(
+        src = dto.src.copy(
+          path = dto.src.path.format(
+            formatInfo.meteoParamInfo.meteoParamAbbrev,
+            formatInfo.stationInfo.stateNoSc
+          ),
+          axis = dto.src.axis.copy(
+            y = dto.src.axis.y.copy(
+              name = dto.src.axis.y.name.format(
+                formatInfo.meteoParamInfo.meteoParamAbbrev,
+                formatInfo.meteoParamInfo.colAggMethod
+              )
+            )
+          )
+        ),
+        dest = dto.dest.copy(
+          path = dto.dest.path.format(
+            formatInfo.meteoParamInfo.meteoParamAbbrev,
+            formatInfo.stationInfo.stateNoSc
+          )
+        ),
+        style = dto.style.copy(
+          lettering = dto.style.lettering.copy(
+            title = dto.style.lettering.title.format(
+              formatInfo.stationInfo.stationName,
+              formatInfo.stationInfo.stationId,
+              formatInfo.stationInfo.state,
+              formatInfo.meteoParamInfo.meteoParam,
+            ),
+            subtitle = dto.style.lettering.subtitle.format(
+              formatInfo.stationInfo.latitude,
+              formatInfo.stationInfo.longitude,
+              formatInfo.stationInfo.altitude
+            ),
+            yLabel = dto.style.lettering.yLabel.format(
+              formatInfo.meteoParamInfo.meteoParam.capitalize,
+              formatInfo.meteoParamInfo.units
+            )
+          ),
+          figure = dto.style.figure.copy(
+            name = dto.style.figure.name.format(
+              formatInfo.meteoParamInfo.meteoParam.capitalize,
+            )
+          )
+        )
+      )
+    }
+
     def generate(): Unit = {
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startPlotGeneration.format(
         ctsLogs.studyName
@@ -287,7 +339,7 @@ object PlotGenerator {
                     studyParamValue.studyParamName,
                     studyParamValue.studyParamAbbrev,
                     studyParamValue.studyParamUnit,
-                    studyParamValue.colAggMethod
+                    ctsUtils.groupMethods.avg
                   ),
                   top10Order,
                   Top10TemporalInfo(
@@ -321,12 +373,64 @@ object PlotGenerator {
                   studyParamValue.studyParamName,
                   studyParamValue.studyParamAbbrev,
                   studyParamValue.studyParamUnit,
-                  studyParamValue.colAggMethod
+                  ctsUtils.groupMethods.avg
                 ),
                 top5IncOrder
               )
             )
           )
+        })
+
+        // -- EVOL --
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolStudy.format(
+          studyParamValue.studyParamName.capitalize
+        ), encloseHalfLength = encloseHalfLength + 10)
+
+        ctsExecution.stateValues.foreach(stateValue => {
+
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolState.format(
+            stateValue.stateName.capitalize
+          ), encloseHalfLength = encloseHalfLength + 15)
+
+          val stationJSON = readJSON(ctsStorage.evol.dataSrcStation.format(
+            studyParamValue.studyParamAbbrev,
+            stateValue.stateNameNoSc
+          ), findHeaviest = true) match {
+            case Left(exception: Exception) =>
+              ConsoleLogUtils.Message.printlnConsoleMessage(NotificationType.Warning, exception.toString)
+              return
+            case Right(json: Value) => json
+          }
+
+          // -- EVOL 2024 --
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evol2024.format(
+            studyParamValue.studyParamName.capitalize
+          ), encloseHalfLength = encloseHalfLength + 20)
+
+          generatePlot(
+            buildUrl(ctsExecution.evol2024.uri),
+            LinearDTOEvol2024Formatter(
+              ctsExecution.evol2024.body,
+              Evol2024FormatInfo(
+                MeteoParamInfo(
+                  studyParamValue.studyParamName,
+                  studyParamValue.studyParamAbbrev,
+                  studyParamValue.studyParamUnit,
+                  ctsUtils.groupMethods.avg
+                ),
+                StationInfo(
+                  stationJSON(ctsSchemaSpark.stationsDf.stationName).str,
+                  stationJSON(ctsSchemaSpark.stationsDf.stationId).str,
+                  stationJSON(ctsSchemaSpark.stationsDf.state).str,
+                  stateValue.stateNameNoSc,
+                  stationJSON(ctsSchemaSpark.stationsDf.latDms).str,
+                  stationJSON(ctsSchemaSpark.stationsDf.longDms).str,
+                  stationJSON(ctsSchemaSpark.stationsDf.altitude).num.toInt,
+                )
+              )
+            )
+          )
+
         })
       })
 
