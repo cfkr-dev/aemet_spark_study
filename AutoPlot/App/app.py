@@ -1,3 +1,5 @@
+import logging
+
 from flask import Flask
 from flask_restx import Api
 
@@ -24,6 +26,10 @@ api.add_namespace(table_linear_ns, path='/table')
 api.add_namespace(climograph_ns, path='/climograph')
 api.add_namespace(heat_map_ns, path='/heat-map')
 
+gunicorn_error_logger = logging.getLogger('gunicorn.error')
+app.logger.handlers = gunicorn_error_logger.handlers
+app.logger.setLevel(gunicorn_error_logger.level)
+
 # Ejecutar la aplicación
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(debug=True)

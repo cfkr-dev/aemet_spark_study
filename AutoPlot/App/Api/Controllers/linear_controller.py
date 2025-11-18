@@ -1,4 +1,5 @@
 from flask_restx import Resource, abort, Namespace
+from flask import current_app
 
 from App.Api.DTOS.linear_dto import LinearDTO
 from App.Api.Models.linear_model import LinearModel
@@ -16,7 +17,9 @@ class LinearController(Resource):
         validation = model.validate()
 
         if not validation.is_valid():
-            abort(400, message=validation.build_error_message())
+            error_message = validation.build_error_message()
+            current_app.logger.warning(error_message)
+            abort(400, message=error_message)
 
         linear_plotter = LinearPlotter(model)
 

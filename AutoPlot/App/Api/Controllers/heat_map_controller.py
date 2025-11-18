@@ -1,4 +1,5 @@
 from flask_restx import Resource, abort, Namespace
+from flask import current_app
 
 from App.Api.DTOS.heat_map_dto import HeatMapDTO
 from App.Api.Models.heat_map_model import HeatMapModel
@@ -16,7 +17,9 @@ class HeatMapController(Resource):
         validation = model.validate()
 
         if not validation.is_valid():
-            abort(400, message=validation.build_error_message())
+            error_message = validation.build_error_message()
+            current_app.logger.warning(error_message)
+            abort(400, message=error_message)
 
         heat_map_plotter = HeatMapPlotter(model)
 
