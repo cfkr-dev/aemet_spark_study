@@ -73,6 +73,7 @@ class LinearRegressionPlotter(Plotter):
                 side='right',
                 showgrid=False,
                 zeroline=False,
+                visible=False
             ),
             template='plotly_white',
             hovermode='x unified',
