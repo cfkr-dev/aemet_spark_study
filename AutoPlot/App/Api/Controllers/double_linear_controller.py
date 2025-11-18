@@ -1,4 +1,5 @@
 from flask_restx import Resource, abort, Namespace
+from flask import current_app
 
 from App.Api.DTOS.double_linear_dto import DoubleLinearDTO
 from App.Api.Models.double_linear_model import DoubleLinearModel
@@ -16,7 +17,9 @@ class DoubleLinearController(Resource):
         validation = model.validate()
 
         if not validation.is_valid():
-            abort(400, message=validation.build_error_message())
+            error_message = validation.build_error_message()
+            current_app.logger.warning(error_message)
+            abort(400, message=error_message)
 
         double_linear_plotter = DoubleLinearPlotter(model)
 

@@ -1,4 +1,5 @@
 from flask_restx import Resource, abort, Namespace
+from flask import current_app
 
 from App.Api.DTOS.pie_dto import PieDTO
 from App.Api.Models.pie_model import PieModel
@@ -16,7 +17,9 @@ class PieController(Resource):
         validation = model.validate()
 
         if not validation.is_valid():
-            abort(400, message=validation.build_error_message())
+            error_message = validation.build_error_message()
+            current_app.logger.warning(error_message)
+            abort(400, message=error_message)
 
         pie_plotter = PiePlotter(model)
 

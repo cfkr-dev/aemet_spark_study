@@ -35,5 +35,5 @@ ENV PYTHONPATH="/AutoPlot/"
 WORKDIR /AutoPlot/App/
 
 # RUN GUNICORN SERVER
-CMD ["gunicorn", "-w", "4", "-t", "0", "-b", "0.0.0.0:8000", "--access-logfile", "-", "app:app"]
+CMD ["gunicorn", "-w", "4", "-t", "0", "-b", "0.0.0.0:8000", "--access-logfile", "-", "--error-logfile", "-", "app:app"]
 
