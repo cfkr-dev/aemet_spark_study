@@ -63,7 +63,7 @@ class HeatMapPlotter(Plotter):
 
         # Constants
         knn_max_dist = 0.05
-        interpolation_grid_size = 1000
+        interpolation_grid_size = 1000 if self.model.src.location == SpainGeographicLocations.CONTINENTAL else 2000
 
         if self.model.src.location == SpainGeographicLocations.CONTINENTAL:
             long_lb, long_ub = LONG_LOWER_BOUND_SPAIN_CONTINENTAL, LONG_UPPER_BOUND_SPAIN_CONTINENTAL
