@@ -10,7 +10,8 @@ case class SingleParamStudiesTop10Dirs(
 )
 
 case class EvolFromStartForEachStateDirs(
-  dataStation: String,
+  dataStationGlobal: String,
+  dataStationLatest: String,
   dataEvol: String,
   dataEvolYearlyGroup: String,
   dataEvolRegression: String

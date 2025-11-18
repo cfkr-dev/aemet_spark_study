@@ -315,12 +315,18 @@ object InitApp extends App {
 //  SparkQueries.getLongestOperativeStationsPerProvince("tmed", 3).write.option("header", "true").csv("./result/tmed/")
 //  SparkQueries.getLongestOperativeStationsPerProvince("prec", 3).write.option("header", "true").csv("./result/prec/")
 //  SparkQueries.getLongestOperativeStationsPerProvince("velmedia", 3).write.option("header", "true").csv("./result/velmedia/")
-//  SparkQueries.getLongestOperativeStationsPerProvince("presmax", 3).write.option("header", "true").csv("./result/presmax/")
+//  SparkQueries.getLongestOperativeStationsPerProvince(List("presmax"), 3).write.option("header", "true").csv("./result/presmax/")
 //  SparkQueries.getLongestOperativeStationsPerProvince("sol", 3).write.option("header", "true").csv("./result/sol/")
 //  SparkQueries.getLongestOperativeStationsPerProvince("hrmedia", 3).write.option("header", "true").csv("./result/hrmedia/")
   //SparkQueries.getLongestOperativeStationsPerProvince(List("prec", "presmax"), 3).write.option("header", "true").csv("./result/prec_presmax/")
 
-
+//  SparkQueries.getLongestOperativeStations2024(List("tmed"), 3).write.option("header", "true").csv("./result/2024/tmed/")
+//  SparkQueries.getLongestOperativeStations2024(List("prec"), 3).write.option("header", "true").csv("./result/2024/prec/")
+//  SparkQueries.getLongestOperativeStations2024(List("velmedia"), 3).write.option("header", "true").csv("./result/2024/velmedia/")
+//  SparkQueries.getLongestOperativeStations2024(List("presmax"), 3).write.option("header", "true").csv("./result/2024/presmax/")
+//  SparkQueries.getLongestOperativeStations2024(List("sol"), 3).write.option("header", "true").csv("./result/2024/sol/")
+//  SparkQueries.getLongestOperativeStations2024(List("hrmedia"), 3).write.option("header", "true").csv("./result/2024/hrmedia/")
+//  SparkQueries.getLongestOperativeStations2024(List("prec", "presmax"), 3).write.option("header", "true").csv("./result/2024/prec_presmax/")
 
 
 
@@ -383,7 +389,7 @@ object InitApp extends App {
 
   //SparkQueries.trainLinearModelForProvincesAndRank()
   //SparkQueries.trainAndRankTemperatureModels()
-  //val indicativos = stationRegistries.map(e => e.stationId) // cambia esto por los indicativos que quieras
+  //val indicativos = stationRegistries.map(e => e.stationIdGlobal) // cambia esto por los indicativos que quieras
   //SparkQueries.getTopNClimateParamIncrementInAYearLapse(indicativos, "prec", 1973, 2024, highest = false).show()
 
 //  SparkQueries.getAllStationsByStatesAvgClimateParamInALapse("tmed", "2024", None, Some(List("SANTA CRUZ DE TENERIFE", "LAS PALMAS"))) match {

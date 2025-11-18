@@ -78,7 +78,7 @@ object HTTPUtils {
       ConsoleLogUtils.Response.printlnResponse(response)
 
       if (response.code.isClientError || response.code.isServerError)
-        Left(new Exception(response.code.toString() + response.statusText))
+        Left(new Exception(response.code.toString() + response.statusText + "\n" + response.body))
       else
         Right(response)
     } catch {
