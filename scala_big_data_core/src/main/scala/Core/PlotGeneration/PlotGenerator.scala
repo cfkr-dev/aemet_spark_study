@@ -405,7 +405,7 @@ object PlotGenerator {
                     studyParamValue.studyParamName,
                     studyParamValue.studyParamAbbrev,
                     studyParamValue.studyParamUnit,
-                    ctsUtils.groupMethods.avg
+                    studyParamValue.colAggMethod
                   ),
                   top10Order,
                   Top10TemporalInfo(
@@ -482,7 +482,7 @@ object PlotGenerator {
                   studyParamValue.studyParamName,
                   studyParamValue.studyParamAbbrev,
                   studyParamValue.studyParamUnit,
-                  ctsUtils.groupMethods.avg
+                  studyParamValue.colAggMethod
                 ),
                 StationInfo(
                   station2024JSON(ctsSchemaSpark.stationsDf.stationName).str,

@@ -5,6 +5,8 @@ import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import scala.io.Source
 
 object FileUtils {
+
+  // TODO ELIMINAR Y USAR LECTURA DE JSONUTILS
   def getContentFromPath(path: String): Either[Exception, String] = {
     val file = new File(path)
 
@@ -19,6 +21,7 @@ object FileUtils {
     Right(content)
   }
 
+  // TODO LLEVAR A JSONUTILS
   def saveContentToPath[T](
     path: String,
     fileName: String,

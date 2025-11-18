@@ -560,6 +560,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  aggMethodName = study.colAggMethod,
                   paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsExecution.top10Highest2024.startDate,
                   endDate = None) match {
@@ -583,6 +584,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  aggMethodName = study.colAggMethod,
                   paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsExecution.top10HighestDecade.startDate,
                   endDate = Some(ctsExecution.top10HighestDecade.endDate)) match {
@@ -606,6 +608,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  aggMethodName = study.colAggMethod,
                   paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsExecution.top10HighestGlobal.startDate,
                   endDate = Some(ctsExecution.top10HighestGlobal.endDate)) match {
@@ -629,6 +632,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  aggMethodName = study.colAggMethod,
                   paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsExecution.top10Lowest2024.startDate,
                   endDate = None,
@@ -654,6 +658,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  aggMethodName = study.colAggMethod,
                   paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsExecution.top10LowestDecade.startDate,
                   endDate = Some(ctsExecution.top10LowestDecade.endDate),
@@ -679,6 +684,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getTopNClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  aggMethodName = study.colAggMethod,
                   paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsExecution.top10LowestGlobal.startDate,
                   endDate = Some(ctsExecution.top10LowestGlobal.endDate),
@@ -738,6 +744,7 @@ object SparkManager {
                     List(
                       (study.dataframeColName, study.studyParamAbbrev)
                     ),
+                    List(study.colAggMethod),
                     registry.startDateLatest,
                     Some(registry.endDateLatest)
                   ) match {
@@ -873,6 +880,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getAllStationsByStatesAvgClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  aggMethodName = study.colAggMethod,
                   paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsExecution.avg2024AllStationSpain.startDate,
                   states = Some(ctsExecution.avg2024AllStationSpain.continentalStates)
@@ -897,6 +905,7 @@ object SparkManager {
               FetchAndSaveInfo(
                 getAllStationsByStatesAvgClimateParamInALapse(
                   climateParam = study.dataframeColName,
+                  aggMethodName = study.colAggMethod,
                   paramNameToShow = study.studyParamAbbrev,
                   startDate = ctsExecution.avg2024AllStationSpain.startDate,
                   states = Some(ctsExecution.avg2024AllStationSpain.canaryIslandStates)
@@ -966,6 +975,7 @@ object SparkManager {
                 getClimateParamInALapseById(
                   registry.stationIdLatest,
                   ctsExecution.precAndPressEvolFromStartForEachState.climateParams,
+                  ctsExecution.precAndPressEvolFromStartForEachState.colAggMethods,
                   registry.startDateLatest,
                   Some(registry.endDateLatest)
                 ) match {
@@ -1310,6 +1320,7 @@ object SparkManager {
 
     private def getTopNClimateParamInALapse(
       climateParam: String,
+      aggMethodName: String,
       paramNameToShow: String,
       startDate: String,
       endDate: Option[String] = None,
@@ -1320,13 +1331,21 @@ object SparkManager {
         val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
         val stationDf: DataFrame = SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName)
 
+        val aggMethod: Column => Column = aggMethodName.toLowerCase match {
+          case ctsExecutionGlobalConf.groupMethods.avg => avg
+          case ctsExecutionGlobalConf.groupMethods.sum => sum
+          case ctsExecutionGlobalConf.groupMethods.min => min
+          case ctsExecutionGlobalConf.groupMethods.max => max
+          case other => throw new IllegalArgumentException(other)
+        }
+
         Right(
           meteoDf.filter(endDate match {
             case Some(endDate) => col(ctsSchemaAemetAllMeteoInfo.fecha).between(lit(startDate), lit(endDate))
             case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startDate.toInt
           }).filter(col(climateParam).isNotNull)
           .groupBy(col(ctsSchemaAemetAllMeteoInfo.indicativo))
-          .agg(avg(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colAvg.format(climateParam)))
+          .agg(aggMethod(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colGrouped.format(climateParam, aggMethodName)))
           .join(stationDf, Seq(ctsSchemaAemetAllStation.indicativo), "inner")
           .select(
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
@@ -1338,9 +1357,9 @@ object SparkManager {
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
               ctsSchemaAemetAllStation.provincia
             )).alias(ctsSchemaSparkAllStation.state),
-            col(ctsExecutionDataframeConf.specialColumns.colAvg.format(
-              climateParam
-            )).alias(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(paramNameToShow)),
+            round(col(ctsExecutionDataframeConf.specialColumns.colGrouped.format(
+              climateParam, aggMethodName
+            )), 1).alias(ctsExecutionDataframeConf.specialColumns.colGrouped.format(paramNameToShow, aggMethodName)),
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
               ctsSchemaAemetAllStation.latitud
             )).alias(ctsSchemaSparkAllStation.latDms),
@@ -1352,9 +1371,9 @@ object SparkManager {
             )).alias(ctsSchemaSparkAllStation.altitude),
           ).orderBy(
             if (highest)
-              col(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(paramNameToShow)).desc
+              col(ctsExecutionDataframeConf.specialColumns.colGrouped.format(paramNameToShow, aggMethodName)).desc
             else
-              col(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(paramNameToShow)).asc
+              col(ctsExecutionDataframeConf.specialColumns.colGrouped.format(paramNameToShow, aggMethodName)).asc
           )
           .limit(topN)
           .withColumn(ctsExecutionDataframeConf.specialColumns.top, monotonically_increasing_id() + 1)
@@ -1445,10 +1464,13 @@ object SparkManager {
     private def getClimateParamInALapseById(
       stationId: String,
       climateParams: Seq[(String, String)],
+      aggMethodNames: Seq[String],
       startDate: String,
       endDate: Option[String] = None
     ): Either[Exception, DataFrame] = {
       try {
+        require(climateParams.length == aggMethodNames.length)
+
         val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
         
         Right(
@@ -1463,8 +1485,8 @@ object SparkManager {
           .filter(col(ctsSchemaAemetAllMeteoInfo.indicativo) === stationId)
           .select(
             Seq(col(ctsSchemaAemetAllMeteoInfo.fecha).alias(ctsExecutionDataframeConf.specialColumns.date)) ++
-            climateParams.map(param => round(col(param._1), 1).alias(
-              ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(param._2)
+            climateParams.zip(aggMethodNames).map(param => round(col(param._1._1), 1).alias(
+              ctsExecutionDataframeConf.specialColumns.colDailyGrouped.format(param._1._2, param._2)
             )): _*
           )
           .orderBy(ctsExecutionDataframeConf.specialColumns.date)
@@ -1525,6 +1547,7 @@ object SparkManager {
 
     private def getAllStationsByStatesAvgClimateParamInALapse(
       climateParam: String,
+      aggMethodName: String,
       paramNameToShow: String,
       startDate: String,
       endDate: Option[String] = None,
@@ -1533,6 +1556,14 @@ object SparkManager {
       try {
         val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
         val stationDf: DataFrame = SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName)
+
+        val aggMethod: Column => Column = aggMethodName.toLowerCase match {
+          case ctsExecutionGlobalConf.groupMethods.avg => avg
+          case ctsExecutionGlobalConf.groupMethods.sum => sum
+          case ctsExecutionGlobalConf.groupMethods.min => min
+          case ctsExecutionGlobalConf.groupMethods.max => max
+          case other => throw new IllegalArgumentException(other)
+        }
 
         Right(
           meteoDf.filter(endDate match {
@@ -1543,7 +1574,7 @@ object SparkManager {
             case None => lit(true)
           }).filter(col(climateParam).isNotNull)
           .groupBy(col(ctsSchemaAemetAllMeteoInfo.indicativo))
-          .agg(avg(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colAvg.format(climateParam)))
+          .agg(aggMethod(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colGrouped.format(climateParam, aggMethodName)))
           .join(stationDf, Seq(ctsSchemaAemetAllStation.indicativo), "inner")
           .select(
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
@@ -1556,8 +1587,8 @@ object SparkManager {
               ctsSchemaAemetAllStation.provincia
             )).alias(ctsSchemaSparkAllStation.state),
             round(
-              col(ctsExecutionDataframeConf.specialColumns.colAvg.format(climateParam)), 1
-            ).alias(ctsExecutionDataframeConf.specialColumns.colDailyAvg.format(paramNameToShow)),
+              col(ctsExecutionDataframeConf.specialColumns.colGrouped.format(climateParam, aggMethodName)), 1
+            ).alias(ctsExecutionDataframeConf.specialColumns.colGrouped.format(paramNameToShow, aggMethodName)),
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
               ctsSchemaAemetAllStation.latitud
             )).alias(ctsSchemaSparkAllStation.latDms),

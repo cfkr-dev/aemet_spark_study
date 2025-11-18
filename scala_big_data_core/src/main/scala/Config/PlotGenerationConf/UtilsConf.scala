@@ -17,6 +17,7 @@ case class ColumnNames(
   precMonthlySum: String,
   colAvg: String,
   colSum: String,
+  colGrouped: String,
   colDailyGrouped: String,
   colYearlyGrouped: String,
   globalColYearlyAvg: String,
