@@ -11,13 +11,21 @@ case class Top5Inc(
 )
 
 case class Evol2024(
+  dataSrcStation: String,
   dataSrc: String,
   dataDest: String
 )
 
-case class Evol(
+case class EvolYearlyGroup(
   dataSrcStation: String,
-  evol2024: Evol2024
+  dataSrc: String,
+  regressionSrc: String,
+  dataDest: String
+)
+
+case class Evol(
+  evol2024: Evol2024,
+  evolYearlyGroup: EvolYearlyGroup
 )
 
 case class SingleParamStudiesConf(

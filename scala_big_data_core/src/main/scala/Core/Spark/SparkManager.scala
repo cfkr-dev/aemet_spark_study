@@ -51,7 +51,9 @@ object SparkManager {
 
     def saveDataframeAsJSON(dataframe: DataFrame, path: String): Either[Exception, String] = {
       try {
-        dataframe.write
+        dataframe
+          .coalesce(1)
+          .write
           .mode(SaveMode.Overwrite)
           .json(path)
 
@@ -701,23 +703,38 @@ object SparkManager {
             study.reprStationRegs.flatMap(registry => {
               List(
                 FetchAndSaveInfo(
-                  getStationInfoById(registry.stationId) match {
+                  getStationInfoById(registry.stationIdGlobal) match {
                     case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                       return
                     case Right(dataFrame: DataFrame) => dataFrame
                   },
-                  ctsStorage.evolFromStartForEachState.dataStation.format(
+                  ctsStorage.evolFromStartForEachState.dataStationGlobal.format(
                     study.studyParamAbbrev,
                     registry.stateNameNoSc.replace(" ", "_")
                   ),
-                  ctsLogs.evolFromStartForEachStateStartStation.format(
+                  ctsLogs.evolFromStartForEachStateStartStationGlobal.format(
+                    registry.stateName.capitalize
+                  ),
+                  saveAsJSON = true
+                ),
+                FetchAndSaveInfo(
+                  getStationInfoById(registry.stationIdLatest) match {
+                    case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                      return
+                    case Right(dataFrame: DataFrame) => dataFrame
+                  },
+                  ctsStorage.evolFromStartForEachState.dataStationLatest.format(
+                    study.studyParamAbbrev,
+                    registry.stateNameNoSc.replace(" ", "_")
+                  ),
+                  ctsLogs.evolFromStartForEachStateStartStationLatest.format(
                     registry.stateName.capitalize
                   ),
                   saveAsJSON = true
                 ),
                 FetchAndSaveInfo(
                   getClimateParamInALapseById(
-                    registry.stationId,
+                    registry.stationIdLatest,
                     List(
                       (study.dataframeColName, study.studyParamAbbrev)
                     ),
@@ -739,7 +756,7 @@ object SparkManager {
                 ),
                 FetchAndSaveInfo(
                   getClimateYearlyGroupById(
-                    registry.stationId,
+                    registry.stationIdGlobal,
                     List(
                       (study.dataframeColName, study.studyParamAbbrev)
                     ),
@@ -763,7 +780,7 @@ object SparkManager {
                 ),
                 FetchAndSaveInfo(
                   getStationClimateParamRegressionModelInALapse(
-                    registry.stationId,
+                    registry.stationIdGlobal,
                     study.dataframeColName,
                     study.colAggMethod,
                     registry.startDateGlobal,
@@ -785,7 +802,7 @@ object SparkManager {
               )
             })
           ).zipWithIndex.filter {
-            case (_, idx) => idx % 4 == 3
+            case (_, idx) => idx >= 4 && (idx - 4) % 5 == 0
           }.map(_._1).reduce(_ union _).persist(StorageLevel.MEMORY_AND_DISK_SER)
 
           regressionModelDf.count()
@@ -798,7 +815,7 @@ object SparkManager {
             List(
               FetchAndSaveInfo(
                 getTopNClimateParamIncrementInAYearLapse(
-                  stationIds = study.reprStationRegs.map(registry => registry.stationId),
+                  stationIds = study.reprStationRegs.map(registry => registry.stationIdGlobal),
                   regressionModels = regressionModelDf,
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
@@ -825,7 +842,7 @@ object SparkManager {
             List(
               FetchAndSaveInfo(
                 getTopNClimateParamIncrementInAYearLapse(
-                  stationIds = study.reprStationRegs.map(registry => registry.stationId),
+                  stationIds = study.reprStationRegs.map(registry => registry.stationIdGlobal),
                   regressionModels = regressionModelDf,
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
@@ -918,22 +935,36 @@ object SparkManager {
           ctsExecution.stationRegistries.flatMap(registry => {
             List(
               FetchAndSaveInfo(
-                getStationInfoById(registry.stationId) match {
+                getStationInfoById(registry.stationIdGlobal) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
-                ctsStorage.precAndPressEvol.dataStation.format(
+                ctsStorage.precAndPressEvol.dataStationGlobal.format(
                   registry.stateNameNoSc.replace(" ", "_")
                 ),
-                ctsLogs.precAndPressureEvolFromStartForEachStateStartStation.format(
+                ctsLogs.precAndPressureEvolFromStartForEachStateStartStationGlobal.format(
+                  registry.stateName.capitalize
+                ),
+                saveAsJSON = true
+              ),
+              FetchAndSaveInfo(
+                getStationInfoById(registry.stationIdLatest) match {
+                  case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                    return
+                  case Right(dataFrame: DataFrame) => dataFrame
+                },
+                ctsStorage.precAndPressEvol.dataStationLatest.format(
+                  registry.stateNameNoSc.replace(" ", "_")
+                ),
+                ctsLogs.precAndPressureEvolFromStartForEachStateStartStationLatest.format(
                   registry.stateName.capitalize
                 ),
                 saveAsJSON = true
               ),
               FetchAndSaveInfo(
                 getClimateParamInALapseById(
-                  registry.stationId,
+                  registry.stationIdLatest,
                   ctsExecution.precAndPressEvolFromStartForEachState.climateParams,
                   registry.startDateLatest,
                   Some(registry.endDateLatest)
@@ -951,7 +982,7 @@ object SparkManager {
               ),
               FetchAndSaveInfo(
                 getClimateYearlyGroupById(
-                  registry.stationId,
+                  registry.stationIdGlobal,
                   ctsExecution.precAndPressEvolFromStartForEachState.climateParams,
                   ctsExecution.precAndPressEvolFromStartForEachState.colAggMethods,
                   registry.startDateGlobal,
@@ -1702,7 +1733,7 @@ object SparkManager {
       }
     }
 
-    private def getLongestOperativeStationsPerProvince(params: Seq[String], maxNullMonths: Int = 3): DataFrame = {
+     def getLongestOperativeStationsPerProvince(params: Seq[String], maxNullMonths: Int = 3): DataFrame = {
       val df: DataFrame = SparkCore.dataframes.allMeteoInfo
 
       val dfParsed = df
@@ -1758,5 +1789,73 @@ object SparkManager {
 
       longestStations.orderBy("provincia", "start_date")
     }
+
+    def getLongestOperativeStations2024(params: Seq[String], maxNullMonths: Int = 3): DataFrame = {
+      val df: DataFrame = SparkCore.dataframes.allMeteoInfo
+
+      // --- Filtrar solo registros de 2024 ---
+      val dfParsed = df
+        .withColumn("fecha", to_date(col("fecha"), "yyyy-MM-dd"))
+        .filter(year(col("fecha")) === 2024)
+        .withColumn("year_month", date_format(col("fecha"), "yyyy-MM"))
+
+      // --- Condición de parámetros nulos ---
+      val nullCondition = params.map(p => col(p).isNull).reduce(_ || _)
+
+      // --- Cálculo mensual ---
+      val monthlyStats = dfParsed
+        .groupBy("provincia", "indicativo", "nombre", "year_month")
+        .agg(
+          count("*").alias("n_registros"),
+          count(when(nullCondition, 1)).alias("null_param")
+        )
+
+      // Mes inactivo = sin registros o registros todos nulos
+      val inactiveMonths = monthlyStats
+        .withColumn("inactive",
+          when(col("n_registros") === 0 || col("null_param") === col("n_registros"), 1).otherwise(0)
+        )
+
+      val window = Window.partitionBy("provincia", "indicativo", "nombre").orderBy("year_month")
+
+      val withCutFlag = inactiveMonths
+        .withColumn("inactive_seq", sum("inactive").over(window.rowsBetween(-maxNullMonths + 1, 0)))
+        .withColumn("cut_flag", when(col("inactive_seq") === maxNullMonths, 1).otherwise(0))
+
+      val withSegment = withCutFlag
+        .withColumn("segment_id", sum("cut_flag").over(window.rowsBetween(Window.unboundedPreceding, 0)))
+
+      // Volver a unir fechas completas del año 2024
+      val fullDates = dfParsed
+        .select("provincia", "indicativo", "nombre", "fecha")
+        .withColumn("year_month", date_format(col("fecha"), "yyyy-MM"))
+
+      val joinedWithDates = withSegment
+        .join(fullDates, Seq("provincia", "indicativo", "nombre", "year_month"))
+
+      // Segmentos activos
+      val activePeriods = joinedWithDates
+        .filter(col("inactive") === 0)
+        .groupBy("provincia", "indicativo", "nombre", "segment_id")
+        .agg(
+          count("*").alias("active_months"),
+          min("fecha").alias("start_date"),
+          max("fecha").alias("end_date")
+        )
+
+      // Duración máxima por provincia
+      val maxDurations = activePeriods
+        .groupBy("provincia")
+        .agg(max("active_months").alias("max_months"))
+
+      // Estación más longeva por provincia
+      val longestStations = activePeriods
+        .join(maxDurations, Seq("provincia"))
+        .filter(col("active_months") === col("max_months"))
+        .drop("max_months")
+
+      longestStations.orderBy("provincia", "start_date")
+    }
+
   }
 }

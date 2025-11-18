@@ -13,7 +13,8 @@ case class InterestingStudiesTop10Dirs (
 )
 
 case class PrecAndPressEvolDirs (
-  dataStation: String,
+  dataStationGlobal: String,
+  dataStationLatest: String,
   dataEvol: String,
   dataEvolYearlyGroup: String
 )

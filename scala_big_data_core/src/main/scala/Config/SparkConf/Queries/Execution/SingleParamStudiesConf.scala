@@ -21,7 +21,8 @@ case class StudyParamAbbrev(
 case class SingleParamStudyRepresentativeStationRegistry(
   stateName: String,
   stateNameNoSc: String,
-  stationId: String,
+  stationIdGlobal: String,
+  stationIdLatest: String,
   startDateLatest: String,
   endDateLatest: String,
   startDateGlobal: String,

@@ -10,5 +10,6 @@ case class SingleParamStudiesConf(
   top5IncOrder: String,
   evolStudy: String,
   evolState: String,
-  evol2024: String
+  evol2024: String,
+  evolYearlyGroup: String
 )

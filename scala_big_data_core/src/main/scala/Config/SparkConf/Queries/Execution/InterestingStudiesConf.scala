@@ -3,7 +3,8 @@ package Config.SparkConf.Queries.Execution
 case class InterestingStudiesRepresentativeStationRegistry(
   stateName: String,
   stateNameNoSc: String,
-  stationId: String,
+  stationIdGlobal: String,
+  stationIdLatest: String,
   startDateLatest: String,
   endDateLatest: String,
   startDateGlobal: String,

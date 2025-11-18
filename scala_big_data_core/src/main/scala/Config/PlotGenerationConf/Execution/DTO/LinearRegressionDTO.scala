@@ -50,8 +50,8 @@ case class LinearRegressionDTOLettering(
   @key("title") title: String,
   @key("subtitle") subtitle: String,
   @key("x_label") xLabel: String,
-  @key("y1_label") y1Label: String,
-  @key("y2_label") y2Label: String
+  @key("y_1_label") y1Label: String,
+  @key("y_2_label") y2Label: String
 )
 object LinearRegressionDTOLettering { implicit val rw: ReadWriter[LinearRegressionDTOLettering] = macroRW }
 
