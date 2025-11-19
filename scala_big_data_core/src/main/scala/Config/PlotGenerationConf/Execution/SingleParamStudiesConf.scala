@@ -1,6 +1,6 @@
 package Config.PlotGenerationConf.Execution
 
-import Config.PlotGenerationConf.Execution.DTO.{BarDTO, LinearDTO, LinearRegressionDTO}
+import Config.PlotGenerationConf.Execution.DTO.{BarDTO, HeatMapDTO, LinearDTO, LinearRegressionDTO}
 
 case class StudyParamsValues(
   studyParamName: String,
@@ -48,6 +48,11 @@ case class EvolYearlyGroup(
   body: LinearRegressionDTO
 )
 
+case class HeatMap2024(
+  uri: String,
+  body: HeatMapDTO
+)
+
 case class SingleParamStudiesConf(
   studyParamsValues: List[StudyParamsValues],
   stateValues: List[StateValues],
@@ -56,5 +61,7 @@ case class SingleParamStudiesConf(
   top5IncValues: Top5IncValues,
   top5Inc: Top5Inc,
   evol2024: Evol2024,
-  evolYearlyGroup: EvolYearlyGroup
+  evolYearlyGroup: EvolYearlyGroup,
+  heatMap2024Values: List[String],
+  heatMap2024: HeatMap2024
 )

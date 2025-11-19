@@ -19,6 +19,9 @@ libraryDependencies += "org.apache.spark" %% "spark-sql" % "3.5.3"
 // https://mvnrepository.com/artifact/com.softwaremill.sttp.client4/core
 libraryDependencies += "com.softwaremill.sttp.client4" %% "core" % "4.0.0-M18"
 
+// https://mvnrepository.com/artifact/com.softwaremill.sttp.client4/okhttp-backend
+libraryDependencies += "com.softwaremill.sttp.client4" %% "okhttp-backend" % "4.0.0-M18"
+
 // https://mvnrepository.com/artifact/com.lihaoyi/upickle
 libraryDependencies += "com.lihaoyi" %% "upickle" % "4.0.2"
 

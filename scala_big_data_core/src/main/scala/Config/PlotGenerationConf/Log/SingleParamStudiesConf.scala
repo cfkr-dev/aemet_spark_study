@@ -11,5 +11,7 @@ case class SingleParamStudiesConf(
   evolStudy: String,
   evolState: String,
   evol2024: String,
-  evolYearlyGroup: String
+  evolYearlyGroup: String,
+  heatMap2024: String,
+  heatMap2024Location: String
 )
