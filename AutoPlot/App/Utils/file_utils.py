@@ -13,6 +13,6 @@ def get_response_dest_path(dest_path: pathlib.Path):
     try:
         parts = dest_path.parts
         index = parts.index(K_OUTPUT_DIR_NAME)
-        return str(Path(*parts[index:]))
+        return Path(*parts[index:]).as_posix()
     except ValueError:
         return None

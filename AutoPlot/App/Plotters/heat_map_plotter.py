@@ -116,7 +116,13 @@ class HeatMapPlotter(Plotter):
                 'nugget': 0.1
             }
         )
-        interpolated_grid = kriging.execute('grid', grid_x, grid_y)[0]
+
+        interpolated_grid = np.zeros((grid_y.size, grid_x.size), dtype=np.float32)
+        block_size = 200
+        for i in range(0, grid_y.size, block_size):
+            y_block = grid_y[i:i + block_size]
+            grid_block = kriging.execute('grid', grid_x, y_block)[0]
+            interpolated_grid[i:i + block_size, :] = grid_block
 
         # Apply frontier mask
         transform = rasterio.transform.from_origin(grid_x.min(), grid_y.max(), (grid_x[1] - grid_x[0]),
