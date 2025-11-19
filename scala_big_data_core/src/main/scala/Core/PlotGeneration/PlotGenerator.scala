@@ -2,7 +2,7 @@ package Core.PlotGeneration
 
 import Config.GlobalConf
 import Config.PlotGenerationConf
-import Config.PlotGenerationConf.Execution.DTO.{BarDTO, ClimographDTO, LinearDTO, LinearRegressionDTO}
+import Config.PlotGenerationConf.Execution.DTO.{BarDTO, ClimographDTO, HeatMapDTO, LinearDTO, LinearRegressionDTO}
 import Utils.ConsoleLogUtils
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage}
 import Utils.HTTPUtils.{buildUrl, sendPostRequest}
@@ -177,6 +177,7 @@ object PlotGenerator {
     private case class Top5IncFormatInfo(meteoParamInfo: MeteoParamInfo, order: String)
     private case class StationInfo(stationName: String, stationId: String, state: String, stateNoSc: String, latitude: String, longitude: String, altitude: Int)
     private case class EvolFormatInfo(meteoParamInfo: MeteoParamInfo, stationInfo: StationInfo)
+    private case class HeatMap2024FormatInfo(meteoParamInfo: MeteoParamInfo, location: String)
 
     private val ctsExecution = PlotGenerator.ctsExecution.singleParamStudiesConf
     private val ctsStorage = PlotGenerator.ctsStorage.singleParamStudiesConf
@@ -368,6 +369,51 @@ object PlotGenerator {
       )
     }
 
+    private def HeatMapDTOHeatMap2024Formatter(dto: HeatMapDTO, formatInfo: HeatMap2024FormatInfo): HeatMapDTO = {
+      dto.copy(
+        src = dto.src.copy(
+          path = dto.src.path.format(
+            formatInfo.meteoParamInfo.meteoParamAbbrev,
+            formatInfo.location
+          ),
+          names = dto.src.names.copy(
+            value = dto.src.names.value.format(
+              formatInfo.meteoParamInfo.meteoParamAbbrev,
+              formatInfo.meteoParamInfo.colAggMethod
+            )
+          ),
+          location = dto.src.location.format(
+            formatInfo.location
+          )
+        ),
+        dest = dto.dest.copy(
+          path = dto.dest.path.format(
+            formatInfo.meteoParamInfo.meteoParamAbbrev,
+            formatInfo.location
+          )
+        ),
+        style = dto.style.copy(
+          lettering = dto.style.lettering.copy(
+            title = dto.style.lettering.title.format(
+              formatInfo.meteoParamInfo.meteoParam.capitalize
+            ),
+            subtitle = dto.style.lettering.subtitle.format(
+              formatInfo.location.replace("_", " ")
+            ),
+            legendLabel = dto.style.lettering.legendLabel.format(
+              formatInfo.meteoParamInfo.meteoParam.capitalize,
+              formatInfo.meteoParamInfo.units
+            )
+          ),
+          figure = dto.style.figure.copy(
+            name = dto.style.figure.name.format(
+              formatInfo.meteoParamInfo.meteoParam
+            )
+          )
+        )
+      )
+    }
+
     def generate(): Unit = {
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startPlotGeneration.format(
         ctsLogs.studyName
@@ -497,7 +543,7 @@ object PlotGenerator {
             )
           )
 
-          // -- EVOL YEARLY GROUP
+          // -- EVOL YEARLY GROUP --
           printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolYearlyGroup.format(
             studyParamValue.studyParamName.capitalize
           ), encloseHalfLength = encloseHalfLength + 20)
@@ -535,7 +581,34 @@ object PlotGenerator {
               )
             )
           )
+        })
 
+        // -- HEAT MAP 2024 --
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.heatMap2024.format(
+          studyParamValue.studyParamName.capitalize
+        ), encloseHalfLength = encloseHalfLength + 10)
+
+        ctsExecution.heatMap2024Values.foreach(location => {
+
+          printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.heatMap2024Location.format(
+            location.replace("_", " ").capitalize
+          ), encloseHalfLength = encloseHalfLength + 15)
+
+          generatePlot(
+            buildUrl(ctsExecution.heatMap2024.uri),
+            HeatMapDTOHeatMap2024Formatter(
+              ctsExecution.heatMap2024.body,
+              HeatMap2024FormatInfo(
+                MeteoParamInfo(
+                  studyParamValue.studyParamName,
+                  studyParamValue.studyParamAbbrev,
+                  studyParamValue.studyParamUnit,
+                  studyParamValue.colAggMethod
+                ),
+                location
+              )
+            )
+          )
         })
       })
 

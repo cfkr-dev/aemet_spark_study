@@ -1,9 +1,12 @@
 package Utils
 
 import sttp.client4.httpurlconnection.HttpURLConnectionBackend
+import sttp.client4.okhttp.OkHttpSyncBackend
 import sttp.client4.{Response, UriContext, quickRequest}
 import sttp.model.Uri
 import ujson.{Value, write}
+
+import java.util.concurrent.TimeUnit
 
 object HTTPUtils {
   def buildUrl(baseUrl: String, urlSegments: List[String], urlQueryParams: List[(String, String)]): Uri = {
@@ -53,7 +56,13 @@ object HTTPUtils {
   }
 
   def sendPostRequest(uri: Uri, body: Value): Either[Exception, Response[String]] = {
-    val backend = HttpURLConnectionBackend()
+    val backend = OkHttpSyncBackend.usingClient(
+      new okhttp3.OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.MINUTES)
+        .readTimeout(10, TimeUnit.MINUTES)
+        .writeTimeout(10, TimeUnit.MINUTES)
+        .build()
+    )
 
     ConsoleLogUtils.Method.printlnPost(uri)
 

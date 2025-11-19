@@ -28,10 +28,16 @@ case class Evol(
   evolYearlyGroup: EvolYearlyGroup
 )
 
+case class HeatMap2024(
+  dataSrc: String,
+  dataDest: String
+)
+
 case class SingleParamStudiesConf(
   baseSrcDir: String,
   baseDestDir: String,
   top10: Top10,
   top5Inc: Top5Inc,
-  evol: Evol
+  evol: Evol,
+  heatMap2024: HeatMap2024
 )
