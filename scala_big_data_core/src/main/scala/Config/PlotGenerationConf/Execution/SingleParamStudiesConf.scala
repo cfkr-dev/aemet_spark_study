@@ -2,18 +2,6 @@ package Config.PlotGenerationConf.Execution
 
 import Config.PlotGenerationConf.Execution.DTO.{BarDTO, HeatMapDTO, LinearDTO, LinearRegressionDTO}
 
-case class StudyParamsValues(
-  studyParamName: String,
-  studyParamAbbrev: String,
-  studyParamUnit: String,
-  colAggMethod: String
-)
-
-case class StateValues(
-  stateName: String,
-  stateNameNoSc: String
-)
-
 case class Top10ValuesTemporal(
   value: String,
   title: String
@@ -54,8 +42,6 @@ case class HeatMap2024(
 )
 
 case class SingleParamStudiesConf(
-  studyParamsValues: List[StudyParamsValues],
-  stateValues: List[StateValues],
   top10Values: Top10Values,
   top10: Top10,
   top5IncValues: Top5IncValues,

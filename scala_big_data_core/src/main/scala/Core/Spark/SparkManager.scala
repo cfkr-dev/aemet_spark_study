@@ -14,9 +14,11 @@ object SparkManager {
   private val ctsExecutionDataframeConf = SparkConf.Constants.init.execution.dataframeConf
   private val ctsSchemaAemetAllMeteoInfo = GlobalConf.Constants.schema.aemetConf.allMeteoInfo
   private val ctsSchemaAemetAllStation = GlobalConf.Constants.schema.aemetConf.allStationInfo
-  private val ctsSchemaSparkMeteo = GlobalConf.Constants.schema.sparkConf.meteoDf
   private val ctsSchemaSparkAllStation = GlobalConf.Constants.schema.sparkConf.stationsDf
+  private val ctsSpecialColumns = GlobalConf.Constants.schema.sparkConf.specialColumns
+  private val ctsGroupMethods = GlobalConf.Constants.schema.sparkConf.groupMethods
   private val ctsAllStationSpecialValues = ctsExecutionDataframeConf.allStationsDf.specialValues
+  
 
   private object SparkCore {
     private val ctsExecutionSessionConf = SparkConf.Constants.init.execution.sessionConf
@@ -34,6 +36,13 @@ object SparkManager {
       SparkCore.sparkSession.conf.getAll.foreach {case (k, v) => printlnConsoleMessage(NotificationType.Information, s"$k = $v")}
       SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName).count()
       SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName).count()
+    }
+
+    def endSparkSession(): Unit = {
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSessionCheckStats.format(ctsExecutionSessionConf.sessionStatsUrl))
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSessionPressAnyKey)
+      scala.io.StdIn.readLine()
+      sparkSession.stop()
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSession)
     }
 
@@ -334,10 +343,11 @@ object SparkManager {
 
     def execute(): Unit = {
       SparkCore.startSparkSession()
-      Stations.execute()
+      //Stations.execute()
       Climograph.execute()
-      SingleParamStudies.execute()
-      InterestingStudies.execute()
+      //SingleParamStudies.execute()
+      //InterestingStudies.execute()
+      SparkCore.endSparkSession()
     }
 
     private case class FetchAndSaveInfo(
@@ -512,6 +522,7 @@ object SparkManager {
                   FetchAndSaveInfo(
                     getStationMonthlyAvgTempAndSumPrecInAYear(
                       registry.stationId,
+                      (ctsExecution.studyParamNames.temperature, ctsExecution.studyParamNames.precipitation),
                       ctsExecution.observationYear
                     ) match {
                       case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
@@ -716,7 +727,7 @@ object SparkManager {
                   },
                   ctsStorage.evolFromStartForEachState.dataStationGlobal.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSc.replace(" ", "_")
+                    registry.stateNameNoSc
                   ),
                   ctsLogs.evolFromStartForEachStateStartStationGlobal.format(
                     registry.stateName.capitalize
@@ -731,7 +742,7 @@ object SparkManager {
                   },
                   ctsStorage.evolFromStartForEachState.dataStationLatest.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSc.replace(" ", "_")
+                    registry.stateNameNoSc
                   ),
                   ctsLogs.evolFromStartForEachStateStartStationLatest.format(
                     registry.stateName.capitalize
@@ -754,7 +765,7 @@ object SparkManager {
                   },
                   ctsStorage.evolFromStartForEachState.dataEvol.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSc.replace(" ", "_")
+                    registry.stateNameNoSc
                   ),
                   ctsLogs.evolFromStartForEachStateStart.format(
                     registry.stateName,
@@ -777,7 +788,7 @@ object SparkManager {
                   },
                   ctsStorage.evolFromStartForEachState.dataEvolYearlyGroup.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSc.replace(" ", "_")
+                    registry.stateNameNoSc
                   ),
                   ctsLogs.evolFromStartForEachStateYearlyGroup.format(
                     registry.stateName,
@@ -799,7 +810,7 @@ object SparkManager {
                   },
                   ctsStorage.evolFromStartForEachState.dataEvolRegression.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSc.replace(" ", "_")
+                    registry.stateNameNoSc
                   ),
                   ctsLogs.evolFromStartForEachStateStartRegression.format(
                     registry.stateName.capitalize,
@@ -928,7 +939,7 @@ object SparkManager {
       }
     }
 
-    object InterestingStudies {
+    private object InterestingStudies {
       private val ctsExecution = SparkConf.Constants.queries.execution.interestingStudiesConf
       private val ctsLogs = SparkConf.Constants.queries.log.interestingStudiesConf
       private val ctsStorage = SparkConf.Constants.queries.storage.interestingStudiesConf
@@ -950,7 +961,7 @@ object SparkManager {
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
                 ctsStorage.precAndPressEvol.dataStationGlobal.format(
-                  registry.stateNameNoSc.replace(" ", "_")
+                  registry.stateNameNoSc
                 ),
                 ctsLogs.precAndPressureEvolFromStartForEachStateStartStationGlobal.format(
                   registry.stateName.capitalize
@@ -964,7 +975,7 @@ object SparkManager {
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
                 ctsStorage.precAndPressEvol.dataStationLatest.format(
-                  registry.stateNameNoSc.replace(" ", "_")
+                  registry.stateNameNoSc
                 ),
                 ctsLogs.precAndPressureEvolFromStartForEachStateStartStationLatest.format(
                   registry.stateName.capitalize
@@ -984,7 +995,7 @@ object SparkManager {
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
                 ctsStorage.precAndPressEvol.dataEvol.format(
-                  registry.stateNameNoSc.replace(" ", "_")
+                  registry.stateNameNoSc
                 ),
                 ctsLogs.precAndPressureEvolFromStartForEachStateStartEvol.format(
                   registry.stateName
@@ -1003,7 +1014,7 @@ object SparkManager {
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
                 ctsStorage.precAndPressEvol.dataEvolYearlyGroup.format(
-                  registry.stateNameNoSc.replace(" ", "_")
+                  registry.stateNameNoSc
                 ),
                 ctsLogs.precAndPressureEvolFromStartForEachStateYearlyGroup.format(
                   registry.stateName
@@ -1238,10 +1249,10 @@ object SparkManager {
               case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startDate.toInt
             }
           ).groupBy(column._1.as(column._2))
-          .agg(countDistinct(col(ctsSchemaAemetAllMeteoInfo.indicativo)).as(ctsExecutionDataframeConf.specialColumns.count))
+          .agg(countDistinct(col(ctsSchemaAemetAllMeteoInfo.indicativo)).as(ctsSpecialColumns.count))
           .select(
             col(column._2),
-            col(ctsExecutionDataframeConf.specialColumns.count)
+            col(ctsSpecialColumns.count)
           )
           .orderBy(column._2)
         )
@@ -1281,11 +1292,11 @@ object SparkManager {
               else
                 param > actualMin && param <= actualMax
             ).agg(
-              lit(actualMin).as(ctsExecutionDataframeConf.specialColumns.minValue),
-              lit(actualMax).as(ctsExecutionDataframeConf.specialColumns.maxValue),
-              countDistinct(ctsSchemaAemetAllMeteoInfo.indicativo).as(ctsExecutionDataframeConf.specialColumns.count)
+              lit(actualMin).as(ctsSpecialColumns.minValue),
+              lit(actualMax).as(ctsSpecialColumns.maxValue),
+              countDistinct(ctsSchemaAemetAllMeteoInfo.indicativo).as(ctsSpecialColumns.count)
             )
-          }.reduce(_.union(_)).orderBy(ctsExecutionDataframeConf.specialColumns.minValue)
+          }.reduce(_.union(_)).orderBy(ctsSpecialColumns.minValue)
         )
       } catch {
         case exception: Exception => Left(exception)
@@ -1294,6 +1305,7 @@ object SparkManager {
 
     private def getStationMonthlyAvgTempAndSumPrecInAYear(
       stationId: String,
+      studyParams: (String, String),
       observationYear: Int
     ): Either[Exception, DataFrame] = {
       try {
@@ -1307,11 +1319,11 @@ object SparkManager {
                 col(ctsSchemaAemetAllMeteoInfo.indicativo) === stationId &&
                 year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === observationYear
             ).groupBy(
-              month(col(ctsSchemaAemetAllMeteoInfo.fecha)).as(ctsExecutionDataframeConf.specialColumns.month)
+              month(col(ctsSchemaAemetAllMeteoInfo.fecha)).as(ctsSpecialColumns.month)
             ).agg(
-              round(avg(col(ctsSchemaAemetAllMeteoInfo.tMed)), 1).as(ctsExecutionDataframeConf.specialColumns.tempMonthlyAvg),
-              round(sum(col(ctsSchemaAemetAllMeteoInfo.prec)), 1).as(ctsExecutionDataframeConf.specialColumns.precMonthlySum)
-            ).orderBy(col(ctsExecutionDataframeConf.specialColumns.month))
+              round(avg(col(ctsSchemaAemetAllMeteoInfo.tMed)), 1).as(ctsSpecialColumns.colMonthlyGrouped.format(studyParams._1, ctsGroupMethods.avg)),
+              round(sum(col(ctsSchemaAemetAllMeteoInfo.prec)), 1).as(ctsSpecialColumns.colMonthlyGrouped.format(studyParams._2, ctsGroupMethods.sum))
+            ).orderBy(col(ctsSpecialColumns.month))
         )
       } catch {
         case exception: Exception => Left(exception)
@@ -1332,10 +1344,10 @@ object SparkManager {
         val stationDf: DataFrame = SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName)
 
         val aggMethod: Column => Column = aggMethodName.toLowerCase match {
-          case ctsExecutionGlobalConf.groupMethods.avg => avg
-          case ctsExecutionGlobalConf.groupMethods.sum => sum
-          case ctsExecutionGlobalConf.groupMethods.min => min
-          case ctsExecutionGlobalConf.groupMethods.max => max
+          case ctsGroupMethods.avg => avg
+          case ctsGroupMethods.sum => sum
+          case ctsGroupMethods.min => min
+          case ctsGroupMethods.max => max
           case other => throw new IllegalArgumentException(other)
         }
 
@@ -1345,7 +1357,7 @@ object SparkManager {
             case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startDate.toInt
           }).filter(col(climateParam).isNotNull)
           .groupBy(col(ctsSchemaAemetAllMeteoInfo.indicativo))
-          .agg(aggMethod(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colGrouped.format(climateParam, aggMethodName)))
+          .agg(aggMethod(col(climateParam)).as(ctsSpecialColumns.colGrouped.format(climateParam, aggMethodName)))
           .join(stationDf, Seq(ctsSchemaAemetAllStation.indicativo), "inner")
           .select(
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
@@ -1357,9 +1369,9 @@ object SparkManager {
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
               ctsSchemaAemetAllStation.provincia
             )).alias(ctsSchemaSparkAllStation.state),
-            round(col(ctsExecutionDataframeConf.specialColumns.colGrouped.format(
+            round(col(ctsSpecialColumns.colGrouped.format(
               climateParam, aggMethodName
-            )), 1).alias(ctsExecutionDataframeConf.specialColumns.colGrouped.format(paramNameToShow, aggMethodName)),
+            )), 1).alias(ctsSpecialColumns.colGrouped.format(paramNameToShow, aggMethodName)),
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
               ctsSchemaAemetAllStation.latitud
             )).alias(ctsSchemaSparkAllStation.latDms),
@@ -1371,12 +1383,12 @@ object SparkManager {
             )).alias(ctsSchemaSparkAllStation.altitude),
           ).orderBy(
             if (highest)
-              col(ctsExecutionDataframeConf.specialColumns.colGrouped.format(paramNameToShow, aggMethodName)).desc
+              col(ctsSpecialColumns.colGrouped.format(paramNameToShow, aggMethodName)).desc
             else
-              col(ctsExecutionDataframeConf.specialColumns.colGrouped.format(paramNameToShow, aggMethodName)).asc
+              col(ctsSpecialColumns.colGrouped.format(paramNameToShow, aggMethodName)).asc
           )
           .limit(topN)
-          .withColumn(ctsExecutionDataframeConf.specialColumns.top, monotonically_increasing_id() + 1)
+          .withColumn(ctsSpecialColumns.top, monotonically_increasing_id() + 1)
         )
       } catch {
         case exception: Exception => Left(exception)
@@ -1407,30 +1419,30 @@ object SparkManager {
           (if (groupByState) {
             filteredDf
               .groupBy(ctsSchemaAemetAllMeteoInfo.provincia)
-              .agg(count(ctsSchemaAemetAllMeteoInfo.fecha).alias(ctsExecutionDataframeConf.specialColumns.daysWithConds))
+              .agg(count(ctsSchemaAemetAllMeteoInfo.fecha).alias(ctsSpecialColumns.daysWithConds))
               .orderBy(
                 if (highest)
-                  col(ctsExecutionDataframeConf.specialColumns.daysWithConds).desc
+                  col(ctsSpecialColumns.daysWithConds).desc
                 else
-                  col(ctsExecutionDataframeConf.specialColumns.daysWithConds).asc
+                  col(ctsSpecialColumns.daysWithConds).asc
               )
-              .withColumn(ctsExecutionDataframeConf.specialColumns.top, monotonically_increasing_id() + 1)
+              .withColumn(ctsSpecialColumns.top, monotonically_increasing_id() + 1)
               .select(
                 col(ctsSchemaAemetAllMeteoInfo.provincia).alias(ctsSchemaSparkAllStation.state),
-                col(ctsExecutionDataframeConf.specialColumns.top)
+                col(ctsSpecialColumns.top)
               )
           } else {
             filteredDf
               .groupBy(ctsSchemaAemetAllMeteoInfo.indicativo)
-              .agg(countDistinct(ctsSchemaAemetAllMeteoInfo.fecha).alias(ctsExecutionDataframeConf.specialColumns.daysWithConds))
+              .agg(countDistinct(ctsSchemaAemetAllMeteoInfo.fecha).alias(ctsSpecialColumns.daysWithConds))
               .join(stationDf, Seq(ctsSchemaAemetAllStation.indicativo), "inner")
               .orderBy(
                 if (highest)
-                  col(ctsExecutionDataframeConf.specialColumns.daysWithConds).desc
+                  col(ctsSpecialColumns.daysWithConds).desc
                 else
-                  col(ctsExecutionDataframeConf.specialColumns.daysWithConds).asc
+                  col(ctsSpecialColumns.daysWithConds).asc
               )
-              .withColumn(ctsExecutionDataframeConf.specialColumns.top, monotonically_increasing_id() + 1)
+              .withColumn(ctsSpecialColumns.top, monotonically_increasing_id() + 1)
               .select(
                 col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
                   ctsSchemaAemetAllStation.indicativo
@@ -1450,10 +1462,10 @@ object SparkManager {
                 col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
                   ctsSchemaAemetAllStation.altitud
                 )).alias(ctsSchemaSparkAllStation.altitude),
-                col(ctsExecutionDataframeConf.specialColumns.top)
+                col(ctsSpecialColumns.top)
               )
           })
-          .orderBy(col(ctsExecutionDataframeConf.specialColumns.top).asc)
+          .orderBy(col(ctsSpecialColumns.top).asc)
           .limit(topN)
         )
       } catch {
@@ -1484,12 +1496,12 @@ object SparkManager {
           }
           .filter(col(ctsSchemaAemetAllMeteoInfo.indicativo) === stationId)
           .select(
-            Seq(col(ctsSchemaAemetAllMeteoInfo.fecha).alias(ctsExecutionDataframeConf.specialColumns.date)) ++
+            Seq(col(ctsSchemaAemetAllMeteoInfo.fecha).alias(ctsSpecialColumns.date)) ++
             climateParams.zip(aggMethodNames).map(param => round(col(param._1._1), 1).alias(
-              ctsExecutionDataframeConf.specialColumns.colDailyGrouped.format(param._1._2, param._2)
+              ctsSpecialColumns.colDailyGrouped.format(param._1._2, param._2)
             )): _*
           )
-          .orderBy(ctsExecutionDataframeConf.specialColumns.date)
+          .orderBy(ctsSpecialColumns.date)
         )
       } catch {
         case exception: Exception => Left(exception)
@@ -1515,7 +1527,7 @@ object SparkManager {
               case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startDate.toInt
             })
             .filter(col(ctsSchemaAemetAllMeteoInfo.indicativo) === stationId)
-            .withColumn(ctsExecutionDataframeConf.specialColumns.year, year(col(ctsSchemaAemetAllMeteoInfo.fecha)))
+            .withColumn(ctsSpecialColumns.year, year(col(ctsSchemaAemetAllMeteoInfo.fecha)))
         ) { (acc, climateParam) =>
           acc.filter(col(climateParam._1).isNotNull)
         }
@@ -1524,19 +1536,19 @@ object SparkManager {
           case ((colName, paramName), op) =>
             val baseCol = col(colName)
             val aggCol = op.toLowerCase match {
-              case ctsExecutionGlobalConf.groupMethods.avg => round(avg(baseCol), 1)
-              case ctsExecutionGlobalConf.groupMethods.sum => round(sum(baseCol), 1)
-              case ctsExecutionGlobalConf.groupMethods.min => round(min(baseCol), 1)
-              case ctsExecutionGlobalConf.groupMethods.max => round(max(baseCol), 1)
+              case ctsGroupMethods.avg => round(avg(baseCol), 1)
+              case ctsGroupMethods.sum => round(sum(baseCol), 1)
+              case ctsGroupMethods.min => round(min(baseCol), 1)
+              case ctsGroupMethods.max => round(max(baseCol), 1)
               case other => throw new IllegalArgumentException(other)
             }
-            aggCol.alias(ctsExecutionDataframeConf.specialColumns.colYearlyGrouped.format(paramName, op))
+            aggCol.alias(ctsSpecialColumns.colYearlyGrouped.format(paramName, op))
         }
 
         val resultDf = filteredDf
-          .groupBy(ctsExecutionDataframeConf.specialColumns.year)
+          .groupBy(ctsSpecialColumns.year)
           .agg(aggColumns.head, aggColumns.tail: _*)
-          .orderBy(ctsExecutionDataframeConf.specialColumns.year)
+          .orderBy(ctsSpecialColumns.year)
 
         Right(resultDf)
 
@@ -1558,10 +1570,10 @@ object SparkManager {
         val stationDf: DataFrame = SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName)
 
         val aggMethod: Column => Column = aggMethodName.toLowerCase match {
-          case ctsExecutionGlobalConf.groupMethods.avg => avg
-          case ctsExecutionGlobalConf.groupMethods.sum => sum
-          case ctsExecutionGlobalConf.groupMethods.min => min
-          case ctsExecutionGlobalConf.groupMethods.max => max
+          case ctsGroupMethods.avg => avg
+          case ctsGroupMethods.sum => sum
+          case ctsGroupMethods.min => min
+          case ctsGroupMethods.max => max
           case other => throw new IllegalArgumentException(other)
         }
 
@@ -1574,7 +1586,7 @@ object SparkManager {
             case None => lit(true)
           }).filter(col(climateParam).isNotNull)
           .groupBy(col(ctsSchemaAemetAllMeteoInfo.indicativo))
-          .agg(aggMethod(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colGrouped.format(climateParam, aggMethodName)))
+          .agg(aggMethod(col(climateParam)).as(ctsSpecialColumns.colGrouped.format(climateParam, aggMethodName)))
           .join(stationDf, Seq(ctsSchemaAemetAllStation.indicativo), "inner")
           .select(
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
@@ -1587,8 +1599,8 @@ object SparkManager {
               ctsSchemaAemetAllStation.provincia
             )).alias(ctsSchemaSparkAllStation.state),
             round(
-              col(ctsExecutionDataframeConf.specialColumns.colGrouped.format(climateParam, aggMethodName)), 1
-            ).alias(ctsExecutionDataframeConf.specialColumns.colGrouped.format(paramNameToShow, aggMethodName)),
+              col(ctsSpecialColumns.colGrouped.format(climateParam, aggMethodName)), 1
+            ).alias(ctsSpecialColumns.colGrouped.format(paramNameToShow, aggMethodName)),
             col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
               ctsSchemaAemetAllStation.latitud
             )).alias(ctsSchemaSparkAllStation.latDms),
@@ -1622,10 +1634,10 @@ object SparkManager {
         val meteoDf: DataFrame = SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName)
 
         val aggMethod: Column => Column = aggMethodName.toLowerCase match {
-          case ctsExecutionGlobalConf.groupMethods.avg => avg
-          case ctsExecutionGlobalConf.groupMethods.sum => sum
-          case ctsExecutionGlobalConf.groupMethods.min => min
-          case ctsExecutionGlobalConf.groupMethods.max => max
+          case ctsGroupMethods.avg => avg
+          case ctsGroupMethods.sum => sum
+          case ctsGroupMethods.min => min
+          case ctsGroupMethods.max => max
           case other => throw new IllegalArgumentException(other)
         }
 
@@ -1636,34 +1648,34 @@ object SparkManager {
             case None => year(col(ctsSchemaAemetAllMeteoInfo.fecha)) === startYear
           })
           .filter(col(climateParam).isNotNull)
-          .withColumn(ctsExecutionDataframeConf.specialColumns.year, year(col(ctsSchemaAemetAllMeteoInfo.fecha)))
-          .groupBy(ctsExecutionDataframeConf.specialColumns.year)
-          .agg(aggMethod(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.climateParamAvg))
+          .withColumn(ctsSpecialColumns.year, year(col(ctsSchemaAemetAllMeteoInfo.fecha)))
+          .groupBy(ctsSpecialColumns.year)
+          .agg(aggMethod(col(climateParam)).as(ctsSpecialColumns.climateParamGrouped.format(ctsGroupMethods.avg)))
           .select(
-            col(ctsExecutionDataframeConf.specialColumns.year).alias(ctsExecutionDataframeConf.specialColumns.x),
-            col(ctsExecutionDataframeConf.specialColumns.climateParamAvg).alias(ctsExecutionDataframeConf.specialColumns.y)
+            col(ctsSpecialColumns.year).alias(ctsSpecialColumns.x),
+            col(ctsSpecialColumns.climateParamGrouped.format(ctsGroupMethods.avg)).alias(ctsSpecialColumns.y)
           )
 
         val (meanX, meanY) = filteredDF.agg(
-          avg(ctsExecutionDataframeConf.specialColumns.x),
-          avg(ctsExecutionDataframeConf.specialColumns.y)
+          avg(ctsSpecialColumns.x),
+          avg(ctsSpecialColumns.y)
         ).as[(Double, Double)].first() match {
           case (mx, my) => (mx, my)
         }
 
         val (beta1, beta0) = filteredDF.withColumn(
-            ctsExecutionDataframeConf.specialColumns.xDiff, col(ctsExecutionDataframeConf.specialColumns.x) - meanX
+            ctsSpecialColumns.xDiff, col(ctsSpecialColumns.x) - meanX
           )
           .withColumn(
-            ctsExecutionDataframeConf.specialColumns.yDiff, col(ctsExecutionDataframeConf.specialColumns.y) - meanY
+            ctsSpecialColumns.yDiff, col(ctsSpecialColumns.y) - meanY
           )
           .agg(
             sum(
-              col(ctsExecutionDataframeConf.specialColumns.xDiff) * col(ctsExecutionDataframeConf.specialColumns.yDiff)
-            ).as(ctsExecutionDataframeConf.specialColumns.num),
+              col(ctsSpecialColumns.xDiff) * col(ctsSpecialColumns.yDiff)
+            ).as(ctsSpecialColumns.num),
             sum(
-              col(ctsExecutionDataframeConf.specialColumns.xDiff) * col(ctsExecutionDataframeConf.specialColumns.xDiff)
-            ).as(ctsExecutionDataframeConf.specialColumns.den)
+              col(ctsSpecialColumns.xDiff) * col(ctsSpecialColumns.xDiff)
+            ).as(ctsSpecialColumns.den)
           ).as[(Double, Double)].first() match {
           case (num, den) =>
             val b1 = num / den
@@ -1672,9 +1684,9 @@ object SparkManager {
         }
 
         Right(Seq((stationId, beta1, beta0)).toDF(
-          ctsSchemaSparkMeteo.stationId,
-          ctsExecutionDataframeConf.specialColumns.beta1,
-          ctsExecutionDataframeConf.specialColumns.beta0
+          ctsSchemaSparkAllStation.stationId,
+          ctsSpecialColumns.beta1,
+          ctsSpecialColumns.beta0
         ))
       } catch {
         case exception: Exception => Left(exception)
@@ -1697,40 +1709,40 @@ object SparkManager {
         val stationDf: DataFrame = SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName)
 
         val aggMethod: Column => Column = aggMethodName.toLowerCase match {
-          case ctsExecutionGlobalConf.groupMethods.avg => avg
-          case ctsExecutionGlobalConf.groupMethods.sum => sum
-          case ctsExecutionGlobalConf.groupMethods.min => min
-          case ctsExecutionGlobalConf.groupMethods.max => max
+          case ctsGroupMethods.avg => avg
+          case ctsGroupMethods.sum => sum
+          case ctsGroupMethods.min => min
+          case ctsGroupMethods.max => max
           case other => throw new IllegalArgumentException(other)
         }
 
         Right(
           regressionModels
-            .filter(col(ctsSchemaSparkMeteo.stationId).isin(stationIds: _*))
+            .filter(col(ctsSchemaSparkAllStation.stationId).isin(stationIds: _*))
             .withColumn(
-              ctsExecutionDataframeConf.specialColumns.inc,
-              (col(ctsExecutionDataframeConf.specialColumns.beta1) * lit(endYear) + col(ctsExecutionDataframeConf.specialColumns.beta0)) - (col(ctsExecutionDataframeConf.specialColumns.beta1) * lit(startYear) + col(ctsExecutionDataframeConf.specialColumns.beta0))
+              ctsSpecialColumns.inc,
+              (col(ctsSpecialColumns.beta1) * lit(endYear) + col(ctsSpecialColumns.beta0)) - (col(ctsSpecialColumns.beta1) * lit(startYear) + col(ctsSpecialColumns.beta0))
             )
-            .select(col(ctsSchemaSparkMeteo.stationId).as(ctsSchemaAemetAllMeteoInfo.indicativo), col(ctsExecutionDataframeConf.specialColumns.inc))
+            .select(col(ctsSchemaSparkAllStation.stationId).as(ctsSchemaAemetAllMeteoInfo.indicativo), col(ctsSpecialColumns.inc))
             .join(
               meteoDf
                 .filter(col(ctsSchemaAemetAllMeteoInfo.indicativo).isin(stationIds: _*))
                 .filter(col(climateParam).isNotNull)
-                .withColumn(ctsExecutionDataframeConf.specialColumns.year, year(col(ctsSchemaAemetAllMeteoInfo.fecha)))
-                .filter(col(ctsExecutionDataframeConf.specialColumns.year).between(startYear, endYear))
-                .groupBy(ctsSchemaAemetAllMeteoInfo.indicativo, ctsExecutionDataframeConf.specialColumns.year)
-                .agg(aggMethod(col(climateParam)).as(ctsExecutionDataframeConf.specialColumns.colYearlyGrouped.format(climateParam, aggMethodName)))
+                .withColumn(ctsSpecialColumns.year, year(col(ctsSchemaAemetAllMeteoInfo.fecha)))
+                .filter(col(ctsSpecialColumns.year).between(startYear, endYear))
+                .groupBy(ctsSchemaAemetAllMeteoInfo.indicativo, ctsSpecialColumns.year)
+                .agg(aggMethod(col(climateParam)).as(ctsSpecialColumns.colYearlyGrouped.format(climateParam, aggMethodName)))
                 .groupBy(ctsSchemaAemetAllMeteoInfo.indicativo)
-                .agg(avg(col(ctsExecutionDataframeConf.specialColumns.colYearlyGrouped.format(climateParam, aggMethodName))).as(ctsExecutionDataframeConf.specialColumns.globalColYearlyAvg.format(climateParam))),
+                .agg(avg(col(ctsSpecialColumns.colYearlyGrouped.format(climateParam, aggMethodName))).as(ctsSpecialColumns.globalColYearlyAvg.format(climateParam))),
               Seq(ctsSchemaAemetAllMeteoInfo.indicativo),
               "inner"
             )
             .join(stationDf, Seq(ctsSchemaAemetAllStation.indicativo), "inner")
-            .withColumn(ctsExecutionDataframeConf.specialColumns.incPerc, col(ctsExecutionDataframeConf.specialColumns.inc) / col(ctsExecutionDataframeConf.specialColumns.globalColYearlyAvg.format(climateParam, aggMethodName)) * 100)
+            .withColumn(ctsSpecialColumns.incPerc, col(ctsSpecialColumns.inc) / col(ctsSpecialColumns.globalColYearlyAvg.format(climateParam, aggMethodName)) * 100)
             .select(
-              round(col(ctsExecutionDataframeConf.specialColumns.inc), 1).alias(ctsExecutionDataframeConf.specialColumns.inc),
-              round(col(ctsExecutionDataframeConf.specialColumns.incPerc), 1).alias(ctsExecutionDataframeConf.specialColumns.incPerc),
-              round(col(ctsExecutionDataframeConf.specialColumns.globalColYearlyAvg.format(climateParam, aggMethodName)), 1).alias(ctsExecutionDataframeConf.specialColumns.globalColYearlyAvg.format(paramNameToShow, aggMethodName)),
+              round(col(ctsSpecialColumns.inc), 1).alias(ctsSpecialColumns.inc),
+              round(col(ctsSpecialColumns.incPerc), 1).alias(ctsSpecialColumns.incPerc),
+              round(col(ctsSpecialColumns.globalColYearlyAvg.format(climateParam, aggMethodName)), 1).alias(ctsSpecialColumns.globalColYearlyAvg.format(paramNameToShow, aggMethodName)),
               col(ctsExecutionDataframeConf.allStationsDf.aliasCol.format(
                 ctsSchemaAemetAllStation.indicativo
               )).alias(ctsSchemaSparkAllStation.stationId),
@@ -1752,12 +1764,12 @@ object SparkManager {
             )
             .orderBy(
               if (highest)
-                col(ctsExecutionDataframeConf.specialColumns.inc).desc
+                col(ctsSpecialColumns.inc).desc
               else
-                col(ctsExecutionDataframeConf.specialColumns.inc).asc
+                col(ctsSpecialColumns.inc).asc
             )
             .limit(topN)
-            .withColumn(ctsExecutionDataframeConf.specialColumns.top, monotonically_increasing_id() + 1)
+            .withColumn(ctsSpecialColumns.top, monotonically_increasing_id() + 1)
         )
       } catch {
         case exception: Exception => Left(exception)

@@ -1,5 +1,7 @@
 package Config.PlotGenerationConf.Execution
 
+
+import Config.GlobalConf.Schema.MeteoParamsValuesEntry
 import Config.PlotGenerationConf.Execution.DTO.ClimographDTO
 
 case class Locations(
@@ -18,13 +20,23 @@ case class ClimateRegistries(
   climates: List[ClimateRegistry]
 )
 
+case class ClimographMeteoParams(
+  temperature: MeteoParamsValuesEntry,
+  precipitation: MeteoParamsValuesEntry
+)
+
+case class ClimographValues(
+  locations: Locations,
+  climateRegistries: List[ClimateRegistries],
+  meteoParams: ClimographMeteoParams
+)
+
 case class Climograph(
   uri: String,
   body: ClimographDTO
 )
 
 case class ClimographConf(
-  locations: Locations,
-  climateRegistries: List[ClimateRegistries],
+  climographValues: ClimographValues,
   climograph: Climograph
 )
