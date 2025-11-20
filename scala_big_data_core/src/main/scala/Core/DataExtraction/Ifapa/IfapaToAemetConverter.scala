@@ -1,6 +1,7 @@
 package Core.DataExtraction.Ifapa
 
 import Config.{DataExtractionConf, GlobalConf}
+import Utils.ChronoUtils
 import Utils.ConsoleLogUtils.Message._
 import Utils.FileUtils.{copyFile, saveContentToPath}
 import Utils.JSONUtils.{buildJSONFromSchemaAndData, readJSON, transformJSONValues, writeJSON}
@@ -9,6 +10,8 @@ import ujson.{Arr, Value}
 object IfapaToAemetConverter {
   private val ctsExecutionAemet = DataExtractionConf.Constants.execution.aemetConf
   private val ctsLogs = DataExtractionConf.Constants.log.ifapaAemetFormatConf
+  private val ctsGlobalUtils = GlobalConf.Constants.utils
+  private val chronometer = ChronoUtils.Chronometer()
 
   private def genEmptyAemetJSONFromMetadata(metadataJSON: ujson.Value): ujson.Value = {
     ujson.Obj.from(
@@ -19,6 +22,8 @@ object IfapaToAemetConverter {
   }
 
   def ifapaToAemetConversion(): Unit = {
+    chronometer.start()
+
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.singleStationInfoStartConverting)
     SingleStationInfo.saveSingleStationInfoAemetFormat()
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.singleStationInfoEndConverting)
@@ -26,6 +31,10 @@ object IfapaToAemetConverter {
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.singleStationMeteoInfoStartConverting)
     SingleStationMeteoInfo.saveSingleStationMeteoInfoAemetFormat()
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.singleStationMeteoInfoEndConverting)
+
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.chrono.chronoResult.format(chronometer.stop()))
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.betweenStages.infoText.format(ctsGlobalUtils.betweenStages.millisBetweenStages / 1000))
+    Thread.sleep(ctsGlobalUtils.betweenStages.millisBetweenStages)
   }
 
   private object SingleStationMeteoInfo {
@@ -144,12 +153,12 @@ object IfapaToAemetConverter {
           case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
             return
           case Right(json: Value) => Arr(json.arr.map {
-            registryJSON =>
+            recordJSON =>
               transformJSONValues(
                 buildJSONFromSchemaAndData(
                   genEmptyAemetJSONFromMetadata(aemetAllMeteoInfoMetadata),
                   genAemetMeteoInfoJSONKeysToIfapaJSONValues(
-                    registryJSON,
+                    recordJSON,
                     ifapaSingleStationInfo
                   )
                 ),

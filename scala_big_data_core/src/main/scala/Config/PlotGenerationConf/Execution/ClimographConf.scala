@@ -10,14 +10,14 @@ case class Locations(
   balearIslands: String
 )
 
-case class ClimateRegistry(
+case class ClimateRecord(
   climateName: String,
   locations: List[String]
 )
 
-case class ClimateRegistries(
+case class ClimateRecords(
   climateGroupName: String,
-  climates: List[ClimateRegistry]
+  climates: List[ClimateRecord]
 )
 
 case class ClimographMeteoParams(
@@ -27,7 +27,7 @@ case class ClimographMeteoParams(
 
 case class ClimographValues(
   locations: Locations,
-  climateRegistries: List[ClimateRegistries],
+  climateRecords: List[ClimateRecords],
   meteoParams: ClimographMeteoParams
 )
 

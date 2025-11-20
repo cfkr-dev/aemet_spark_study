@@ -2,12 +2,15 @@ package Core.Spark
 
 import Config.{GlobalConf, SparkConf}
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
-import Utils.JSONUtils
+import Utils.{ChronoUtils, JSONUtils}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Column, DataFrame, SaveMode, SparkSession}
 import org.apache.spark.storage.StorageLevel
+
+import java.nio.file.{Files, Paths, StandardCopyOption}
+import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 object SparkManager {
   private val ctsExecutionGlobalConf = SparkConf.Constants.init.execution.globalConf
@@ -18,7 +21,8 @@ object SparkManager {
   private val ctsSpecialColumns = GlobalConf.Constants.schema.sparkConf.specialColumns
   private val ctsGroupMethods = GlobalConf.Constants.schema.sparkConf.groupMethods
   private val ctsAllStationSpecialValues = ctsExecutionDataframeConf.allStationsDf.specialValues
-  
+  private val ctsGlobalUtils = GlobalConf.Constants.utils
+  private val chronometer = ChronoUtils.Chronometer()
 
   private object SparkCore {
     private val ctsExecutionSessionConf = SparkConf.Constants.init.execution.sessionConf
@@ -32,6 +36,7 @@ object SparkManager {
     )
 
     def startSparkSession(): Unit = {
+      chronometer.start()
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.startSparkSession)
       SparkCore.sparkSession.conf.getAll.foreach {case (k, v) => printlnConsoleMessage(NotificationType.Information, s"$k = $v")}
       SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName).count()
@@ -40,8 +45,9 @@ object SparkManager {
 
     def endSparkSession(): Unit = {
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSessionCheckStats.format(ctsExecutionSessionConf.sessionStatsUrl))
-      printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSessionPressAnyKey)
-      scala.io.StdIn.readLine()
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.chrono.chronoResult.format(chronometer.stop()))
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.betweenStages.infoText.format(ctsGlobalUtils.betweenStages.millisBetweenStages / 1000))
+      Thread.sleep(ctsGlobalUtils.betweenStages.millisBetweenStages)
       sparkSession.stop()
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSession)
     }
@@ -60,11 +66,19 @@ object SparkManager {
 
     def saveDataframeAsJSON(dataframe: DataFrame, path: String): Either[Exception, String] = {
       try {
+        val dir = Paths.get(path).getParent
+
         dataframe
           .coalesce(1)
           .write
           .mode(SaveMode.Overwrite)
-          .json(path)
+          .json(dir.toString)
+
+        Files.move(
+          Files.list(dir).iterator().asScala.find(_.getFileName.toString.startsWith(ctsExecutionSessionConf.sessionResultFilesPrefix)).get,
+          Paths.get(path),
+          StandardCopyOption.REPLACE_EXISTING
+        )
 
         Right(path)
       } catch {
@@ -343,10 +357,10 @@ object SparkManager {
 
     def execute(): Unit = {
       SparkCore.startSparkSession()
-      //Stations.execute()
+      Stations.execute()
       Climograph.execute()
-      //SingleParamStudies.execute()
-      //InterestingStudies.execute()
+      SingleParamStudies.execute()
+      InterestingStudies.execute()
       SparkCore.endSparkSession()
     }
 
@@ -417,7 +431,7 @@ object SparkManager {
           ctsLogs.studyName
         ))
 
-        // Station count evolution from the start of registers
+        // Station count evolution from the beginning of the records
         simpleFetchAndSave(
           ctsLogs.stationCountEvolFromStart,
           List(
@@ -491,37 +505,37 @@ object SparkManager {
           ctsLogs.studyName
         ))
 
-        ctsExecution.stationsRegistries.foreach(climateGroup => {
+        ctsExecution.stationsRecords.foreach(climateGroup => {
           printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.startFetchingClimateGroup.format(
             climateGroup.climateGroupName
           ), encloseHalfLength = 35)
 
-          climateGroup.climates.foreach(climateRegistry => {
+          climateGroup.climates.foreach(climateRecord => {
             simpleFetchAndSave(
               ctsLogs.fetchingClimate.format(
-                climateRegistry.climateName
+                climateRecord.climateName
               ),
-              climateRegistry.registries.flatMap(registry => {
+              climateRecord.records.flatMap(record => {
                 List(
                   FetchAndSaveInfo(
-                    getStationInfoById(registry.stationId) match {
+                    getStationInfoById(record.stationId) match {
                       case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                         return
                       case Right(dataFrame: DataFrame) => dataFrame
                     },
                     ctsStorage.climograph.dataStation.format(
                       climateGroup.climateGroupName,
-                      climateRegistry.climateName,
-                      registry.location.replace(" ", "_")
+                      climateRecord.climateName,
+                      record.location.replace(" ", "_")
                     ),
                     ctsLogs.fetchingClimateLocationStation.format(
-                      registry.location.capitalize,
+                      record.location.capitalize,
                     ),
                     saveAsJSON = true
                   ),
                   FetchAndSaveInfo(
                     getStationMonthlyAvgTempAndSumPrecInAYear(
-                      registry.stationId,
+                      record.stationId,
                       (ctsExecution.studyParamNames.temperature, ctsExecution.studyParamNames.precipitation),
                       ctsExecution.observationYear
                     ) match {
@@ -531,11 +545,11 @@ object SparkManager {
                     },
                     ctsStorage.climograph.dataTempAndPrec.format(
                       climateGroup.climateGroupName,
-                      climateRegistry.climateName,
-                      registry.location.replace(" ", "_")
+                      climateRecord.climateName,
+                      record.location.replace(" ", "_")
                     ),
                     ctsLogs.fetchingClimateLocationTempPrec.format(
-                      registry.location.capitalize,
+                      record.location.capitalize,
                     )
                   )
                 )
@@ -610,7 +624,7 @@ object SparkManager {
             )
           )
 
-          // Top 10 places with the highest eratures from the start of registers
+          // Top 10 places with the highest eratures from the beginning of the records
           simpleFetchAndSave(
             ctsLogs.top10HighestGlobal.format(
               study.studyParam
@@ -686,7 +700,7 @@ object SparkManager {
             )
           )
 
-          // Top 10 places with the lowest eratures from the start of registers
+          // Top 10 places with the lowest eratures from the beginning of the records
           simpleFetchAndSave(
             ctsLogs.top10LowestGlobal.format(
               study.studyParam
@@ -712,52 +726,52 @@ object SparkManager {
             )
           )
 
-          // temperature evolution from the start of registers for each state
+          // temperature evolution from the beginning of the records for each state
           val regressionModelDf: DataFrame = simpleFetchAndSave(
             ctsLogs.evolFromStartForEachState.format(
               study.studyParam.capitalize
             ),
-            study.reprStationRegs.flatMap(registry => {
+            study.reprStationRegs.flatMap(record => {
               List(
                 FetchAndSaveInfo(
-                  getStationInfoById(registry.stationIdGlobal) match {
+                  getStationInfoById(record.stationIdGlobal) match {
                     case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                       return
                     case Right(dataFrame: DataFrame) => dataFrame
                   },
                   ctsStorage.evolFromStartForEachState.dataStationGlobal.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSc
+                    record.stateNameNoSc
                   ),
                   ctsLogs.evolFromStartForEachStateStartStationGlobal.format(
-                    registry.stateName.capitalize
+                    record.stateName.capitalize
                   ),
                   saveAsJSON = true
                 ),
                 FetchAndSaveInfo(
-                  getStationInfoById(registry.stationIdLatest) match {
+                  getStationInfoById(record.stationIdLatest) match {
                     case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                       return
                     case Right(dataFrame: DataFrame) => dataFrame
                   },
                   ctsStorage.evolFromStartForEachState.dataStationLatest.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSc
+                    record.stateNameNoSc
                   ),
                   ctsLogs.evolFromStartForEachStateStartStationLatest.format(
-                    registry.stateName.capitalize
+                    record.stateName.capitalize
                   ),
                   saveAsJSON = true
                 ),
                 FetchAndSaveInfo(
                   getClimateParamInALapseById(
-                    registry.stationIdLatest,
+                    record.stationIdLatest,
                     List(
                       (study.dataframeColName, study.studyParamAbbrev)
                     ),
                     List(study.colAggMethod),
-                    registry.startDateLatest,
-                    Some(registry.endDateLatest)
+                    record.startDateLatest,
+                    Some(record.endDateLatest)
                   ) match {
                     case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                       return
@@ -765,22 +779,22 @@ object SparkManager {
                   },
                   ctsStorage.evolFromStartForEachState.dataEvol.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSc
+                    record.stateNameNoSc
                   ),
                   ctsLogs.evolFromStartForEachStateStart.format(
-                    registry.stateName,
+                    record.stateName,
                     study.studyParam.replace("_", " ")
                   )
                 ),
                 FetchAndSaveInfo(
                   getClimateYearlyGroupById(
-                    registry.stationIdGlobal,
+                    record.stationIdGlobal,
                     List(
                       (study.dataframeColName, study.studyParamAbbrev)
                     ),
                     List(study.colAggMethod),
-                    registry.startDateGlobal,
-                    Some(registry.endDateGlobal)
+                    record.startDateGlobal,
+                    Some(record.endDateGlobal)
                   ) match {
                     case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                       return
@@ -788,21 +802,21 @@ object SparkManager {
                   },
                   ctsStorage.evolFromStartForEachState.dataEvolYearlyGroup.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSc
+                    record.stateNameNoSc
                   ),
                   ctsLogs.evolFromStartForEachStateYearlyGroup.format(
-                    registry.stateName,
+                    record.stateName,
                     study.studyParam.replace("_", " "),
                     study.colAggMethod
                   )
                 ),
                 FetchAndSaveInfo(
                   getStationClimateParamRegressionModelInALapse(
-                    registry.stationIdGlobal,
+                    record.stationIdGlobal,
                     study.dataframeColName,
                     study.colAggMethod,
-                    registry.startDateGlobal,
-                    Some(registry.endDateGlobal)
+                    record.startDateGlobal,
+                    Some(record.endDateGlobal)
                   ) match {
                     case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                       return
@@ -810,10 +824,10 @@ object SparkManager {
                   },
                   ctsStorage.evolFromStartForEachState.dataEvolRegression.format(
                     study.studyParamAbbrev,
-                    registry.stateNameNoSc
+                    record.stateNameNoSc
                   ),
                   ctsLogs.evolFromStartForEachStateStartRegression.format(
-                    registry.stateName.capitalize,
+                    record.stateName.capitalize,
                     study.studyParam.replace("_", " ")
                   )
                 )
@@ -833,7 +847,7 @@ object SparkManager {
             List(
               FetchAndSaveInfo(
                 getTopNClimateParamIncrementInAYearLapse(
-                  stationIds = study.reprStationRegs.map(registry => registry.stationIdGlobal),
+                  stationIds = study.reprStationRegs.map(record => record.stationIdGlobal),
                   regressionModels = regressionModelDf,
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
@@ -860,7 +874,7 @@ object SparkManager {
             List(
               FetchAndSaveInfo(
                 getTopNClimateParamIncrementInAYearLapse(
-                  stationIds = study.reprStationRegs.map(registry => registry.stationIdGlobal),
+                  stationIds = study.reprStationRegs.map(record => record.stationIdGlobal),
                   regressionModels = regressionModelDf,
                   climateParam = study.dataframeColName,
                   paramNameToShow = study.studyParamAbbrev,
@@ -949,260 +963,102 @@ object SparkManager {
           ctsLogs.studyName
         ))
 
-        // Precipitation and pressure evolution from the start of registers for each state
+        // Precipitation and pressure evolution from the beginning of the records for each state
         simpleFetchAndSave(
           ctsLogs.precAndPressureEvolFromStartForEachState,
-          ctsExecution.stationRegistries.flatMap(registry => {
+          ctsExecution.stationRecords.flatMap(record => {
             List(
               FetchAndSaveInfo(
-                getStationInfoById(registry.stationIdGlobal) match {
+                getStationInfoById(record.stationIdGlobal) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
                 ctsStorage.precAndPressEvol.dataStationGlobal.format(
-                  registry.stateNameNoSc
+                  record.stateNameNoSc
                 ),
                 ctsLogs.precAndPressureEvolFromStartForEachStateStartStationGlobal.format(
-                  registry.stateName.capitalize
+                  record.stateName.capitalize
                 ),
                 saveAsJSON = true
               ),
               FetchAndSaveInfo(
-                getStationInfoById(registry.stationIdLatest) match {
+                getStationInfoById(record.stationIdLatest) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
                 ctsStorage.precAndPressEvol.dataStationLatest.format(
-                  registry.stateNameNoSc
+                  record.stateNameNoSc
                 ),
                 ctsLogs.precAndPressureEvolFromStartForEachStateStartStationLatest.format(
-                  registry.stateName.capitalize
+                  record.stateName.capitalize
                 ),
                 saveAsJSON = true
               ),
               FetchAndSaveInfo(
                 getClimateParamInALapseById(
-                  registry.stationIdLatest,
+                  record.stationIdLatest,
                   ctsExecution.precAndPressEvolFromStartForEachState.climateParams,
                   ctsExecution.precAndPressEvolFromStartForEachState.colAggMethods,
-                  registry.startDateLatest,
-                  Some(registry.endDateLatest)
+                  record.startDateLatest,
+                  Some(record.endDateLatest)
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
                 ctsStorage.precAndPressEvol.dataEvol.format(
-                  registry.stateNameNoSc
+                  record.stateNameNoSc
                 ),
                 ctsLogs.precAndPressureEvolFromStartForEachStateStartEvol.format(
-                  registry.stateName
+                  record.stateName
                 )
               ),
               FetchAndSaveInfo(
                 getClimateYearlyGroupById(
-                  registry.stationIdGlobal,
+                  record.stationIdGlobal,
                   ctsExecution.precAndPressEvolFromStartForEachState.climateParams,
                   ctsExecution.precAndPressEvolFromStartForEachState.colAggMethods,
-                  registry.startDateGlobal,
-                  Some(registry.endDateGlobal)
+                  record.startDateGlobal,
+                  Some(record.endDateGlobal)
                 ) match {
                   case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                     return
                   case Right(dataFrame: DataFrame) => dataFrame
                 },
                 ctsStorage.precAndPressEvol.dataEvolYearlyGroup.format(
-                  registry.stateNameNoSc
+                  record.stateNameNoSc
                 ),
                 ctsLogs.precAndPressureEvolFromStartForEachStateYearlyGroup.format(
-                  registry.stateName
+                  record.stateName
                 )
               ),
             )
           })
         )
 
-        // Top 10 better places for wind power generation in the last decade
-        simpleFetchAndSave(
-          ctsLogs.top10BetterWindPower,
-          List(
-            FetchAndSaveInfo(
-              getTopNClimateConditionsInALapse(
-                climateParams = ctsExecution.top10BetterWindPower.climateParams,
-                startDate = ctsExecution.top10BetterWindPower.startDate,
-                endDate = Some(ctsExecution.top10BetterWindPower.endDate),
-                groupByState = true
-              ) match {
-                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-                  return
-                case Right(dataFrame: DataFrame) => dataFrame
-              },
-              ctsStorage.top10.dataBetterWindPower
+        // Top 10 States
+        ctsExecution.top10States.foreach(top10 => {
+          simpleFetchAndSave(
+            ctsLogs.top10States.format(top10.name),
+            List(
+              FetchAndSaveInfo(
+                getTopNClimateConditionsInALapse(
+                  climateParams = top10.climateParams,
+                  startDate = top10.startDate,
+                  endDate = Some(top10.endDate),
+                  groupByState = true
+                ) match {
+                  case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
+                    return
+                  case Right(dataFrame: DataFrame) => dataFrame
+                },
+                ctsStorage.top10States.dataTop.format(top10.nameAbbrev)
+              )
             )
           )
-        )
-
-        // Top 10 better places for sun power generation in the last decade
-        simpleFetchAndSave(
-          ctsLogs.top10BetterSunPower,
-          List(
-            FetchAndSaveInfo(
-              getTopNClimateConditionsInALapse(
-                climateParams = ctsExecution.top10BetterSunPower.climateParams,
-                startDate = ctsExecution.top10BetterSunPower.startDate,
-                endDate = Some(ctsExecution.top10BetterSunPower.endDate),
-                groupByState = true
-              ) match {
-                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-                  return
-                case Right(dataFrame: DataFrame) => dataFrame
-              },
-              ctsStorage.top10.dataBetterSunPower
-            )
-          )
-        )
-
-        // Top 10 places with the highest incidence of torrential rains in the last decade
-        simpleFetchAndSave(
-          ctsLogs.top10TorrentialRains,
-          List(
-            FetchAndSaveInfo(
-              getTopNClimateConditionsInALapse(
-                climateParams = ctsExecution.top10TorrentialRains.climateParams,
-                startDate = ctsExecution.top10TorrentialRains.startDate,
-                endDate = Some(ctsExecution.top10TorrentialRains.endDate),
-                groupByState = true
-              ) match {
-                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-                  return
-                case Right(dataFrame: DataFrame) => dataFrame
-              },
-              ctsStorage.top10.dataTorrentialRains
-            )
-          )
-        )
-
-        // Top 10 the highest incidence of storms in the last decade
-        simpleFetchAndSave(
-          ctsLogs.top10Storms,
-          List(
-            FetchAndSaveInfo(
-              getTopNClimateConditionsInALapse(
-                climateParams = ctsExecution.top10Storms.climateParams,
-                startDate = ctsExecution.top10Storms.startDate,
-                endDate = Some(ctsExecution.top10Storms.endDate),
-                groupByState = true
-              ) match {
-                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-                  return
-                case Right(dataFrame: DataFrame) => dataFrame
-              },
-              ctsStorage.top10.dataStorms
-            )
-          )
-        )
-
-        // Top 10 better places for agriculture in the last decade
-        simpleFetchAndSave(
-          ctsLogs.top10Agriculture,
-          List(
-            FetchAndSaveInfo(
-              getTopNClimateConditionsInALapse(
-                climateParams = ctsExecution.top10Agriculture.climateParams,
-                startDate = ctsExecution.top10Agriculture.startDate,
-                endDate = Some(ctsExecution.top10Agriculture.endDate),
-                groupByState = true
-              ) match {
-                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-                  return
-                case Right(dataFrame: DataFrame) => dataFrame
-              },
-              ctsStorage.top10.dataAgriculture
-            )
-          )
-        )
-
-        // Top 10 the highest incidence of droughts in the last decade
-        simpleFetchAndSave(
-          ctsLogs.top10Droughts,
-          List(
-            FetchAndSaveInfo(
-              getTopNClimateConditionsInALapse(
-                climateParams = ctsExecution.top10Droughts.climateParams,
-                startDate = ctsExecution.top10Droughts.startDate,
-                endDate = Some(ctsExecution.top10Droughts.endDate),
-                groupByState = true
-              ) match {
-                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-                  return
-                case Right(dataFrame: DataFrame) => dataFrame
-              },
-              ctsStorage.top10.dataDroughts
-            )
-          )
-        )
-
-        // Top 10 the highest incidence of fires in the last decade
-        simpleFetchAndSave(
-          ctsLogs.top10Fires,
-          List(
-            FetchAndSaveInfo(
-              getTopNClimateConditionsInALapse(
-                climateParams = ctsExecution.top10Fires.climateParams,
-                startDate = ctsExecution.top10Fires.startDate,
-                endDate = Some(ctsExecution.top10Fires.endDate),
-                groupByState = true
-              ) match {
-                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-                  return
-                case Right(dataFrame: DataFrame) => dataFrame
-              },
-              ctsStorage.top10.dataFires
-            )
-          )
-        )
-
-        // Top 10 the highest incidence of heat waves in the last decade
-        simpleFetchAndSave(
-          ctsLogs.top10HeatWaves,
-          List(
-            FetchAndSaveInfo(
-              getTopNClimateConditionsInALapse(
-                climateParams = ctsExecution.top10HeatWaves.climateParams,
-                startDate = ctsExecution.top10HeatWaves.startDate,
-                endDate = Some(ctsExecution.top10HeatWaves.endDate),
-                groupByState = true
-              ) match {
-                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-                  return
-                case Right(dataFrame: DataFrame) => dataFrame
-              },
-              ctsStorage.top10.dataHeatWaves
-            )
-          )
-        )
-
-        // Top 10 the highest incidence of frosts in the last decade
-        simpleFetchAndSave(
-          ctsLogs.top10Frosts,
-          List(
-            FetchAndSaveInfo(
-              getTopNClimateConditionsInALapse(
-                climateParams = ctsExecution.top10Frosts.climateParams,
-                startDate = ctsExecution.top10Frosts.startDate,
-                endDate = Some(ctsExecution.top10Frosts.endDate),
-                groupByState = true
-              ) match {
-                case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-                  return
-                case Right(dataFrame: DataFrame) => dataFrame
-              },
-              ctsStorage.top10.dataFrosts
-            )
-          )
-        )
+        })
 
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.endStudy.format(
           ctsLogs.studyName

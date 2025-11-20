@@ -1,6 +1,6 @@
 package Config.SparkConf.Queries.Execution
 
-case class InterestingStudiesRepresentativeStationRegistry(
+case class InterestingStudiesRepresentativeStationRecord(
   stateName: String,
   stateNameNoSc: String,
   stationIdGlobal: String,
@@ -17,21 +17,15 @@ case class PrecAndPressEvolFromStartForEachState(
 )
 
 case class InterestingStudyTop10(
+  name: String,
+  nameAbbrev: String,
   climateParams: List[(String, Double, Double)],
   startDate: String,
   endDate: String
 )
 
 case class InterestingStudiesConf(
-  stationRegistries: List[InterestingStudiesRepresentativeStationRegistry],
+  stationRecords: List[InterestingStudiesRepresentativeStationRecord],
   precAndPressEvolFromStartForEachState: PrecAndPressEvolFromStartForEachState,
-  top10BetterWindPower: InterestingStudyTop10,
-  top10BetterSunPower: InterestingStudyTop10,
-  top10TorrentialRains: InterestingStudyTop10,
-  top10Storms: InterestingStudyTop10,
-  top10Agriculture: InterestingStudyTop10,
-  top10Droughts: InterestingStudyTop10,
-  top10Fires: InterestingStudyTop10,
-  top10HeatWaves: InterestingStudyTop10,
-  top10Frosts: InterestingStudyTop10
+  top10States: List[InterestingStudyTop10]
 )

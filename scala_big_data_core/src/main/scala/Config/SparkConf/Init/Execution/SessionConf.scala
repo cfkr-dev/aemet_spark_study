@@ -4,5 +4,6 @@ case class SessionConf(
   sessionName: String,
   sessionMaster: String,
   sessionLogLevel: String,
-  sessionStatsUrl: String
+  sessionStatsUrl: String,
+  sessionResultFilesPrefix: String
 )

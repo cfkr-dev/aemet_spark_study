@@ -2,8 +2,8 @@ package Core.PlotGeneration
 
 import Config.GlobalConf
 import Config.PlotGenerationConf
-import Config.PlotGenerationConf.Execution.DTO.{BarDTO, ClimographDTO, HeatMapDTO, LinearDTO, LinearRegressionDTO}
-import Utils.ConsoleLogUtils
+import Config.PlotGenerationConf.Execution.DTO.{BarDTO, ClimographDTO, DoubleLinearDTO, HeatMapDTO, LinearDTO, LinearRegressionDTO, TableDTO}
+import Utils.{ChronoUtils, ConsoleLogUtils}
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage}
 import Utils.HTTPUtils.{buildUrl, sendPostRequest}
 import Utils.JSONUtils.{readJSON, removeNullKeys}
@@ -20,6 +20,8 @@ object PlotGenerator {
   private val ctsGlobalLogs = PlotGenerator.ctsLogs.globalConf
   private val ctsGlobalExecution = PlotGenerator.ctsExecution.globalConf
   private val encloseHalfLength = 35
+  private val ctsGlobalUtils = GlobalConf.Constants.utils
+  private val chronometer = ChronoUtils.Chronometer()
 
   object Stations {
     private val ctsExecution = PlotGenerator.ctsExecution.stationsConf
@@ -135,19 +137,19 @@ object PlotGenerator {
         ctsLogs.studyName
       ))
 
-      ctsExecution.climographValues.climateRegistries.foreach(climateGroup => {
+      ctsExecution.climographValues.climateRecords.foreach(climateGroup => {
 
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.climateType.format(
           climateGroup.climateGroupName
         ), encloseHalfLength = encloseHalfLength)
 
-        climateGroup.climates.foreach(climateRegistry => {
+        climateGroup.climates.foreach(climateRecord => {
 
           printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.climateSubtype.format(
-            climateRegistry.climateName
+            climateRecord.climateName
           ), encloseHalfLength = encloseHalfLength + 5)
 
-          climateRegistry.locations.foreach(location => {
+          climateRecord.locations.foreach(location => {
 
             printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.climateLocation.format(
               location
@@ -155,9 +157,9 @@ object PlotGenerator {
 
             val stationJSON = readJSON(ctsStorage.climograph.dataSrcStation.format(
               climateGroup.climateGroupName,
-              climateRegistry.climateName,
+              climateRecord.climateName,
               location.replace(" ", "_")
-            ), findHeaviest = true) match {
+            )) match {
               case Left(exception: Exception) =>
                 ConsoleLogUtils.Message.printlnConsoleMessage(NotificationType.Warning, exception.toString)
                 return
@@ -195,7 +197,7 @@ object PlotGenerator {
                       ctsExecution.climographValues.meteoParams.precipitation.colAggMethod,
                     ),
                     climateGroup.climateGroupName,
-                    climateRegistry.climateName,
+                    climateRecord.climateName,
                     location
                   )
                 )
@@ -228,7 +230,7 @@ object PlotGenerator {
     private val ctsStorage = PlotGenerator.ctsStorage.singleParamStudiesConf
     private val ctsLogs = PlotGenerator.ctsLogs.singleParamStudiesConf
 
-    private def BarDTOTop10Formatter(dto: BarDTO, formatInfo: Top10FormatInfo): BarDTO = {
+    private def barDTOTop10Formatter(dto: BarDTO, formatInfo: Top10FormatInfo): BarDTO = {
       dto.copy(
         src = dto.src.copy(
           path = dto.src.path.format(
@@ -270,7 +272,7 @@ object PlotGenerator {
       )
     }
 
-    private def BarDTOTop5IncFormatter(dto: BarDTO, formatInfo: Top5IncFormatInfo): BarDTO = {
+    private def barDTOTop5IncFormatter(dto: BarDTO, formatInfo: Top5IncFormatInfo): BarDTO = {
       dto.copy(
         src = dto.src.copy(
           path = dto.src.path.format(
@@ -299,7 +301,7 @@ object PlotGenerator {
       )
     }
 
-    private def LinearDTOEvol2024Formatter(dto: LinearDTO, formatInfo: EvolFormatInfo): LinearDTO = {
+    private def linearDTOEvol2024Formatter(dto: LinearDTO, formatInfo: EvolFormatInfo): LinearDTO = {
       dto.copy(
         src = dto.src.copy(
           path = dto.src.path.format(
@@ -348,7 +350,7 @@ object PlotGenerator {
       )
     }
 
-    private def LinearRegressionDTOEvolYearlyGroupFormatter(dto: LinearRegressionDTO, formatInfo: EvolFormatInfo): LinearRegressionDTO = {
+    private def linearRegressionDTOEvolYearlyGroupFormatter(dto: LinearRegressionDTO, formatInfo: EvolFormatInfo): LinearRegressionDTO = {
       dto.copy(
         src = dto.src.copy(
           main = dto.src.main.copy(
@@ -414,7 +416,7 @@ object PlotGenerator {
       )
     }
 
-    private def HeatMapDTOHeatMap2024Formatter(dto: HeatMapDTO, formatInfo: HeatMap2024FormatInfo): HeatMapDTO = {
+    private def heatMapDTOHeatMap2024Formatter(dto: HeatMapDTO, formatInfo: HeatMap2024FormatInfo): HeatMapDTO = {
       dto.copy(
         src = dto.src.copy(
           path = dto.src.path.format(
@@ -489,7 +491,7 @@ object PlotGenerator {
 
             generatePlot(
               buildUrl(ctsExecution.top10.uri),
-              BarDTOTop10Formatter(
+              barDTOTop10Formatter(
                 ctsExecution.top10.body,
                 Top10FormatInfo(
                   MeteoParamInfo(
@@ -523,7 +525,7 @@ object PlotGenerator {
 
           generatePlot(
             buildUrl(ctsExecution.top5Inc.uri),
-            BarDTOTop5IncFormatter(
+            barDTOTop5IncFormatter(
               ctsExecution.top5Inc.body,
               Top5IncFormatInfo(
                 MeteoParamInfo(
@@ -557,7 +559,7 @@ object PlotGenerator {
           val station2024JSON = readJSON(ctsStorage.evol.evol2024.dataSrcStation.format(
             studyParamValue.studyParamAbbrev,
             stateValue.stateNameNoSc
-          ), findHeaviest = true) match {
+          )) match {
             case Left(exception: Exception) =>
               ConsoleLogUtils.Message.printlnConsoleMessage(NotificationType.Warning, exception.toString)
               return
@@ -566,7 +568,7 @@ object PlotGenerator {
 
           generatePlot(
             buildUrl(ctsExecution.evol2024.uri),
-            LinearDTOEvol2024Formatter(
+            linearDTOEvol2024Formatter(
               ctsExecution.evol2024.body,
               EvolFormatInfo(
                 MeteoParamInfo(
@@ -596,7 +598,7 @@ object PlotGenerator {
           val stationGlobalJSON = readJSON(ctsStorage.evol.evolYearlyGroup.dataSrcStation.format(
             studyParamValue.studyParamAbbrev,
             stateValue.stateNameNoSc
-          ), findHeaviest = true) match {
+          )) match {
             case Left(exception: Exception) =>
               ConsoleLogUtils.Message.printlnConsoleMessage(NotificationType.Warning, exception.toString)
               return
@@ -605,7 +607,7 @@ object PlotGenerator {
 
           generatePlot(
             buildUrl(ctsExecution.evolYearlyGroup.uri),
-            LinearRegressionDTOEvolYearlyGroupFormatter(
+            linearRegressionDTOEvolYearlyGroupFormatter(
               ctsExecution.evolYearlyGroup.body,
               EvolFormatInfo(
                 MeteoParamInfo(
@@ -641,7 +643,7 @@ object PlotGenerator {
 
           generatePlot(
             buildUrl(ctsExecution.heatMap2024.uri),
-            HeatMapDTOHeatMap2024Formatter(
+            heatMapDTOHeatMap2024Formatter(
               ctsExecution.heatMap2024.body,
               HeatMap2024FormatInfo(
                 MeteoParamInfo(
@@ -663,7 +665,225 @@ object PlotGenerator {
     }
   }
 
+  object InterestingStudies {
+    private case class MeteoParamInfo(meteoParam: String, meteoParamAbbrev: String, units: String, colAggMethod: String)
+    private case class StationInfo(stationName: String, stationId: String, state: String, stateNoSc: String, latitude: String, longitude: String, altitude: Int)
+    private case class PrecPressEvolFormatInfo(precMeteoInfo: MeteoParamInfo, pressMeteoInfo: MeteoParamInfo, stationInfo: StationInfo)
+    private case class Top10StatesFormatInfo(studyName: String, studyAbbrev: String)
 
+    private val ctsExecution = PlotGenerator.ctsExecution.interestingStudiesConf
+    private val ctsStorage = PlotGenerator.ctsStorage.interestingStudiesConf
+    private val ctsLogs = PlotGenerator.ctsLogs.interestingStudiesConf
+
+    private def doubleLinearDTOEvolPrecPressFormatter(dto: DoubleLinearDTO, formatInfo: PrecPressEvolFormatInfo): DoubleLinearDTO = {
+      dto.copy(
+        src = dto.src.copy(
+          path = dto.src.path.format(
+            formatInfo.stationInfo.stateNoSc
+          ),
+          axis = dto.src.axis.copy(
+            y1 = dto.src.axis.y1.copy(
+              name = dto.src.axis.y1.name.format(
+                formatInfo.precMeteoInfo.meteoParamAbbrev,
+                formatInfo.precMeteoInfo.colAggMethod
+              )
+            ),
+            y2 = dto.src.axis.y2.copy(
+              name = dto.src.axis.y2.name.format(
+                formatInfo.pressMeteoInfo.meteoParamAbbrev,
+                formatInfo.pressMeteoInfo.colAggMethod
+              )
+            )
+          )
+        ),
+        dest = dto.dest.copy(
+          path = dto.dest.path.format(
+            formatInfo.stationInfo.stateNoSc
+          )
+        ),
+        style = dto.style.copy(
+          lettering = dto.style.lettering.copy(
+            title = dto.style.lettering.title.format(
+              formatInfo.stationInfo.stationName,
+              formatInfo.stationInfo.stationId,
+              formatInfo.stationInfo.state,
+              formatInfo.precMeteoInfo.meteoParam,
+              formatInfo.pressMeteoInfo.meteoParam,
+            ),
+            subtitle = dto.style.lettering.subtitle.format(
+              formatInfo.stationInfo.latitude,
+              formatInfo.stationInfo.longitude,
+              formatInfo.stationInfo.altitude
+            ),
+            y1Label = dto.style.lettering.y1Label.format(
+              formatInfo.precMeteoInfo.meteoParam.capitalize,
+              formatInfo.precMeteoInfo.units
+            ),
+            y2Label = dto.style.lettering.y2Label.format(
+              formatInfo.pressMeteoInfo.meteoParam.capitalize,
+              formatInfo.pressMeteoInfo.units
+            )
+          ),
+          figure1 = dto.style.figure1.copy(
+            name = dto.style.figure1.name.format(
+              formatInfo.precMeteoInfo.meteoParam.capitalize,
+            )
+          ),
+          figure2 = dto.style.figure2.copy(
+            name = dto.style.figure2.name.format(
+              formatInfo.pressMeteoInfo.meteoParam.capitalize,
+            )
+          )
+        )
+      )
+    }
+
+    private def tableDTOTop10StatesFormatter(dto: TableDTO, formatInfo: Top10StatesFormatInfo): TableDTO = {
+      dto.copy(
+        src = dto.src.copy(
+          path = dto.src.path.format(
+            formatInfo.studyAbbrev
+          )
+        ),
+        dest = dto.dest.copy(
+          path = dto.dest.path.format(
+            formatInfo.studyAbbrev
+          )
+        ),
+        style = dto.style.copy(
+          lettering = dto.style.lettering.copy(
+            title = dto.style.lettering.title.format(
+              formatInfo.studyName
+            )
+          )
+        )
+      )
+    }
+
+    def generate(): Unit = {
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startPlotGeneration.format(
+        ctsLogs.studyName
+      ))
+
+      // -- EVOL PREC PRESS --
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolPrecPressStudy, encloseHalfLength = encloseHalfLength + 5)
+
+      ctsSchemaSpark.stateValues.toList.foreach(stateValue => {
+
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolPrecPressState.format(
+          stateValue.stateName.capitalize
+        ), encloseHalfLength = encloseHalfLength + 10)
+
+        // -- EVOL PREC PRESS 2024 --
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolPrecPress2024, encloseHalfLength = encloseHalfLength + 15)
+
+        val station2024JSON = readJSON(ctsStorage.evolPrecPress.evol2024.dataSrcStation.format(
+          stateValue.stateNameNoSc
+        )) match {
+          case Left(exception: Exception) =>
+            ConsoleLogUtils.Message.printlnConsoleMessage(NotificationType.Warning, exception.toString)
+            return
+          case Right(json: Value) => json
+        }
+
+        generatePlot(
+          buildUrl(ctsExecution.evolPrecPress2024.uri),
+          doubleLinearDTOEvolPrecPressFormatter(
+            ctsExecution.evolPrecPress2024.body,
+            PrecPressEvolFormatInfo(
+              MeteoParamInfo(
+                ctsExecution.evolPrecPressValues.precipitation.studyParamName,
+                ctsExecution.evolPrecPressValues.precipitation.studyParamAbbrev,
+                ctsExecution.evolPrecPressValues.precipitation.studyParamUnit,
+                ctsExecution.evolPrecPressValues.precipitation.colAggMethod
+              ),
+              MeteoParamInfo(
+                ctsExecution.evolPrecPressValues.pressure.studyParamName,
+                ctsExecution.evolPrecPressValues.pressure.studyParamAbbrev,
+                ctsExecution.evolPrecPressValues.pressure.studyParamUnit,
+                ctsExecution.evolPrecPressValues.pressure.colAggMethod
+              ),
+              StationInfo(
+                station2024JSON(ctsSchemaSpark.stationsDf.stationName).str,
+                station2024JSON(ctsSchemaSpark.stationsDf.stationId).str,
+                station2024JSON(ctsSchemaSpark.stationsDf.state).str,
+                stateValue.stateNameNoSc,
+                station2024JSON(ctsSchemaSpark.stationsDf.latDms).str,
+                station2024JSON(ctsSchemaSpark.stationsDf.longDms).str,
+                station2024JSON(ctsSchemaSpark.stationsDf.altitude).num.toInt,
+              )
+            )
+          )
+        )
+
+        // -- EVOL PREC PRESS YEARLY GROUP --
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolPrecPressYearlyGroup, encloseHalfLength = encloseHalfLength + 15)
+
+        val stationGlobalJSON = readJSON(ctsStorage.evolPrecPress.evolYearlyGroup.dataSrcStation.format(
+          stateValue.stateNameNoSc
+        )) match {
+          case Left(exception: Exception) =>
+            ConsoleLogUtils.Message.printlnConsoleMessage(NotificationType.Warning, exception.toString)
+            return
+          case Right(json: Value) => json
+        }
+
+        generatePlot(
+          buildUrl(ctsExecution.evolPrecPressYearlyGroup.uri),
+          doubleLinearDTOEvolPrecPressFormatter(
+            ctsExecution.evolPrecPressYearlyGroup.body,
+            PrecPressEvolFormatInfo(
+              MeteoParamInfo(
+                ctsExecution.evolPrecPressValues.precipitation.studyParamName,
+                ctsExecution.evolPrecPressValues.precipitation.studyParamAbbrev,
+                ctsExecution.evolPrecPressValues.precipitation.studyParamUnit,
+                ctsExecution.evolPrecPressValues.precipitation.colAggMethod
+              ),
+              MeteoParamInfo(
+                ctsExecution.evolPrecPressValues.pressure.studyParamName,
+                ctsExecution.evolPrecPressValues.pressure.studyParamAbbrev,
+                ctsExecution.evolPrecPressValues.pressure.studyParamUnit,
+                ctsExecution.evolPrecPressValues.pressure.colAggMethod
+              ),
+              StationInfo(
+                stationGlobalJSON(ctsSchemaSpark.stationsDf.stationName).str,
+                stationGlobalJSON(ctsSchemaSpark.stationsDf.stationId).str,
+                stationGlobalJSON(ctsSchemaSpark.stationsDf.state).str,
+                stateValue.stateNameNoSc,
+                stationGlobalJSON(ctsSchemaSpark.stationsDf.latDms).str,
+                stationGlobalJSON(ctsSchemaSpark.stationsDf.longDms).str,
+                stationGlobalJSON(ctsSchemaSpark.stationsDf.altitude).num.toInt,
+              )
+            )
+          )
+        )
+
+      })
+
+      // -- TOP 10 --
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.top10StatesStudy, encloseHalfLength = encloseHalfLength + 5)
+
+      ctsExecution.top10StatesValues.foreach(study => {
+
+        printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.top10StatesStudyName.format(
+          study.name
+        ), encloseHalfLength = encloseHalfLength + 10)
+
+        generatePlot(
+          buildUrl(ctsExecution.top10States.uri),
+          tableDTOTop10StatesFormatter(
+            ctsExecution.top10States.body,
+            Top10StatesFormatInfo(
+              study.name,
+              study.nameAbbrev
+            )
+          )
+        )
+      })
+
+
+    }
+  }
 
   private def generateRequestBody[T: ReadWriter](dto: T): Value = {
     removeNullKeys(writeJs(dto))
@@ -680,14 +900,23 @@ object PlotGenerator {
   }
 
   def generate(): Unit = {
+    chronometer.start()
+
     // STATIONS
-    //Stations.generate()
+    Stations.generate()
 
     // CLIMOGRAPH
     Climograph.generate()
 
     // SINGLE PARAM STUDIES
-    //SingleParamStudies.generate()
+    SingleParamStudies.generate()
+
+    // INTERESTING STUDIES
+    InterestingStudies.generate()
+
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.chrono.chronoResult.format(chronometer.stop()))
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.betweenStages.infoText.format(ctsGlobalUtils.betweenStages.millisBetweenStages / 1000))
+    Thread.sleep(ctsGlobalUtils.betweenStages.millisBetweenStages)
   }
 }
 
