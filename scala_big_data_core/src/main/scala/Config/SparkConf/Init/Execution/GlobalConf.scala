@@ -5,14 +5,6 @@ case class ReadConfig(
   readMode: String
 )
 
-case class AggregationMethods(
-  sum: String,
-  avg: String,
-  max: String,
-  min: String
-)
-
 case class GlobalConf(
-  readConfig: ReadConfig,
-  groupMethods: AggregationMethods
+  readConfig: ReadConfig
 )

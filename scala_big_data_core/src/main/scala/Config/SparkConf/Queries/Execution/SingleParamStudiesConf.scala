@@ -1,23 +1,5 @@
 package Config.SparkConf.Queries.Execution
 
-case class StudyParamNames(
-  temperature: String,
-  precipitation: String,
-  windVelocity: String,
-  pressure: String,
-  sunRadiation: String,
-  relativeHumidity: String
-)
-
-case class StudyParamAbbrev(
-  temperature: String,
-  precipitation: String,
-  windVelocity: String,
-  pressure: String,
-  sunRadiation: String,
-  relativeHumidity: String
-)
-
 case class SingleParamStudyRepresentativeStationRegistry(
   stateName: String,
   stateNameNoSc: String,
@@ -83,8 +65,6 @@ case class Avg2024AllStationSpain(
 
 
 case class SingleParamStudiesConf(
-  studyParamNames: StudyParamNames,
-  studyParamAbbrev: StudyParamAbbrev,
   singleParamStudiesValues: List[StudyRegistry],
   top10Highest2024: Top10Highest2024,
   top10HighestDecade: Top10HighestDecade,

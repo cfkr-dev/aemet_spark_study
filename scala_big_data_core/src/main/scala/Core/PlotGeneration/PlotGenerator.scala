@@ -17,8 +17,8 @@ object PlotGenerator {
   private val ctsExecution = PlotGenerationConf.Constants.execution
   private val ctsStorage = PlotGenerationConf.Constants.storage
   private val ctsLogs = PlotGenerationConf.Constants.log
-  private val ctsUtils = PlotGenerationConf.Constants.utils
   private val ctsGlobalLogs = PlotGenerator.ctsLogs.globalConf
+  private val ctsGlobalExecution = PlotGenerator.ctsExecution.globalConf
   private val encloseHalfLength = 35
 
   object Stations {
@@ -55,7 +55,8 @@ object PlotGenerator {
 
   object Climograph {
     private case class StationInfo(stationName: String, stationId: String, state: String, latitude: String, longitude: String, altitude: Int)
-    private case class ClimographInfo(climateType: String, climateSubtype: String, climateLocation: String)
+    private case class MeteoParamInfo(meteoParam: String, meteoParamAbbrev: String, units: String, colAggMethod: String)
+    private case class ClimographInfo(tempParamInfo: MeteoParamInfo, precParamInfo: MeteoParamInfo, climateType: String, climateSubtype: String, climateLocation: String)
     private case class FormatInfo(stationInfo: StationInfo, climographInfo: ClimographInfo)
 
     private val ctsExecution = PlotGenerator.ctsExecution.climographConf
@@ -69,6 +70,20 @@ object PlotGenerator {
             formatInfo.climographInfo.climateType,
             formatInfo.climographInfo.climateSubtype,
             formatInfo.climographInfo.climateLocation.replace(" ", "_")
+          ),
+          axis = dto.src.axis.copy(
+            yTemp = dto.src.axis.yTemp.copy(
+              name = dto.src.axis.yTemp.name.format(
+                formatInfo.climographInfo.tempParamInfo.meteoParamAbbrev,
+                formatInfo.climographInfo.tempParamInfo.colAggMethod
+              )
+            ),
+            yPrec = dto.src.axis.yPrec.copy(
+              name = dto.src.axis.yPrec.name.format(
+                formatInfo.climographInfo.precParamInfo.meteoParamAbbrev,
+                formatInfo.climographInfo.precParamInfo.colAggMethod
+              )
+            )
           )
         ),
         dest = dto.dest.copy(
@@ -91,8 +106,26 @@ object PlotGenerator {
               formatInfo.stationInfo.latitude,
               formatInfo.stationInfo.longitude,
               formatInfo.stationInfo.altitude
+            ),
+            yTempLabel = dto.style.lettering.yTempLabel.format(
+              formatInfo.climographInfo.tempParamInfo.meteoParam.capitalize,
+              formatInfo.climographInfo.tempParamInfo.units
+            ),
+            yPrecLabel = dto.style.lettering.yPrecLabel.format(
+              formatInfo.climographInfo.precParamInfo.meteoParam.capitalize,
+              formatInfo.climographInfo.precParamInfo.units
             )
-          )
+          ),
+          figureTemp = dto.style.figureTemp.copy(
+            name = dto.style.figureTemp.name.format(
+              formatInfo.climographInfo.tempParamInfo.meteoParam.capitalize
+            )
+          ),
+          figurePrec = dto.style.figurePrec.copy(
+            name = dto.style.figurePrec.name.format(
+              formatInfo.climographInfo.precParamInfo.meteoParam.capitalize
+            )
+          ),
         )
       )
     }
@@ -102,7 +135,7 @@ object PlotGenerator {
         ctsLogs.studyName
       ))
 
-      ctsExecution.climateRegistries.foreach(climateGroup => {
+      ctsExecution.climographValues.climateRegistries.foreach(climateGroup => {
 
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.climateType.format(
           climateGroup.climateGroupName
@@ -149,6 +182,18 @@ object PlotGenerator {
                     stationJSON(ctsSchemaSpark.stationsDf.altitude).num.toInt,
                   ),
                   ClimographInfo(
+                    MeteoParamInfo(
+                      ctsExecution.climographValues.meteoParams.temperature.studyParamName,
+                      ctsExecution.climographValues.meteoParams.temperature.studyParamAbbrev,
+                      ctsExecution.climographValues.meteoParams.temperature.studyParamUnit,
+                      ctsExecution.climographValues.meteoParams.temperature.colAggMethod,
+                    ),
+                    MeteoParamInfo(
+                      ctsExecution.climographValues.meteoParams.precipitation.studyParamName,
+                      ctsExecution.climographValues.meteoParams.precipitation.studyParamAbbrev,
+                      ctsExecution.climographValues.meteoParams.precipitation.studyParamUnit,
+                      ctsExecution.climographValues.meteoParams.precipitation.colAggMethod,
+                    ),
                     climateGroup.climateGroupName,
                     climateRegistry.climateName,
                     location
@@ -419,7 +464,7 @@ object PlotGenerator {
         ctsLogs.studyName
       ))
 
-      ctsExecution.studyParamsValues.foreach(studyParamValue => {
+      ctsSchemaSpark.meteoParamsValues.toList.foreach(studyParamValue => {
 
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.meteoParamStudy.format(
           studyParamValue.studyParamName.capitalize
@@ -485,7 +530,7 @@ object PlotGenerator {
                   studyParamValue.studyParamName,
                   studyParamValue.studyParamAbbrev,
                   studyParamValue.studyParamUnit,
-                  ctsUtils.groupMethods.avg
+                  ctsSchemaSpark.groupMethods.avg
                 ),
                 top5IncOrder
               )
@@ -498,7 +543,7 @@ object PlotGenerator {
           studyParamValue.studyParamName.capitalize
         ), encloseHalfLength = encloseHalfLength + 10)
 
-        ctsExecution.stateValues.foreach(stateValue => {
+        ctsSchemaSpark.stateValues.toList.foreach(stateValue => {
 
           printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolState.format(
             stateValue.stateName.capitalize
@@ -636,13 +681,13 @@ object PlotGenerator {
 
   def generate(): Unit = {
     // STATIONS
-    Stations.generate()
+    //Stations.generate()
 
     // CLIMOGRAPH
     Climograph.generate()
 
     // SINGLE PARAM STUDIES
-    SingleParamStudies.generate()
+    //SingleParamStudies.generate()
   }
 }
 

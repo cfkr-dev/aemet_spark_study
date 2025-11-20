@@ -1,5 +1,10 @@
 package Config.SparkConf.Queries.Execution
 
+case class ClimographStudyParamNames(
+  temperature: String,
+  precipitation: String
+)
+
 case class ClimographLocations(
   peninsula: String,
   canaryIslands: String,
@@ -23,6 +28,7 @@ case class ClimateGroupRegistry(
 
 case class ClimographConf(
   observationYear: Int,
+  studyParamNames: ClimographStudyParamNames,
   locations: ClimographLocations,
   stationsRegistries: List[ClimateGroupRegistry]
 )
