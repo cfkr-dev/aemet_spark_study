@@ -16,4 +16,13 @@ case class UtilsErrors(
   environmentVariableNotFound: String
 )
 
-case class UtilsConf(formats: UtilsFormats, errors: UtilsErrors)
+case class Chrono(
+  chronoResult: String
+)
+
+case class BetweenStages(
+  millisBetweenStages: Int,
+  infoText: String
+)
+
+case class UtilsConf(formats: UtilsFormats, errors: UtilsErrors, chrono: Chrono, betweenStages: BetweenStages)

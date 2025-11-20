@@ -1,15 +1,7 @@
 package Config.SparkConf.Queries.Storage
 
 case class InterestingStudiesTop10Dirs (
-  dataBetterWindPower: String,
-  dataBetterSunPower: String,
-  dataTorrentialRains: String,
-  dataStorms: String,
-  dataAgriculture: String,
-  dataDroughts: String,
-  dataFires: String,
-  dataHeatWaves: String,
-  dataFrosts: String
+  dataTop: String
 )
 
 case class PrecAndPressEvolDirs (
@@ -21,6 +13,6 @@ case class PrecAndPressEvolDirs (
 
 case class InterestingStudiesConf(
   baseDir: String,
-  top10: InterestingStudiesTop10Dirs,
+  top10States: InterestingStudiesTop10Dirs,
   precAndPressEvol: PrecAndPressEvolDirs
 )

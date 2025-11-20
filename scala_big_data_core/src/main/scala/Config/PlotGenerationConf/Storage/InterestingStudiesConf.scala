@@ -17,8 +17,14 @@ case class EvolPrecPress(
   evolYearlyGroup: EvolPrecPressYearlyGroup
 )
 
+case class Top10States(
+  dataSrc: String,
+  dataDest: String
+)
+
 case class InterestingStudiesConf(
   baseSrcDir: String,
   baseDestDir: String,
-  evolPrecPress: EvolPrecPress
+  evolPrecPress: EvolPrecPress,
+  top10States: Top10States
 )

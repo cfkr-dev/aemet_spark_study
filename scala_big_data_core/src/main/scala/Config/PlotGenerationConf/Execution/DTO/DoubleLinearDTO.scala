@@ -11,8 +11,8 @@ object DoubleLinearDTOAxisComponent { implicit val rw: ReadWriter[DoubleLinearDT
 
 case class DoubleLinearDTOAxis(
   @key("x") x: DoubleLinearDTOAxisComponent,
-  @key("y1") y1: DoubleLinearDTOAxisComponent,
-  @key("y2") y2: DoubleLinearDTOAxisComponent
+  @key("y_1") y1: DoubleLinearDTOAxisComponent,
+  @key("y_2") y2: DoubleLinearDTOAxisComponent
 )
 object DoubleLinearDTOAxis { implicit val rw: ReadWriter[DoubleLinearDTOAxis] = macroRW }
 
@@ -33,8 +33,8 @@ case class DoubleLinearDTOLettering(
   @key("title") title: String,
   @key("subtitle") subtitle: String,
   @key("x_label") xLabel: String,
-  @key("y1_label") y1Label: String,
-  @key("y2_label") y2Label: String
+  @key("y_1_label") y1Label: String,
+  @key("y_2_label") y2Label: String
 )
 object DoubleLinearDTOLettering { implicit val rw: ReadWriter[DoubleLinearDTOLettering] = macroRW }
 

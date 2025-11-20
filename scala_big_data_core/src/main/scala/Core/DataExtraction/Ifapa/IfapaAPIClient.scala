@@ -1,6 +1,7 @@
 package Core.DataExtraction.Ifapa
 
-import Config.DataExtractionConf
+import Config.{DataExtractionConf, GlobalConf}
+import Utils.ChronoUtils
 import Utils.ChronoUtils.{await, executeAndAwaitIfTimeNotExceedMinimum}
 import Utils.ConsoleLogUtils.Message._
 import Utils.FileUtils.saveContentToPath
@@ -17,6 +18,8 @@ object IfapaAPIClient {
   private val ctsLog = DataExtractionConf.Constants.log.ifapaConf
   private val ctsStorage = DataExtractionConf.Constants.storage.ifapaConf
   private val ctsUrl = DataExtractionConf.Constants.url.ifapaConf
+  private val ctsGlobalUtils = GlobalConf.Constants.utils
+  private val chronometer = ChronoUtils.Chronometer()
 
   private def getIfapaAPIResource(uri: Uri): Either[Exception, Value] = {
     sendGetRequest(uri) match {
@@ -26,6 +29,8 @@ object IfapaAPIClient {
   }
 
   def ifapaDataExtraction(): Unit = {
+    chronometer.start()
+
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationInfoStartFetchingMetadata)
     SingleStationInfo.saveSingleStationInfoMetadata()
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationInfoEndFetchingMetadata)
@@ -41,6 +46,10 @@ object IfapaAPIClient {
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationMeteoInfoStartFetchingData)
     SingleStationMeteoInfo.saveSingleStationMeteoInfo()
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.singleStationMeteoInfoEndFetchingData)
+
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.chrono.chronoResult.format(chronometer.stop()))
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.betweenStages.infoText.format(ctsGlobalUtils.betweenStages.millisBetweenStages / 1000))
+    Thread.sleep(ctsGlobalUtils.betweenStages.millisBetweenStages)
   }
 
   private object SingleStationMeteoInfo {

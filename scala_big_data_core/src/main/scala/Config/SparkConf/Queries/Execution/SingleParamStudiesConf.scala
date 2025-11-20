@@ -1,6 +1,6 @@
 package Config.SparkConf.Queries.Execution
 
-case class SingleParamStudyRepresentativeStationRegistry(
+case class SingleParamStudyRepresentativeStationRecord(
   stateName: String,
   stateNameNoSc: String,
   stationIdGlobal: String,
@@ -11,12 +11,12 @@ case class SingleParamStudyRepresentativeStationRegistry(
   endDateGlobal: String
 )
 
-case class StudyRegistry(
+case class StudyRecord(
   studyParam: String,
   studyParamAbbrev: String,
   dataframeColName: String,
   colAggMethod: String,
-  reprStationRegs: List[SingleParamStudyRepresentativeStationRegistry]
+  reprStationRegs: List[SingleParamStudyRepresentativeStationRecord]
 )
 
 case class Top10Highest2024(
@@ -65,7 +65,7 @@ case class Avg2024AllStationSpain(
 
 
 case class SingleParamStudiesConf(
-  singleParamStudiesValues: List[StudyRegistry],
+  singleParamStudiesValues: List[StudyRecord],
   top10Highest2024: Top10Highest2024,
   top10HighestDecade: Top10HighestDecade,
   top10HighestGlobal: Top10HighestGlobal,

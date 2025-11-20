@@ -11,24 +11,24 @@ case class ClimographLocations(
   balearIslands: String
 )
 
-case class LocationRegistry(
+case class LocationRecord(
   location: String,
   stationId: String
 )
 
-case class ClimateRegistry(
+case class ClimateRecord(
   climateName: String,
-  registries: List[LocationRegistry]
+  records: List[LocationRecord]
 )
 
-case class ClimateGroupRegistry(
+case class ClimateGroupRecord(
   climateGroupName: String,
-  climates: List[ClimateRegistry]
+  climates: List[ClimateRecord]
 )
 
 case class ClimographConf(
   observationYear: Int,
   studyParamNames: ClimographStudyParamNames,
   locations: ClimographLocations,
-  stationsRegistries: List[ClimateGroupRegistry]
+  stationsRecords: List[ClimateGroupRecord]
 )

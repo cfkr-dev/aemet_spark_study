@@ -2,7 +2,7 @@ package Core.DataExtraction.Aemet
 
 import Config.{DataExtractionConf, GlobalConf}
 import Utils.ChronoUtils.{await, executeAndAwaitIfTimeNotExceedMinimum}
-import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleMessage}
+import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
 import Utils.FileUtils.saveContentToPath
 import Utils.HTTPUtils._
 import Utils.JSONUtils.{lowercaseKeys, writeJSON}
@@ -22,23 +22,31 @@ object AemetAPIClient {
   private val ctsStorage = DataExtractionConf.Constants.storage.aemetConf
   private val ctsUrl = DataExtractionConf.Constants.url.aemetConf
   private val ctsUtils = GlobalConf.Constants.utils
+  private val ctsGlobalUtils = GlobalConf.Constants.utils
+  private val chronometer = ChronoUtils.Chronometer()
 
   def aemetDataExtraction(): Unit = {
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoStartFetchingMetadata)
+    chronometer.start()
+
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoStartFetchingMetadata)
     AllStationsData.saveStationInfoMetadata()
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoEndFetchingMetadata)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoEndFetchingMetadata)
 
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoStartFetchingMetadata)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoStartFetchingMetadata)
     AllStationsMeteorologicalDataBetweenDates.saveStationMeteoInfoMetadata()
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoEndFetchingMetadata)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoEndFetchingMetadata)
 
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoStartFetchingData)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoStartFetchingData)
     AllStationsData.saveStationInfo()
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoEndFetchingData)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allStationInfoEndFetchingData)
 
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoStartFetchingData)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoStartFetchingData)
     AllStationsMeteorologicalDataBetweenDates.saveStationMeteoInfo()
-    ConsoleLogUtils.Message.printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoEndFetchingData)
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsLog.allMeteoInfoEndFetchingData)
+
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.chrono.chronoResult.format(chronometer.stop()))
+    printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.betweenStages.infoText.format(ctsGlobalUtils.betweenStages.millisBetweenStages / 1000))
+    Thread.sleep(ctsGlobalUtils.betweenStages.millisBetweenStages)
   }
 
   private def getAemetAPIResource(
