@@ -3,13 +3,14 @@ package Core.DataExtraction.Aemet
 import Config.{DataExtractionConf, GlobalConf}
 import Utils.ChronoUtils.{await, executeAndAwaitIfTimeNotExceedMinimum}
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
-import Utils.FileUtils.saveContentToPath
 import Utils.HTTPUtils._
-import Utils.JSONUtils.{lowercaseKeys, writeJSON}
+import Utils.JSONUtils.lowercaseKeys
+import Utils.Storage.Core.Storage
 import Utils._
 import sttp.client4.UriContext
 import sttp.model.Uri
 import ujson.{Obj, Value}
+import Utils.Storage.JSON.JSONStorageBackend.{readJSON, writeJSON}
 
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -24,6 +25,8 @@ object AemetAPIClient {
   private val ctsUtils = GlobalConf.Constants.utils
   private val ctsGlobalUtils = GlobalConf.Constants.utils
   private val chronometer = ChronoUtils.Chronometer()
+
+  private implicit val storage: Storage = Storage(sys.env.get(ctsGlobalUtils.awsS3.endpointEnvName))
 
   def aemetDataExtraction(): Unit = {
     chronometer.start()
@@ -84,8 +87,7 @@ object AemetAPIClient {
       startDate: ZonedDateTime,
       endDate: ZonedDateTime,
       isMetadata: Boolean,
-      path: String,
-      filename: String
+      path: String
     ): Boolean = {
       getAemetAPIResource(
         buildUrl(
@@ -108,16 +110,9 @@ object AemetAPIClient {
       ) match {
         case Left(exception: Exception) => ConsoleLogUtils.Message.printlnConsoleMessage(NotificationType.Warning, exception.toString)
           false
-        case Right(json) => FileUtils.saveContentToPath(
+        case Right(json) => writeJSON(
           path,
-          filename,
-          if (isMetadata) {
-            json
-          } else {
-            JSONUtils.lowercaseKeys(json)
-          },
-          appendContent = false,
-          JSONUtils.writeJSON
+          if (isMetadata) json else JSONUtils.lowercaseKeys(json)
         ) match {
           case Left(exception) => ConsoleLogUtils.Message.printlnConsoleMessage(NotificationType.Warning, exception.toString)
             false
@@ -135,8 +130,7 @@ object AemetAPIClient {
             startDate,
             endDate,
             isMetadata = true,
-            ctsStorageAllMeteoInfo.dirs.metadata,
-            ctsStorageAllMeteoInfo.filenames.metadata)
+            ctsStorageAllMeteoInfo.filepaths.metadata)
           ) {
             ChronoUtils.await(ctsExecutionGlobal.delayTimes.requestMetadata)
             doWhileWithGetAndSave(startDate, endDate)
@@ -168,8 +162,7 @@ object AemetAPIClient {
             startDate,
             endDate,
             isMetadata = false,
-            ctsStorageAllMeteoInfo.dirs.data,
-            ctsStorageAllMeteoInfo.filenames.data.format(
+            ctsStorageAllMeteoInfo.filepaths.data.format(
               startDate.format(
                 DateTimeFormatter.ofPattern(ctsUtils.formats.dateFormatFile)
               ),
@@ -191,17 +184,14 @@ object AemetAPIClient {
           doWhileWithGetAndSave(startDate, endDate)
         }
 
-        FileUtils.saveContentToPath(
-          ctsStorageAllMeteoInfo.dirs.metadata,
-          ctsStorageAllMeteoInfo.filenames.lastSavedDate,
+        writeJSON(
+          ctsStorageAllMeteoInfo.dirs.metadata + ctsStorageAllMeteoInfo.filenames.lastSavedDate,
           Obj(
             ctsExecutionAemet.reqResp.lastSavedDates.lastEndDate ->
               endDate.format(
                 DateTimeFormatter.ofPattern(ctsUtils.formats.dateHourZoned)
               )
-          ),
-          appendContent = false,
-          JSONUtils.writeJSON
+          )
         ) match {
           case Left(exception) => throw exception
           case Right(_) => ()
@@ -216,7 +206,7 @@ object AemetAPIClient {
         )
       }
 
-      val (startDate, endDate): (ZonedDateTime, ZonedDateTime) = FileUtils.getContentFromPath(
+      val (startDate, endDate): (ZonedDateTime, ZonedDateTime) = readJSON(
         ctsStorageAllMeteoInfo.filepaths.lastSavedDate
       ) match {
         case Right(json) =>
@@ -255,7 +245,11 @@ object AemetAPIClient {
   private object AllStationsData {
     private val ctsStorageAllStationInfo = ctsStorage.allStationInfo
 
-    private def getAndSave(endpoint: String, path: String, filename: String, isMetadata: Boolean = false): Boolean = {
+    private def getAndSave(
+      endpoint: String,
+      path: String,
+      isMetadata: Boolean = false
+    ): Boolean = {
       getAemetAPIResource(
         buildUrl(
           endpoint,
@@ -271,12 +265,9 @@ object AemetAPIClient {
       ) match {
         case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
           false
-        case Right(json: Value) => saveContentToPath(
+        case Right(json: Value) => writeJSON(
           path,
-          filename,
-          lowercaseKeys(json),
-          appendContent = false,
-          writeJSON
+          lowercaseKeys(json)
         ) match {
           case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
             false
@@ -291,8 +282,7 @@ object AemetAPIClient {
         def doWhileWithGetAndSave(): Unit = {
           if (!getAndSave(
             ctsUrl.allStationInfo,
-            ctsStorageAllStationInfo.dirs.metadata,
-            ctsStorageAllStationInfo.filenames.metadata,
+            ctsStorageAllStationInfo.filepaths.metadata,
             isMetadata = true
           )) {
             await(ctsExecutionGlobal.delayTimes.requestMetadata)
@@ -316,8 +306,7 @@ object AemetAPIClient {
         def doWhileWithGetAndSave(): Unit = {
           if (!getAndSave(
             ctsUrl.allStationInfo,
-            ctsStorageAllStationInfo.dirs.data,
-            ctsStorageAllStationInfo.filenames.data,
+            ctsStorageAllStationInfo.filepaths.data,
           )) {
             await(ctsExecutionGlobal.delayTimes.requestSimple)
             doWhileWithGetAndSave()
