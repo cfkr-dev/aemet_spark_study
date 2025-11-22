@@ -29,3 +29,8 @@ libraryDependencies += "com.lihaoyi" %% "upickle" % "4.0.2"
 libraryDependencies += "com.lihaoyi" %% "fansi" % "0.5.0"
 
 libraryDependencies += "com.github.pureconfig" %% "pureconfig" % "0.17.8"
+
+// https://mvnrepository.com/artifact/software.amazon.awssdk/s3
+libraryDependencies += "software.amazon.awssdk" % "s3" % "2.39.1"
+
+

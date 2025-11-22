@@ -25,4 +25,8 @@ case class BetweenStages(
   infoText: String
 )
 
-case class UtilsConf(formats: UtilsFormats, errors: UtilsErrors, chrono: Chrono, betweenStages: BetweenStages)
+case class AwsS3(
+  endpointEnvName: String
+)
+
+case class UtilsConf(formats: UtilsFormats, errors: UtilsErrors, chrono: Chrono, betweenStages: BetweenStages, awsS3: AwsS3)
