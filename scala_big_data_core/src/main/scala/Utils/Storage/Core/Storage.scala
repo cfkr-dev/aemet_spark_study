@@ -2,7 +2,9 @@ package Utils.Storage.Core
 
 import java.nio.file.Path
 
-case class Storage(s3Endpoint: Option[String] = None) {
+case class Storage(storagePrefix: Option[String], s3Endpoint: Option[String] = None) {
+
+  private val checkedPrefix = storagePrefix.getOrElse(throw new StoragePrefixNotFound())
 
   private def parseS3Path(path: String): (String, String) = {
     val parts = path.stripPrefix("s3://").split("/", 2)
@@ -13,7 +15,7 @@ case class Storage(s3Endpoint: Option[String] = None) {
     (parts(0), parts(1))
   }
 
-  private def select(path: String): (String, String, Boolean) = {
+  def selectS3orLocal(path: String): (String, String, Boolean) = {
     if (path.startsWith("s3://")) {
       val (bucket, key) = parseS3Path(path)
       (bucket, key, true)
@@ -23,7 +25,7 @@ case class Storage(s3Endpoint: Option[String] = None) {
   }
 
   def read(path: String): Path = {
-    val (bucket, key, isS3) = select(path)
+    val (bucket, key, isS3) = selectS3orLocal(checkedPrefix + path)
     try {
       if (isS3) S3StorageBackend.read(bucket, key, s3Endpoint) else LocalStorageBackend.read(key)
     } catch {
@@ -33,7 +35,7 @@ case class Storage(s3Endpoint: Option[String] = None) {
   }
 
   def write(path: String, localFile: Path): Unit = {
-    val (bucket, key, isS3) = select(path)
+    val (bucket, key, isS3) = selectS3orLocal(checkedPrefix + path)
     try {
       if (isS3) S3StorageBackend.write(bucket, key, localFile, s3Endpoint) else LocalStorageBackend.write(key, localFile)
     } catch {

@@ -28,6 +28,15 @@ object JSONStorageBackend {
     }
   }
 
+  def copyJSON(srcPath: String, destPath: String)(implicit storage: Storage): Either[Exception, String] = {
+    try {
+      storage.copy(srcPath, destPath)
+      Right(destPath)
+    } catch {
+      case ex: Exception => Left(ex)
+    }
+  }
+
 
 
 }

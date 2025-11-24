@@ -1,16 +1,16 @@
 package Core.Spark
 
 import Config.{GlobalConf, SparkConf}
+import Utils.ChronoUtils
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
-import Utils.{ChronoUtils, JSONUtils}
+import Utils.Storage.Core.Storage
+import Utils.Storage.JSON.JSONStorageBackend.{readJSON, writeJSON}
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Column, DataFrame, SaveMode, SparkSession}
 import org.apache.spark.storage.StorageLevel
-
-import java.nio.file.{Files, Paths, StandardCopyOption}
-import scala.jdk.CollectionConverters.IteratorHasAsScala
+import ujson.read
 
 object SparkManager {
   private val ctsExecutionGlobalConf = SparkConf.Constants.init.execution.globalConf
@@ -22,7 +22,13 @@ object SparkManager {
   private val ctsGroupMethods = GlobalConf.Constants.schema.sparkConf.groupMethods
   private val ctsAllStationSpecialValues = ctsExecutionDataframeConf.allStationsDf.specialValues
   private val ctsGlobalUtils = GlobalConf.Constants.utils
+
   private val chronometer = ChronoUtils.Chronometer()
+
+  private implicit val storage: Storage = Storage(
+    ctsGlobalUtils.environmentVars.values.storagePrefix,
+    ctsGlobalUtils.environmentVars.values.awsS3Endpoint
+  )
 
   private object SparkCore {
     private val ctsExecutionSessionConf = SparkConf.Constants.init.execution.sessionConf
@@ -34,6 +40,8 @@ object SparkManager {
       ctsExecutionSessionConf.sessionMaster,
       ctsExecutionSessionConf.sessionLogLevel
     )
+
+    private val storagePrefix: String = setStoragePrefix(ctsGlobalUtils.environmentVars.values.storagePrefix)
 
     def startSparkSession(): Unit = {
       chronometer.start()
@@ -56,7 +64,7 @@ object SparkManager {
       try {
         dataframe.write
           .mode(SaveMode.Overwrite)
-          .parquet(path)
+          .parquet(storagePrefix + path)
 
         Right(path)
       } catch {
@@ -66,18 +74,9 @@ object SparkManager {
 
     def saveDataframeAsJSON(dataframe: DataFrame, path: String): Either[Exception, String] = {
       try {
-        val dir = Paths.get(path).getParent
-
-        dataframe
-          .coalesce(1)
-          .write
-          .mode(SaveMode.Overwrite)
-          .json(dir.toString)
-
-        Files.move(
-          Files.list(dir).iterator().asScala.find(_.getFileName.toString.startsWith(ctsExecutionSessionConf.sessionResultFilesPrefix)).get,
-          Paths.get(path),
-          StandardCopyOption.REPLACE_EXISTING
+        writeJSON(
+          path,
+          read(dataframe.toJSON.collect().mkString(","))
         )
 
         Right(path)
@@ -87,10 +86,27 @@ object SparkManager {
     }
 
     private def createSparkSession(name: String, master: String, logLevel: String): SparkSession = {
-      val spark = SparkSession.builder()
-        .appName(name)
-        .master(master)
-        .getOrCreate()
+      val spark = if (ctsGlobalUtils.environmentVars.values.runningInEmr.getOrElse(false)) {
+        SparkSession.builder()
+          .appName(name)
+          .getOrCreate()
+      } else {
+        ctsGlobalUtils.environmentVars.values.awsS3Endpoint match {
+          case Some(endpoint) => SparkSession.builder()
+            .appName(name)
+            .master(master)
+            .config(ctsExecutionSessionConf.s3AMockConfiguration.names.accessKey, ctsExecutionSessionConf.s3AMockConfiguration.values.accessKey)
+            .config(ctsExecutionSessionConf.s3AMockConfiguration.names.secretKey, ctsExecutionSessionConf.s3AMockConfiguration.values.secretKey)
+            .config(ctsExecutionSessionConf.s3AMockConfiguration.names.endpoint, endpoint)
+            .config(ctsExecutionSessionConf.s3AMockConfiguration.names.pathStyleAccess, ctsExecutionSessionConf.s3AMockConfiguration.values.pathStyleAccess)
+            .config(ctsExecutionSessionConf.s3AMockConfiguration.names.sslEnabled, ctsExecutionSessionConf.s3AMockConfiguration.values.sslEnabled)
+            .getOrCreate()
+          case None => SparkSession.builder()
+            .appName(name)
+            .master(master)
+            .getOrCreate()
+        }
+      }
 
       spark.sparkContext
         .setLogLevel(logLevel)
@@ -98,6 +114,18 @@ object SparkManager {
       spark.catalog.clearCache()
 
       spark
+    }
+
+    private def setStoragePrefix(prefix: Option[String]): String = {
+      val checkedPrefix = prefix.getOrElse(
+        throw new Exception(ctsGlobalUtils.errors.environmentVariableNotFound.format(
+          ctsGlobalUtils.environmentVars.names.storagePrefix
+        ))
+      )
+
+      val (bucket, rest, isS3) = storage.selectS3orLocal(checkedPrefix + "/")
+
+      if (isS3) s"s3a://$bucket" else rest
     }
 
     private def createDataframeFromJSONAndAemetMetadata(
@@ -118,11 +146,12 @@ object SparkManager {
       }
 
       Right(session
-        .read.format(ctsExecutionGlobalConf.readConfig.readFormat)
+        .read
+        .format(ctsExecutionGlobalConf.readConfig.readFormat)
         .option(ctsExecutionGlobalConf.readConfig.readMode, value = true)
         .schema(
           createDataframeSchemaAemet(
-            JSONUtils.readJSON(
+            readJSON(
               metadataPath
             ) match {
               case Right(json) => json
@@ -130,7 +159,7 @@ object SparkManager {
             }
           )
         )
-        .json(sourcePath))
+        .json(storagePrefix + sourcePath))
     }
 
     object dataframes {

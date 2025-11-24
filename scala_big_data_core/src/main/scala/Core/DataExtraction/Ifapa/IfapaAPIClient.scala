@@ -4,9 +4,10 @@ import Config.{DataExtractionConf, GlobalConf}
 import Utils.ChronoUtils
 import Utils.ChronoUtils.{await, executeAndAwaitIfTimeNotExceedMinimum}
 import Utils.ConsoleLogUtils.Message._
-import Utils.FileUtils.saveContentToPath
 import Utils.HTTPUtils.{buildUrl, sendGetRequest}
-import Utils.JSONUtils.{lowercaseKeys, writeJSON}
+import Utils.JSONUtils.lowercaseKeys
+import Utils.Storage.Core.Storage
+import Utils.Storage.JSON.JSONStorageBackend.writeJSON
 import sttp.model.Uri
 import ujson.{Value, read}
 
@@ -19,7 +20,13 @@ object IfapaAPIClient {
   private val ctsStorage = DataExtractionConf.Constants.storage.ifapaConf
   private val ctsUrl = DataExtractionConf.Constants.url.ifapaConf
   private val ctsGlobalUtils = GlobalConf.Constants.utils
+
   private val chronometer = ChronoUtils.Chronometer()
+
+  private implicit val storage: Storage = Storage(
+    ctsGlobalUtils.environmentVars.values.storagePrefix,
+    ctsGlobalUtils.environmentVars.values.awsS3Endpoint
+  )
 
   private def getIfapaAPIResource(uri: Uri): Either[Exception, Value] = {
     sendGetRequest(uri) match {
@@ -60,23 +67,20 @@ object IfapaAPIClient {
       def saveSingleStationMeteoInfoMetadataAction(): Unit = {
         @tailrec
         def doWhileWithGetAndSave(): Unit = {
-          def getAndSave(endpoint: String, path: String, filename: String): Boolean = {
+          def getAndSave(endpoint: String, path: String): Boolean = {
             getIfapaAPIResource(
               buildUrl(endpoint)
             ) match {
               case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                 false
-              case Right(json: Value) => saveContentToPath(
+              case Right(json: Value) => writeJSON(
                 path,
-                filename,
                 lowercaseKeys(
                   json
                   (ctsExecutionIfapa.reqResp.response.metadata)
                   (ctsExecutionIfapa.reqResp.metadata.singleStationMeteoInfo)
                   (ctsExecutionIfapa.reqResp.metadata.fieldProperties)
-                ),
-                appendContent = false,
-                writeJSON
+                )
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   false
@@ -87,8 +91,7 @@ object IfapaAPIClient {
 
           if (!getAndSave(
             ctsUrl.allMeteadata,
-            ctsStorageSingleMeteoInfo.dirs.metadata,
-            ctsStorageSingleMeteoInfo.filenames.metadata
+            ctsStorageSingleMeteoInfo.filepaths.metadata
           )) {
             await(ctsExecutionGlobal.delayTimes.requestMetadata)
             doWhileWithGetAndSave()
@@ -128,8 +131,7 @@ object IfapaAPIClient {
             startDate: String,
             endDate: String,
             getEt0: Boolean,
-            path: String,
-            filename: String
+            path: String
           ): Boolean = {
             getIfapaAPIResource(
               buildUrl(
@@ -145,12 +147,9 @@ object IfapaAPIClient {
             ) match {
               case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                 false
-              case Right(json: Value) => saveContentToPath(
+              case Right(json: Value) => writeJSON(
                 path,
-                filename,
-                lowercaseKeys(json),
-                appendContent = false,
-                writeJSON
+                lowercaseKeys(json)
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   false
@@ -166,8 +165,7 @@ object IfapaAPIClient {
             startDate,
             endDate,
             getEt0,
-            ctsStorageSingleMeteoInfo.dirs.data,
-            ctsStorageSingleMeteoInfo.filenames.data.format(
+            ctsStorageSingleMeteoInfo.filepaths.data.format(
               startDate, endDate
             )
           )) {
@@ -200,23 +198,20 @@ object IfapaAPIClient {
       def saveSingleStationInfoMetadataAction(): Unit = {
         @tailrec
         def doWhileWithGetAndSave(): Unit = {
-          def getAndSave(endpoint: String, path: String, filename: String): Boolean = {
+          def getAndSave(endpoint: String, path: String): Boolean = {
             getIfapaAPIResource(
               buildUrl(endpoint)
             ) match {
               case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                 false
-              case Right(json: Value) => saveContentToPath(
+              case Right(json: Value) => writeJSON(
                 path,
-                filename,
                 lowercaseKeys(
                   json
                   (ctsExecutionIfapa.reqResp.response.metadata)
                   (ctsExecutionIfapa.reqResp.metadata.singleStationInfo)
                   (ctsExecutionIfapa.reqResp.metadata.fieldProperties)
-                ),
-                appendContent = false,
-                writeJSON
+                )
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   false
@@ -227,8 +222,7 @@ object IfapaAPIClient {
 
           if (!getAndSave(
             ctsUrl.allMeteadata,
-            ctsStorageSingleStationInfo.dirs.metadata,
-            ctsStorageSingleStationInfo.filenames.metadata
+            ctsStorageSingleStationInfo.filepaths.metadata
           )) {
             await(ctsExecutionGlobal.delayTimes.requestMetadata)
             doWhileWithGetAndSave()
@@ -259,8 +253,7 @@ object IfapaAPIClient {
             endpoint: String,
             stateCode: String,
             stationCode: String,
-            path: String,
-            filename: String
+            path: String
           ): Boolean = {
             getIfapaAPIResource(
               buildUrl(
@@ -273,12 +266,9 @@ object IfapaAPIClient {
             ) match {
               case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                 false
-              case Right(json: Value) => saveContentToPath(
+              case Right(json: Value) => writeJSON(
                 path,
-                filename,
-                lowercaseKeys(json),
-                appendContent = false,
-                writeJSON
+                lowercaseKeys(json)
               ) match {
                 case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
                   false
@@ -291,8 +281,7 @@ object IfapaAPIClient {
             ctsUrl.singleStationInfo,
             stateCode,
             stationCode,
-            ctsStorageSingleStationInfo.dirs.data,
-            ctsStorageSingleStationInfo.filenames.data.format(
+            ctsStorageSingleStationInfo.filepaths.data.format(
               stateCode, stationCode
             )
           )) {

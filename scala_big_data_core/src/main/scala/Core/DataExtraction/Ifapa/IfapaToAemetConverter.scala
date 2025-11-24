@@ -3,15 +3,22 @@ package Core.DataExtraction.Ifapa
 import Config.{DataExtractionConf, GlobalConf}
 import Utils.ChronoUtils
 import Utils.ConsoleLogUtils.Message._
-import Utils.FileUtils.{copyFile, saveContentToPath}
-import Utils.JSONUtils.{buildJSONFromSchemaAndData, readJSON, transformJSONValues, writeJSON}
+import Utils.JSONUtils.{buildJSONFromSchemaAndData, transformJSONValues}
+import Utils.Storage.Core.Storage
+import Utils.Storage.JSON.JSONStorageBackend.{copyJSON, readJSON, writeJSON}
 import ujson.{Arr, Value}
 
 object IfapaToAemetConverter {
   private val ctsExecutionAemet = DataExtractionConf.Constants.execution.aemetConf
   private val ctsLogs = DataExtractionConf.Constants.log.ifapaAemetFormatConf
   private val ctsGlobalUtils = GlobalConf.Constants.utils
+
   private val chronometer = ChronoUtils.Chronometer()
+
+  private implicit val storage: Storage = Storage(
+    ctsGlobalUtils.environmentVars.values.storagePrefix,
+    ctsGlobalUtils.environmentVars.values.awsS3Endpoint
+  )
 
   private def genEmptyAemetJSONFromMetadata(metadataJSON: ujson.Value): ujson.Value = {
     ujson.Obj.from(
@@ -140,9 +147,8 @@ object IfapaToAemetConverter {
 
       val formatter: Map[String, ujson.Value => ujson.Value] = genAemetMeteoInfoFormatters()
 
-      saveContentToPath(
-        ctsStorageIfapaAemetFormatSingleStationMeteoInfo.dirs.data,
-        ctsStorageIfapaAemetFormatSingleStationMeteoInfo.filenames.data.format(
+      writeJSON(
+        ctsStorageIfapaAemetFormatSingleStationMeteoInfo.filepaths.data.format(
           ctsExecutionIfapa.apiResources.singleStationMeteoInfo.startDate,
           ctsExecutionIfapa.apiResources.singleStationMeteoInfo.endDate
         ),
@@ -165,12 +171,10 @@ object IfapaToAemetConverter {
                 formatter
               )
           })
-        },
-        appendContent = false,
-        writeJSON
+        }
       ) match {
         case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-        case Right(_) => copyFile(
+        case Right(_) => copyJSON(
           ctsStorageAemetAllMeteoInfo.filepaths.metadata,
           ctsStorageIfapaAemetFormatSingleStationMeteoInfo.filepaths.metadata
         ) match {
@@ -230,9 +234,8 @@ object IfapaToAemetConverter {
 
       val formatter: Map[String, ujson.Value => ujson.Value] = genAemetStationInfoFormatters()
 
-      saveContentToPath(
-        ctsStorageIfapaAemetFormatSingleStationInfo.dirs.data,
-        ctsStorageIfapaAemetFormatSingleStationInfo.filenames.data.format(
+      writeJSON(
+        ctsStorageIfapaAemetFormatSingleStationInfo.filepaths.data.format(
           ctsExecutionIfapa.apiResources.singleStationInfo.stateCode,
           ctsExecutionIfapa.apiResources.singleStationInfo.stationCode
         ),
@@ -249,12 +252,10 @@ object IfapaToAemetConverter {
             ),
             formatter
           )
-        },
-        appendContent = false,
-        writeJSON
+        }
       ) match {
         case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
-        case Right(_) => copyFile(
+        case Right(_) => copyJSON(
           ctsStorageAemetAllStationInfo.filepaths.metadata,
           ctsStorageIfapaAemetFormatSingleStationInfo.filepaths.metadata
         ) match {
