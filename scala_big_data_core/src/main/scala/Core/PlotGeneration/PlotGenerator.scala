@@ -6,7 +6,9 @@ import Config.PlotGenerationConf.Execution.DTO.{BarDTO, ClimographDTO, DoubleLin
 import Utils.{ChronoUtils, ConsoleLogUtils}
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage}
 import Utils.HTTPUtils.{buildUrl, sendPostRequest}
-import Utils.JSONUtils.{readJSON, removeNullKeys}
+import Utils.JSONUtils.removeNullKeys
+import Utils.Storage.Core.Storage
+import Utils.Storage.JSON.JSONStorageBackend.readJSON
 import sttp.model.Uri
 import ujson.Value
 import upickle.default.{ReadWriter, writeJs}
@@ -18,10 +20,14 @@ object PlotGenerator {
   private val ctsStorage = PlotGenerationConf.Constants.storage
   private val ctsLogs = PlotGenerationConf.Constants.log
   private val ctsGlobalLogs = PlotGenerator.ctsLogs.globalConf
-  private val ctsGlobalExecution = PlotGenerator.ctsExecution.globalConf
   private val encloseHalfLength = 35
   private val ctsGlobalUtils = GlobalConf.Constants.utils
   private val chronometer = ChronoUtils.Chronometer()
+
+  private implicit val storage: Storage = Storage(
+    ctsGlobalUtils.environmentVars.values.storagePrefix,
+    ctsGlobalUtils.environmentVars.values.awsS3Endpoint
+  )
 
   object Stations {
     private val ctsExecution = PlotGenerator.ctsExecution.stationsConf

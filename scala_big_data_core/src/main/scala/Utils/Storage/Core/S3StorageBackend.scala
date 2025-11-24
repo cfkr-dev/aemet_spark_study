@@ -1,13 +1,13 @@
 package Utils.Storage.Core
 
-import software.amazon.awssdk.services.s3.S3Client
-import software.amazon.awssdk.services.s3.model._
 import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
 import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model._
 
-import java.io.File
-import java.nio.file.{Path, Paths}
 import java.net.URI
+import java.nio.file.{Path, Paths}
+import java.util.UUID
 
 object S3StorageBackend {
 
@@ -24,12 +24,25 @@ object S3StorageBackend {
       .build()
   }
 
+  private def tempPathForKey(key: String): Path = {
+    val extension = {
+      val name = new java.io.File(key).getName
+      val dotIndex = name.lastIndexOf(".")
+      if (dotIndex != -1) name.substring(dotIndex) else ""
+    }
+
+    val fileName = s"s3reader-${UUID.randomUUID()}$extension"
+
+    tempDir.resolve(fileName)
+  }
+
   def read(bucket: String, key: String, endpoint: Option[String] = None): Path = {
     val client: S3Client = endpoint match {
       case Some(uri) => createDummyClient(uri)
       case None => S3Client.create()
     }
-    val tmp = tempDir.resolve(new File(key).getName)
+
+    val tmp = tempPathForKey(key)
 
     val req = GetObjectRequest.builder()
       .bucket(bucket)

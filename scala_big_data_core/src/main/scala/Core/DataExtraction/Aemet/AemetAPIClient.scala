@@ -22,11 +22,20 @@ object AemetAPIClient {
   private val ctsLog = DataExtractionConf.Constants.log.aemetConf
   private val ctsStorage = DataExtractionConf.Constants.storage.aemetConf
   private val ctsUrl = DataExtractionConf.Constants.url.aemetConf
-  private val ctsUtils = GlobalConf.Constants.utils
   private val ctsGlobalUtils = GlobalConf.Constants.utils
+
   private val chronometer = ChronoUtils.Chronometer()
 
-  private implicit val storage: Storage = Storage(sys.env.get(ctsGlobalUtils.awsS3.endpointEnvName))
+  private implicit val storage: Storage = Storage(
+    ctsGlobalUtils.environmentVars.values.storagePrefix,
+    ctsGlobalUtils.environmentVars.values.awsS3Endpoint
+  )
+
+  private val aemetApiKey: String = ctsGlobalUtils.environmentVars.values.aemetOpenapiApiKey.getOrElse(
+    throw new Exception(ctsGlobalUtils.errors.environmentVariableNotFound.format(
+      ctsGlobalUtils.environmentVars.names.aemetOpenapiApiKey
+    ))
+  )
 
   def aemetDataExtraction(): Unit = {
     chronometer.start()
@@ -72,7 +81,7 @@ object AemetAPIClient {
               case Left(exception) => Left(exception)
             }
 
-          case _ => Left(new Exception(ctsUtils.errors.failOnGettingJson.format(uri.toString())))
+          case _ => Left(new Exception(ctsGlobalUtils.errors.failOnGettingJson.format(uri.toString())))
         }
       case Left(exception) => Left(exception)
     }
@@ -94,17 +103,14 @@ object AemetAPIClient {
           endpoint,
           List(
             startDate.format(
-              DateTimeFormatter.ofPattern(ctsUtils.formats.dateHourUtc)
+              DateTimeFormatter.ofPattern(ctsGlobalUtils.formats.dateHourUtc)
             ),
             endDate.format(
-              DateTimeFormatter.ofPattern(ctsUtils.formats.dateHourUtc)
+              DateTimeFormatter.ofPattern(ctsGlobalUtils.formats.dateHourUtc)
             )
           ),
           List(
-            (ctsExecutionAemet.reqResp.request.apiKey, sys.env.get(ctsExecutionAemet.reqResp.request.apiKeyEnvName) match {
-              case Some(apiKey) => apiKey
-              case None => throw new Exception(ctsUtils.errors.environmentVariableNotFound.format(ctsExecutionAemet.reqResp.request.apiKeyEnvName))
-            })
+            (ctsExecutionAemet.reqResp.request.apiKey, aemetApiKey)
           )
         ), isMetadata = isMetadata
       ) match {
@@ -164,10 +170,10 @@ object AemetAPIClient {
             isMetadata = false,
             ctsStorageAllMeteoInfo.filepaths.data.format(
               startDate.format(
-                DateTimeFormatter.ofPattern(ctsUtils.formats.dateFormatFile)
+                DateTimeFormatter.ofPattern(ctsGlobalUtils.formats.dateFormatFile)
               ),
               endDate.format(
-                DateTimeFormatter.ofPattern(ctsUtils.formats.dateFormatFile)
+                DateTimeFormatter.ofPattern(ctsGlobalUtils.formats.dateFormatFile)
               )
             ))
           ) {
@@ -189,7 +195,7 @@ object AemetAPIClient {
           Obj(
             ctsExecutionAemet.reqResp.lastSavedDates.lastEndDate ->
               endDate.format(
-                DateTimeFormatter.ofPattern(ctsUtils.formats.dateHourZoned)
+                DateTimeFormatter.ofPattern(ctsGlobalUtils.formats.dateHourZoned)
               )
           )
         ) match {
@@ -255,10 +261,7 @@ object AemetAPIClient {
           endpoint,
           List(),
           List(
-            (ctsExecutionAemet.reqResp.request.apiKey, sys.env.get(ctsExecutionAemet.reqResp.request.apiKeyEnvName) match {
-              case Some(apiKey) => apiKey
-              case None => throw new Exception(ctsUtils.errors.environmentVariableNotFound.format(ctsExecutionAemet.reqResp.request.apiKeyEnvName))
-            })
+            (ctsExecutionAemet.reqResp.request.apiKey, aemetApiKey)
           )
         ),
         isMetadata = isMetadata

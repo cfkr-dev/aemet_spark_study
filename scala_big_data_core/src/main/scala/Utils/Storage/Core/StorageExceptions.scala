@@ -1,6 +1,10 @@
 package Utils.Storage.Core
 
-class StorageException(message: String, cause: Throwable = null) extends Exception(message, cause)
+class StorageException(message: String, cause: Throwable = null)
+  extends Exception(message, cause)
+
+class StoragePrefixNotFound()
+  extends StorageException("Storage prefix not valid")
 
 class LocalFileNotFoundException(path: String)
   extends StorageException(s"Local file not found: $path")

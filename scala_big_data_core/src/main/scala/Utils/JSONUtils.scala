@@ -8,47 +8,6 @@ import scala.io.Source
 
 object JSONUtils {
 
-  def writeJSON(file: File, json: ujson.Value, append: Boolean = false): Either[Exception, String] = {
-    try {
-      val bufferedWriter = new BufferedWriter(new FileWriter(file, append))
-
-      bufferedWriter.write(write(json, 2))
-      bufferedWriter.flush()
-      bufferedWriter.close()
-
-      Right(file.getPath)
-    } catch {
-      case exception: Exception => Left(exception)
-    }
-  }
-
-  def readJSON(path: String, findHeaviest: Boolean = false): Either[Exception, ujson.Value] = {
-    def readFile(filePath: String): Either[Exception, ujson.Value] = {
-      val source = Source.fromFile(filePath)
-      try {
-        Right(ujson.read(source.mkString))
-      } catch {
-        case exception: Exception => Left(exception)
-      } finally {
-        source.close()
-      }
-    }
-
-    val file = new File(path)
-
-    if (file.exists && file.isDirectory && findHeaviest) {
-      file.listFiles
-        .filter(f => f.isFile && f.getName.toLowerCase.endsWith(".json"))
-        .maxByOption(_.length)
-        .map(f => readFile(f.getAbsolutePath))
-        .getOrElse(Left(new RuntimeException("No JSON files found in directory")))
-    } else if (file.exists && file.isFile) {
-      readFile(file.getAbsolutePath)
-    } else {
-      Left(new RuntimeException("Invalid path or not permitted usage"))
-    }
-  }
-
   def lowercaseKeys(json: ujson.Value): ujson.Value = {
     json match {
       case obj: ujson.Obj => ujson.Obj.from(

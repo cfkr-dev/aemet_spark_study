@@ -10,27 +10,24 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "2.13.15"
 
-// https://mvnrepository.com/artifact/org.apache.spark/spark-core
+// Spark
 libraryDependencies += "org.apache.spark" %% "spark-core" % "3.5.3"
-
-// https://mvnrepository.com/artifact/org.apache.spark/spark-sql
 libraryDependencies += "org.apache.spark" %% "spark-sql" % "3.5.3"
 
-// https://mvnrepository.com/artifact/com.softwaremill.sttp.client4/core
+// STTP
 libraryDependencies += "com.softwaremill.sttp.client4" %% "core" % "4.0.0-M18"
-
-// https://mvnrepository.com/artifact/com.softwaremill.sttp.client4/okhttp-backend
 libraryDependencies += "com.softwaremill.sttp.client4" %% "okhttp-backend" % "4.0.0-M18"
 
-// https://mvnrepository.com/artifact/com.lihaoyi/upickle
+// JSON
 libraryDependencies += "com.lihaoyi" %% "upickle" % "4.0.2"
-
-// https://mvnrepository.com/artifact/com.lihaoyi/fansi
 libraryDependencies += "com.lihaoyi" %% "fansi" % "0.5.0"
 
+// PureConfig
 libraryDependencies += "com.github.pureconfig" %% "pureconfig" % "0.17.8"
 
-// https://mvnrepository.com/artifact/software.amazon.awssdk/s3
+// AWS SDK v2
 libraryDependencies += "software.amazon.awssdk" % "s3" % "2.39.1"
+
+libraryDependencies += "org.apache.hadoop" % "hadoop-aws" % "3.3.4"
 
 
