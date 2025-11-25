@@ -1,0 +1,30 @@
+# IntelliJ IDEA files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Scala and Spark files
+target/
+project/
+lib_managed/
+
+# Scala compilation output
+*.class
+
+# Spark and Scala logs
+logs/
+*.log
+
+# BSP configuration
+.bsp/
+
+# OS and IDE specific files
+.DS_Store
+Thumbs.db
+ehcache*
+hsperfdata*
+
+# Secrets
+secrets/
+

@@ -1,0 +1,17 @@
+# IntelliJ IDEA files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Python
+.venv/
+
+# OS and IDE specific files
+.DS_Store
+Thumbs.db
+ehcache*
+hsperfdata*
+
+# Secrets
+.env
