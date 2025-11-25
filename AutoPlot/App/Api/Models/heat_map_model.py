@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 
 from App.Config.enumerations import *
+from App.Utils.Storage.Core.storage import Storage
 from App.Utils.file_utils import get_src_path, get_dest_path
 from App.Utils.validator import Validator
 
@@ -34,7 +35,7 @@ class Src:
         self.location = get_enum_value(data['location'], SpainGeographicLocations)
 
     def validate(self, validator: Validator):
-        if not self.path.exists():
+        if not validator.storage.exists(self.path.as_posix()):
             validator.set_invalid()
             validator.add_error_msg('Source path must be a valid path')
 
@@ -182,7 +183,8 @@ class Style:
 
 
 class HeatMapModel:
-    def __init__(self):
+    def __init__(self, storage: Storage):
+        self.storage = storage
         self.src = Src()
         self.dest = Dest()
         self.style = Style()
@@ -193,7 +195,7 @@ class HeatMapModel:
         self.style.setup(data['style'])
 
     def validate(self):
-        validator = Validator()
+        validator = Validator(self.storage)
 
         self.src.validate(validator)
 

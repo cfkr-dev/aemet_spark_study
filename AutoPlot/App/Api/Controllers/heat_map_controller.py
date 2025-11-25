@@ -1,9 +1,11 @@
-from flask_restx import Resource, abort, Namespace
 from flask import current_app
+from flask_restx import Resource, abort, Namespace
 
 from App.Api.DTOS.heat_map_dto import HeatMapDTO
 from App.Api.Models.heat_map_model import HeatMapModel
+from App.Config.constants import AWS_S3_ENDPOINT, STORAGE_PREFIX
 from App.Plotters.heat_map_plotter import HeatMapPlotter
+from App.Utils.Storage.Core.storage import Storage
 
 ns = Namespace('heat-map', description='Create a heat map chart of spanish continental or canary island territory')
 heat_map_dto = HeatMapDTO(ns)
@@ -12,7 +14,8 @@ heat_map_dto = HeatMapDTO(ns)
 class HeatMapController(Resource):
     @ns.expect(heat_map_dto.post_input, validate=True)
     def post(self):
-        model = HeatMapModel()
+        storage = Storage(STORAGE_PREFIX, AWS_S3_ENDPOINT)
+        model = HeatMapModel(storage)
         model.setup(ns.payload)
         validation = model.validate()
 

@@ -3,6 +3,7 @@ import re
 from typing import Optional
 from pathlib import Path
 
+from App.Utils.Storage.Core.storage import Storage
 from App.Utils.validator import Validator
 from App.Utils.file_utils import get_src_path, get_dest_path
 
@@ -42,7 +43,7 @@ class Src:
         self.axis.setup(data['axis'])
 
     def validate(self, validator: Validator):
-        if not self.path.exists():
+        if not validator.storage.exists(self.path.as_posix()):
             validator.set_invalid()
             validator.add_error_msg('Source path must be a valid path')
 
@@ -189,7 +190,8 @@ class Style:
 
 
 class BarModel:
-    def __init__(self):
+    def __init__(self, storage: Storage):
+        self.storage = storage
         self.src = Src()
         self.dest = Dest()
         self.style = Style()
@@ -200,7 +202,7 @@ class BarModel:
         self.style.setup(data['style'])
 
     def validate(self):
-        validator = Validator()
+        validator = Validator(self.storage)
 
         self.src.validate(validator)
 
