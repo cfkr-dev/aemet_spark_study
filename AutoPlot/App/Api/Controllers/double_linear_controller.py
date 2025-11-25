@@ -1,9 +1,11 @@
-from flask_restx import Resource, abort, Namespace
 from flask import current_app
+from flask_restx import Resource, abort, Namespace
 
 from App.Api.DTOS.double_linear_dto import DoubleLinearDTO
 from App.Api.Models.double_linear_model import DoubleLinearModel
+from App.Config.constants import AWS_S3_ENDPOINT, STORAGE_PREFIX
 from App.Plotters.double_linear_plotter import DoubleLinearPlotter
+from App.Utils.Storage.Core.storage import Storage
 
 ns = Namespace('double-linear', description='Create a double linear chart')
 double_linear_dto = DoubleLinearDTO(ns)
@@ -12,7 +14,8 @@ double_linear_dto = DoubleLinearDTO(ns)
 class DoubleLinearController(Resource):
     @ns.expect(double_linear_dto.post_input, validate=True)
     def post(self):
-        model = DoubleLinearModel()
+        storage = Storage(STORAGE_PREFIX, AWS_S3_ENDPOINT)
+        model = DoubleLinearModel(storage)
         model.setup(ns.payload)
         validation = model.validate()
 

@@ -1,9 +1,11 @@
-from flask_restx import Resource, abort, Namespace
 from flask import current_app
+from flask_restx import Resource, abort, Namespace
 
 from App.Api.DTOS.bar_dto import BarDTO
 from App.Api.Models.bar_model import BarModel
+from App.Config.constants import AWS_S3_ENDPOINT, STORAGE_PREFIX
 from App.Plotters.bar_plotter import BarPlotter
+from App.Utils.Storage.Core.storage import Storage
 
 ns = Namespace('bar', description='Create a simple bar chart')
 bar_dto = BarDTO(ns)
@@ -12,7 +14,8 @@ bar_dto = BarDTO(ns)
 class BarController(Resource):
     @ns.expect(bar_dto.post_input, validate=True)
     def post(self):
-        model = BarModel()
+        storage = Storage(STORAGE_PREFIX, AWS_S3_ENDPOINT)
+        model = BarModel(storage)
         model.setup(ns.payload)
         validation = model.validate()
 

@@ -1,18 +1,20 @@
-import os
-import plotly.graph_objects as go
-
 from pathlib import Path
+
+import plotly.graph_objects as go
 from plotly.graph_objs import Figure
 
-from App.Plotters.abstract_plotter import Plotter
 from App.Api.Models.pie_model import PieModel
+from App.Plotters.abstract_plotter import Plotter
+from App.Utils.Storage.Core.storage import Storage
+from App.Utils.Storage.PlotExport.plot_export_storage_backend import PlotExportStorageBackend
 from App.Utils.file_utils import get_response_dest_path
 
 
 class PiePlotter(Plotter):
     def __init__(self, pie_model: PieModel):
+        self.storage = pie_model.storage
         self.model = pie_model
-        self.dataframe = self.load_dataframe(pie_model.src.path)
+        self.dataframe = self.load_dataframe(pie_model.src.path, pie_model.storage)
 
     def create_plot(self):
         lower_bound_col = self.model.src.names.lower_bound
@@ -39,10 +41,16 @@ class PiePlotter(Plotter):
         if figure is None:
             return None
 
-        os.makedirs(str(self.model.dest.path), exist_ok=True)
-
-        figure.write_html(str((self.model.dest.path / Path(self.model.dest.filename + ".html")).resolve()))
+        PlotExportStorageBackend.export_html(
+            str((self.model.dest.path / Path(self.model.dest.filename + ".html")).as_posix()),
+            figure,
+            self.storage
+        )
         if self.model.dest.export_png:
-            figure.write_image(str((self.model.dest.path / Path(self.model.dest.filename + ".png")).resolve()))
+            PlotExportStorageBackend.export_png(
+                str((self.model.dest.path / Path(self.model.dest.filename + ".png")).as_posix()),
+                figure,
+                self.storage
+            )
 
         return get_response_dest_path(self.model.dest.path)

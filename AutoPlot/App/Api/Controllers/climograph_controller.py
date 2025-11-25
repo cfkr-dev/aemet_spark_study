@@ -1,9 +1,11 @@
-from flask_restx import Resource, abort, Namespace
 from flask import current_app
+from flask_restx import Resource, abort, Namespace
 
 from App.Api.DTOS.climograph_dto import ClimographDTO
 from App.Api.Models.climograph_model import ClimographModel
+from App.Config.constants import AWS_S3_ENDPOINT, STORAGE_PREFIX
 from App.Plotters.climograph_plotter import ClimographPlotter
+from App.Utils.Storage.Core.storage import Storage
 
 ns = Namespace('climograph', description='Create a climograph chart')
 climograph_dto = ClimographDTO(ns)
@@ -12,7 +14,8 @@ climograph_dto = ClimographDTO(ns)
 class ClimographController(Resource):
     @ns.expect(climograph_dto.post_input, validate=True)
     def post(self):
-        model = ClimographModel()
+        storage = Storage(STORAGE_PREFIX, AWS_S3_ENDPOINT)
+        model = ClimographModel(storage)
         model.setup(ns.payload)
         validation = model.validate()
 

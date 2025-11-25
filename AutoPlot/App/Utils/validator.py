@@ -1,5 +1,9 @@
+from App.Utils.Storage.Core.storage import Storage
+
+
 class Validator:
-    def __init__(self):
+    def __init__(self, storage: Storage):
+        self.storage = storage
         self.valid = True
         self.error_msgs = []
         self.custom_data = {}

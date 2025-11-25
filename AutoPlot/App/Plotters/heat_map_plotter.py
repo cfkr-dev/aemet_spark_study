@@ -1,20 +1,17 @@
-import os
 import base64
-import numpy as np
+from pathlib import Path
+
 import cv2
 import geopandas as gpd
-import rasterio
+import numpy as np
 import plotly.graph_objects as go
-
-from pathlib import Path
+import rasterio
 from plotly.graph_objs import Figure
 from pykrige.ok import OrdinaryKriging
 from rasterio.features import geometry_mask
 from scipy.spatial import cKDTree
 
-from App.Plotters.abstract_plotter import Plotter
 from App.Api.Models.heat_map_model import HeatMapModel
-from App.Config.enumerations import SpainGeographicLocations
 from App.Config.constants import (
     STORAGE_RESOURCES_COUNTRIES_SHAPEFILE,
     LONG_LOWER_BOUND_SPAIN_CONTINENTAL,
@@ -26,13 +23,18 @@ from App.Config.constants import (
     LAT_LOWER_BOUND_SPAIN_CANARY_ISLAND,
     LAT_UPPER_BOUND_SPAIN_CANARY_ISLAND,
 )
+from App.Config.enumerations import SpainGeographicLocations
+from App.Plotters.abstract_plotter import Plotter
+from App.Utils.Storage.Core.storage import Storage
+from App.Utils.Storage.PlotExport.plot_export_storage_backend import PlotExportStorageBackend
 from App.Utils.file_utils import get_response_dest_path
 
 
 class HeatMapPlotter(Plotter):
     def __init__(self, heat_map_model: HeatMapModel):
+        self.storage = heat_map_model.storage
         self.model = heat_map_model
-        self.dataframe = self.load_dataframe(heat_map_model.src.path)
+        self.dataframe = self.load_dataframe(heat_map_model.src.path, heat_map_model.storage)
 
     def _generate_point_info(self):
         long_col = self.model.src.names.longitude
@@ -239,14 +241,16 @@ class HeatMapPlotter(Plotter):
         if figure is None:
             return None
 
-        os.makedirs(str(self.model.dest.path), exist_ok=True)
-
-        figure.write_html(str((self.model.dest.path / Path(self.model.dest.filename + ".html")).resolve()))
+        PlotExportStorageBackend.export_html(
+            str((self.model.dest.path / Path(self.model.dest.filename + ".html")).as_posix()),
+            figure,
+            self.storage
+        )
         if self.model.dest.export_png:
-            figure.write_image(
-                str((self.model.dest.path / Path(self.model.dest.filename + ".png")).resolve()),
-                width=1280,
-                height=720,
+            PlotExportStorageBackend.export_png(
+                str((self.model.dest.path / Path(self.model.dest.filename + ".png")).as_posix()),
+                figure,
+                self.storage
             )
 
         return get_response_dest_path(self.model.dest.path)

@@ -2,6 +2,7 @@ import pandas as pd
 
 from App.Config.enumerations import Formatters
 
+
 def format_df(df: pd.DataFrame, name_to_format: dict) -> pd.DataFrame:
     format_functions = {
         Formatters.TIMESTAMP: lambda col: pd.to_datetime(col),

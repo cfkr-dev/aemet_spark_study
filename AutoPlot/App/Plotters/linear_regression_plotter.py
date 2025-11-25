@@ -1,11 +1,12 @@
-import os
-import plotly.graph_objects as go
-
 from pathlib import Path
+
+import plotly.graph_objects as go
 from plotly.graph_objs import Figure
 
-from App.Plotters.abstract_plotter import Plotter
 from App.Api.Models.linear_regression_model import LinearRegressionModel
+from App.Plotters.abstract_plotter import Plotter
+from App.Utils.Storage.Core.storage import Storage
+from App.Utils.Storage.PlotExport.plot_export_storage_backend import PlotExportStorageBackend
 from App.Utils.dataframe_formatter import format_df
 from App.Utils.file_utils import get_response_dest_path
 
@@ -17,11 +18,12 @@ class LinearRegressionParams:
 
 class LinearRegressionPlotter(Plotter):
     def __init__(self, linear_regression_model: LinearRegressionModel):
+        self.storage = linear_regression_model.storage
         self.model = linear_regression_model
-        self.dataframe = format_df(self.load_dataframe(linear_regression_model.src.main.path), {
+        self.dataframe = format_df(self.load_dataframe(linear_regression_model.src.main.path, linear_regression_model.storage), {
             linear_regression_model.src.main.axis.x.name: linear_regression_model.src.main.axis.x.format
         })
-        self.regression = LinearRegressionParams(self.load_dataframe(linear_regression_model.src.regression.path), linear_regression_model)
+        self.regression = LinearRegressionParams(self.load_dataframe(linear_regression_model.src.regression.path, linear_regression_model.storage), linear_regression_model)
 
     def create_plot(self):
         x_col = self.model.src.main.axis.x.name
@@ -92,10 +94,16 @@ class LinearRegressionPlotter(Plotter):
         if figure is None:
             return None
 
-        os.makedirs(str(self.model.dest.path), exist_ok=True)
-
-        figure.write_html(str((self.model.dest.path / Path(self.model.dest.filename + ".html")).resolve()))
+        PlotExportStorageBackend.export_html(
+            str((self.model.dest.path / Path(self.model.dest.filename + ".html")).as_posix()),
+            figure,
+            self.storage
+        )
         if self.model.dest.export_png:
-            figure.write_image(str((self.model.dest.path / Path(self.model.dest.filename + ".png")).resolve()))
+            PlotExportStorageBackend.export_png(
+                str((self.model.dest.path / Path(self.model.dest.filename + ".png")).as_posix()),
+                figure,
+                self.storage
+            )
 
         return get_response_dest_path(self.model.dest.path)

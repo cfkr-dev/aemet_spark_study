@@ -1,20 +1,22 @@
-import os
-import plotly.graph_objects as go
-
 from pathlib import Path
+
+import plotly.graph_objects as go
 from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
 
-from App.Plotters.abstract_plotter import Plotter
 from App.Api.Models.double_linear_model import DoubleLinearModel
+from App.Plotters.abstract_plotter import Plotter
+from App.Utils.Storage.Core.storage import Storage
+from App.Utils.Storage.PlotExport.plot_export_storage_backend import PlotExportStorageBackend
 from App.Utils.dataframe_formatter import format_df
 from App.Utils.file_utils import get_response_dest_path
 
 
 class DoubleLinearPlotter(Plotter):
     def __init__(self, double_linear_model: DoubleLinearModel):
+        self.storage = double_linear_model.storage
         self.model = double_linear_model
-        self.dataframe = format_df(self.load_dataframe(double_linear_model.src.path), {
+        self.dataframe = format_df(self.load_dataframe(double_linear_model.src.path, double_linear_model.storage), {
             double_linear_model.src.axis.x.name: double_linear_model.src.axis.x.format
         })
 
@@ -91,10 +93,16 @@ class DoubleLinearPlotter(Plotter):
         if figure is None:
             return None
 
-        os.makedirs(str(self.model.dest.path), exist_ok=True)
-
-        figure.write_html(str((self.model.dest.path / Path(self.model.dest.filename + ".html")).resolve()))
+        PlotExportStorageBackend.export_html(
+            str((self.model.dest.path / Path(self.model.dest.filename + ".html")).as_posix()),
+            figure,
+            self.storage
+        )
         if self.model.dest.export_png:
-            figure.write_image(str((self.model.dest.path / Path(self.model.dest.filename + ".png")).resolve()))
+            PlotExportStorageBackend.export_png(
+                str((self.model.dest.path / Path(self.model.dest.filename + ".png")).as_posix()),
+                figure,
+                self.storage
+            )
 
         return get_response_dest_path(self.model.dest.path)
