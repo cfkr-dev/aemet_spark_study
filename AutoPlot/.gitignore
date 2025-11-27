@@ -15,3 +15,10 @@ hsperfdata*
 
 # Secrets
 .env
+
+# Documentation
+Documentation/
+
+# Subprojects
+../dashboard-web
+../scala_big_data_core
