@@ -1,6 +1,7 @@
 import {NavigationCustomMenu} from "@/components/custom-ui/navigation-custom-menu";
 import {CloudSun} from "lucide-react";
-import StationStudies from "@/components/sections/stations";
+import StationStudies from "@/components/sections/station-studies";
+import ClimographStudies from "@/components/sections/climograph-studies";
 
 export default function Home() {
     return (
@@ -17,6 +18,7 @@ export default function Home() {
 
             <main className="flex-1 p-4">
                 <StationStudies></StationStudies>
+                <ClimographStudies></ClimographStudies>
             </main>
 
         </div>
