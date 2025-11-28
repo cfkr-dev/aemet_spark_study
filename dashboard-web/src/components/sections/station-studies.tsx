@@ -1,4 +1,4 @@
-import AccordionIframe from "@/components/custom-ui/collapsible-iframe";
+import AccordionCustomOpenIframe from "@/components/custom-ui/accordion-custom-open-iframe";
 
 export default function StationStudies() {
 
@@ -8,29 +8,29 @@ export default function StationStudies() {
             <p>Studies on the distribution of meteorological stations across Spanish territory between 1973 and
                 2024.</p>
 
-            <AccordionIframe
+            <AccordionCustomOpenIframe
                 title={"Stations count by state"}
                 subtitle={"Number of stations per state as of 2024."}
                 src={"https://c0nf1cker.net/stations/count_by_state_2024/plot.html"}
                 id={"stations-count_by_state_2024"}
             >
-            </AccordionIframe>
+            </AccordionCustomOpenIframe>
 
-            <AccordionIframe
+            <AccordionCustomOpenIframe
                 title={"Station count by altitude"}
                 subtitle={"Number of stations distributed by altitude as of 2024."}
                 src={"https://c0nf1cker.net/stations/count_by_altitude_2024/plot.html"}
                 id={"stations-count_by_altitude_2024"}
             >
-            </AccordionIframe>
+            </AccordionCustomOpenIframe>
 
-            <AccordionIframe
+            <AccordionCustomOpenIframe
                 title={"Station count evolution"}
                 subtitle={"Evolution of the number of stations from 1973 to 2024."}
                 src={"https://c0nf1cker.net/stations/count_evol/plot.html"}
                 id={"stations-count_evol"}
             >
-            </AccordionIframe>
+            </AccordionCustomOpenIframe>
         </section>
     )
 }

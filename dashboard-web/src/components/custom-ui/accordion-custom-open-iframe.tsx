@@ -5,7 +5,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Skeleton } from "@/components/ui/skeleton";
 import IframeViewer from "@/components/custom-ui/iframe-viewer";
 
-interface AccordionIframeProps {
+interface AccordionCustomOpenIframeProps {
     title: string;
     subtitle?: string;
     src: string;
@@ -13,7 +13,7 @@ interface AccordionIframeProps {
     id: string;
 }
 
-export default function AccordionIframe({ title, subtitle, src, className, id }: AccordionIframeProps) {
+export default function AccordionCustomOpenIframe({ title, subtitle, src, className, id }: AccordionCustomOpenIframeProps) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

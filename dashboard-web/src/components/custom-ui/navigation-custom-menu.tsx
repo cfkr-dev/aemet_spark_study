@@ -78,7 +78,10 @@ export function NavigationCustomMenu() {
                         <ul className="grid w-[300px] gap-4">
                             <li>
                                 <NavigationMenuLink asChild>
-                                    <Link href="#">
+                                    <Link
+                                        href=""
+                                        onClick={(e) => handleLinkClick(e, "climographs-arid")}
+                                    >
                                         <div className="font-medium">Arid</div>
                                         <div className="text-muted-foreground">
                                             Arid climate climographs.
