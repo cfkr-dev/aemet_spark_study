@@ -2,8 +2,10 @@ import {NavigationCustomMenu} from "@/components/custom-ui/navigation-custom-men
 import {CloudSun} from "lucide-react";
 import StationStudies from "@/components/sections/station-studies";
 import ClimographStudies from "@/components/sections/climograph-studies";
+import ParamStudies from "@/components/sections/param-studies";
 
 export default function Home() {
+
     return (
         <div className="w-full min-h-screen flex flex-col">
             <header className="w-full flex items-center p-4 bg-background shadow-sm sticky top-0 z-50">
@@ -19,6 +21,7 @@ export default function Home() {
             <main className="flex-1 p-4">
                 <StationStudies></StationStudies>
                 <ClimographStudies></ClimographStudies>
+                <ParamStudies></ParamStudies>
             </main>
 
         </div>
