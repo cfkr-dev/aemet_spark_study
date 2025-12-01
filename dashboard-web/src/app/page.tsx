@@ -3,6 +3,7 @@ import {CloudSun} from "lucide-react";
 import StationStudies from "@/components/sections/station-studies";
 import ClimographStudies from "@/components/sections/climograph-studies";
 import ParamStudies from "@/components/sections/param-studies";
+import InterestingStudies from "@/components/sections/interesting-studies";
 
 export default function Home() {
 
@@ -22,6 +23,7 @@ export default function Home() {
                 <StationStudies></StationStudies>
                 <ClimographStudies></ClimographStudies>
                 <ParamStudies></ParamStudies>
+                <InterestingStudies></InterestingStudies>
             </main>
 
         </div>

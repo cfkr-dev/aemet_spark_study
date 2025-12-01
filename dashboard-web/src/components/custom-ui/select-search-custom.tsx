@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 
-interface Option { value: string; label: string }
+export interface Option { value: string; label: string }
 interface SelectSearchCustomProps {options: Option[], childrenFn: ({value, label}: Option) => React.ReactNode}
 
 export default function SelectSearchCustom({options, childrenFn}: SelectSearchCustomProps) {

@@ -195,7 +195,10 @@ export function NavigationCustomMenu() {
                         <ul className="grid w-[300px] gap-4">
                             <li>
                                 <NavigationMenuLink asChild>
-                                    <Link href="#">
+                                    <Link
+                                        href=""
+                                        onClick={(e) => handleLinkClick(e, "interesting_studies-prec_and_press_evol")}
+                                    >
                                         <div className="font-medium">Precipitation and atmospheric pressure</div>
                                         <div className="text-muted-foreground">
                                             Correlation between precipitation and atmospheric pressure studies.
@@ -203,8 +206,11 @@ export function NavigationCustomMenu() {
                                     </Link>
                                 </NavigationMenuLink>
                                 <NavigationMenuLink asChild>
-                                    <Link href="#">
-                                        <div className="font-medium">Better states for special conditions</div>
+                                    <Link
+                                        href=""
+                                        onClick={(e) => handleLinkClick(e, "interesting_studies-top_10_states")}
+                                    >
+                                        <div className="font-medium">Top 10 better states for special conditions</div>
                                         <div className="text-muted-foreground">
                                             Better states for special conditions studies.
                                         </div>
