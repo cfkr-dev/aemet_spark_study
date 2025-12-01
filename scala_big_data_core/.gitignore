@@ -28,3 +28,9 @@ hsperfdata*
 # Secrets
 secrets/
 
+# Documentation
+documentation/
+
+# Subprojects
+../AutoPlot
+../dashboard-web
