@@ -89,7 +89,10 @@ export function NavigationCustomMenu() {
                                     </Link>
                                 </NavigationMenuLink>
                                 <NavigationMenuLink asChild>
-                                    <Link href="#">
+                                    <Link
+                                        href=""
+                                        onClick={(e) => handleLinkClick(e, "climographs-warm")}
+                                    >
                                         <div className="font-medium">Warm</div>
                                         <div className="text-muted-foreground">
                                             Warm climate climographs.
@@ -97,7 +100,10 @@ export function NavigationCustomMenu() {
                                     </Link>
                                 </NavigationMenuLink>
                                 <NavigationMenuLink asChild>
-                                    <Link href="#">
+                                    <Link
+                                        href=""
+                                        onClick={(e) => handleLinkClick(e, "climographs-cold")}
+                                    >
                                         <div className="font-medium">Cold</div>
                                         <div className="text-muted-foreground">
                                             Cold climate climographs.
@@ -114,7 +120,10 @@ export function NavigationCustomMenu() {
                         <ul className="grid w-[300px] gap-4">
                             <li>
                                 <NavigationMenuLink asChild>
-                                    <Link href="#">
+                                    <Link
+                                        href=""
+                                        onClick={(e) => handleLinkClick(e, "single_param_studies-temp")}
+                                    >
                                         <div className="font-medium">Temperature</div>
                                         <div className="text-muted-foreground">
                                             Temperature studies.
@@ -122,7 +131,10 @@ export function NavigationCustomMenu() {
                                     </Link>
                                 </NavigationMenuLink>
                                 <NavigationMenuLink asChild>
-                                    <Link href="#">
+                                    <Link
+                                        href=""
+                                        onClick={(e) => handleLinkClick(e, "single_param_studies-prec")}
+                                    >
                                         <div className="font-medium">Precipitation</div>
                                         <div className="text-muted-foreground">
                                             Precipitation studies.
@@ -130,7 +142,10 @@ export function NavigationCustomMenu() {
                                     </Link>
                                 </NavigationMenuLink>
                                 <NavigationMenuLink asChild>
-                                    <Link href="#">
+                                    <Link
+                                        href=""
+                                        onClick={(e) => handleLinkClick(e, "single_param_studies-wind_vel")}
+                                    >
                                         <div className="font-medium">Wind velocity</div>
                                         <div className="text-muted-foreground">
                                             Wind velocity studies.
@@ -138,7 +153,10 @@ export function NavigationCustomMenu() {
                                     </Link>
                                 </NavigationMenuLink>
                                 <NavigationMenuLink asChild>
-                                    <Link href="#">
+                                    <Link
+                                        href=""
+                                        onClick={(e) => handleLinkClick(e, "single_param_studies-press")}
+                                    >
                                         <div className="font-medium">Atmospheric pressure</div>
                                         <div className="text-muted-foreground">
                                             Atmospheric pressure studies.
@@ -146,7 +164,10 @@ export function NavigationCustomMenu() {
                                     </Link>
                                 </NavigationMenuLink>
                                 <NavigationMenuLink asChild>
-                                    <Link href="#">
+                                    <Link
+                                        href=""
+                                        onClick={(e) => handleLinkClick(e, "single_param_studies-sun_rad")}
+                                    >
                                         <div className="font-medium">Sun radiation</div>
                                         <div className="text-muted-foreground">
                                             Sun radiation studies.
@@ -154,7 +175,10 @@ export function NavigationCustomMenu() {
                                     </Link>
                                 </NavigationMenuLink>
                                 <NavigationMenuLink asChild>
-                                    <Link href="#">
+                                    <Link
+                                        href=""
+                                        onClick={(e) => handleLinkClick(e, "single_param_studies-rel_hum")}
+                                    >
                                         <div className="font-medium">Relative humidity</div>
                                         <div className="text-muted-foreground">
                                             Relative humidity studies.

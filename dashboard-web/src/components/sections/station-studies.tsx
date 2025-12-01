@@ -1,3 +1,5 @@
+'use client';
+
 import AccordionCustomOpenIframe from "@/components/custom-ui/accordion-custom-open-iframe";
 
 export default function StationStudies() {
