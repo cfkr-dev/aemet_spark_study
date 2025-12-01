@@ -2,8 +2,7 @@
 
 import AccordionCustomOpen from "@/components/custom-ui/accordion-custom-open";
 import AccordionCustomOpenIframe from "@/components/custom-ui/accordion-custom-open-iframe";
-import SelectSearchCustom from "@/components/custom-ui/select-search-custom";
-import {Option} from "@/components/custom-ui/custom-select-old";
+import SelectSearchCustom, {Option} from "@/components/custom-ui/select-search-custom";
 
 export default function ParamStudies() {
 
