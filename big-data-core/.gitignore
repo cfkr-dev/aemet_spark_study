@@ -6,7 +6,8 @@
 
 # Scala and Spark files
 target/
-project/
+project/project/
+project/target
 lib_managed/
 
 # Scala compilation output

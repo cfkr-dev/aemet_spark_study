@@ -1,0 +1,98 @@
+package Utils
+
+import sttp.client4.httpurlconnection.HttpURLConnectionBackend
+import sttp.client4.okhttp.OkHttpSyncBackend
+import sttp.client4.{Response, UriContext, quickRequest}
+import sttp.model.Uri
+import ujson.{Value, write}
+
+import java.util.concurrent.TimeUnit
+
+object HTTPUtils {
+  def buildUrl(baseUrl: String, urlSegments: List[String], urlQueryParams: List[(String, String)]): Uri = {
+    uri"${baseUrl.format(urlSegments: _*)}".addParams(urlQueryParams: _*)
+  }
+
+  def buildUrl(baseUrl: String, urlSegments: List[String]): Uri = {
+    uri"${baseUrl.format(urlSegments: _*)}"
+  }
+
+  def buildUrl(baseUrl: String): Uri = {
+    uri"$baseUrl"
+  }
+
+  def sendGetRequest(uri: Uri): Either[Exception, Response[String]] = {
+
+    val backend = HttpURLConnectionBackend()
+
+    ConsoleLogUtils.Method.printlnGet(uri)
+
+    val HTTPHeaderAccept = (
+      "Accept",
+      "application/json"
+    )
+    val HTTPHeaderUserAgent = (
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+    )
+
+    try {
+      val response = quickRequest
+        .get(uri)
+        .header(HTTPHeaderAccept._1, HTTPHeaderAccept._2)
+        .header(HTTPHeaderUserAgent._1, HTTPHeaderUserAgent._2)
+        .send(backend)
+
+      ConsoleLogUtils.Response.printlnResponse(response)
+
+      if (response.code.isClientError || response.code.isServerError)
+        Left(new Exception(response.code.toString() + response.statusText))
+      else
+        Right(response)
+    } catch {
+      case exception: Exception => Left(exception)
+    }
+
+  }
+
+  def sendPostRequest(uri: Uri, body: Value): Either[Exception, Response[String]] = {
+    val backend = OkHttpSyncBackend.usingClient(
+      new okhttp3.OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.MINUTES)
+        .readTimeout(10, TimeUnit.MINUTES)
+        .writeTimeout(10, TimeUnit.MINUTES)
+        .build()
+    )
+
+    ConsoleLogUtils.Method.printlnPost(uri)
+
+    val HTTPHeaderAccept = (
+      "Accept",
+      "application/json"
+    )
+    val HTTPHeaderUserAgent = (
+      "User-Agent",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+    )
+
+    try {
+      val response = quickRequest
+        .post(uri)
+        .body(write(body, 2))
+        .header(HTTPHeaderAccept._1, HTTPHeaderAccept._2)
+        .header(HTTPHeaderUserAgent._1, HTTPHeaderUserAgent._2)
+        .contentType("application/json")
+        .send(backend)
+
+      ConsoleLogUtils.Response.printlnResponse(response)
+
+      if (response.code.isClientError || response.code.isServerError)
+        Left(new Exception(response.code.toString() + response.statusText + "\n" + response.body))
+      else
+        Right(response)
+    } catch {
+      case exception: Exception => Left(exception)
+    }
+  }
+
+}
