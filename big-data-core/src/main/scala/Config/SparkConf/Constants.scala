@@ -102,5 +102,7 @@ object Constants {
       stationsConf = readInternalConfig[Queries.Storage.StationsConf]("config/spark/queries/storage/stations.conf", Some(configDirPath))
     )
   )
+
+  dataStorage.deleteLocalDirectoryRecursive(configDirPath)
 }
 

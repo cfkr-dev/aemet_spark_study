@@ -3,10 +3,10 @@ ThisBuild / scalacOptions += "-target:11"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "scala_big_data_core"
+    name := "big-data-core"
   )
 
-ThisBuild / version := "0.1.0-SNAPSHOT"
+ThisBuild / version := "1.0.0"
 
 ThisBuild / scalaVersion := "2.13.15"
 
