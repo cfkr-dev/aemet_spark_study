@@ -21,13 +21,11 @@ object PlotGenerator {
   private val ctsLogs = PlotGenerationConf.Constants.log
   private val ctsGlobalLogs = PlotGenerator.ctsLogs.globalConf
   private val encloseHalfLength = 35
+  private val ctsGlobalInit = GlobalConf.Constants.init
   private val ctsGlobalUtils = GlobalConf.Constants.utils
   private val chronometer = ChronoUtils.Chronometer()
 
-  private implicit val storage: Storage = Storage(
-    ctsGlobalUtils.environmentVars.values.storagePrefix,
-    ctsGlobalUtils.environmentVars.values.awsS3Endpoint
-  )
+  private implicit val dataStorage: Storage = GlobalConf.Constants.dataStorage
 
   object Stations {
     private val ctsExecution = PlotGenerator.ctsExecution.stationsConf

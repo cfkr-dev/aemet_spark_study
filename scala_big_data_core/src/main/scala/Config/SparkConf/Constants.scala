@@ -1,8 +1,10 @@
 package Config.SparkConf
 
-import Utils.PureConfigUtils.readConfigFromFile
+import Config.GlobalConf
+import Utils.Storage.Core
+import Utils.Storage.PureConfig.PureConfigStorageBackend.readInternalConfig
 import pureconfig.generic.auto._
-import Utils.PureConfigUtils.doubleWithInfReader
+import Utils.Storage.PureConfig.PureConfigStorageBackend.doubleWithInfReader
 
 case class QueriesExecutionConf(
   climographConf: Queries.Execution.ClimographConf,
@@ -54,42 +56,50 @@ case class InitConf(
 )
 
 object Constants {
+  private val ctsGlobalInit = GlobalConf.Constants.init
+  private implicit val dataStorage: Core.Storage = GlobalConf.Constants.dataStorage
+
+  private val configDirPath: String = dataStorage.readDirectoryRecursive(
+    s"${ctsGlobalInit.storageBaseData}config",
+    includeDirs = Seq("/config/global", "/config/spark")
+  ).toString.replace("\\", "/").concat("/")
+
   val init: InitConf = InitConf(
     execution = InitExecutionConf(
-      dataframeConf = readConfigFromFile[Init.Execution.DataframeConf]("config/spark/init/execution/dataframe.conf"),
-      globalConf = readConfigFromFile[Init.Execution.GlobalConf]("config/spark/init/execution/global.conf"),
-      sessionConf = readConfigFromFile[Init.Execution.SessionConf]("config/spark/init/execution/session.conf"),
+      dataframeConf = readInternalConfig[Init.Execution.DataframeConf]("config/spark/init/execution/dataframe.conf", Some(configDirPath)),
+      globalConf = readInternalConfig[Init.Execution.GlobalConf]("config/spark/init/execution/global.conf", Some(configDirPath)),
+      sessionConf = readInternalConfig[Init.Execution.SessionConf]("config/spark/init/execution/session.conf", Some(configDirPath)),
     ),
     log = InitLogConf(
-      sessionConf = readConfigFromFile[Init.Log.SessionConf]("config/spark/init/log/session.conf"),
+      sessionConf = readInternalConfig[Init.Log.SessionConf]("config/spark/init/log/session.conf", Some(configDirPath)),
     ),
     storage = InitStorageConf(
-      aemetConf = readConfigFromFile[Init.Storage.AemetConf]("config/spark/init/storage/aemet.conf"),
-      globalConf = readConfigFromFile[Init.Storage.GlobalConf]("config/spark/init/storage/global.conf"),
-      ifapaAemetFormatConf = readConfigFromFile[Init.Storage.IfapaAemetFormatConf]("config/spark/init/storage/ifapa-aemet-format.conf"),
+      aemetConf = readInternalConfig[Init.Storage.AemetConf]("config/spark/init/storage/aemet.conf", Some(configDirPath)),
+      globalConf = readInternalConfig[Init.Storage.GlobalConf]("config/spark/init/storage/global.conf", Some(configDirPath)),
+      ifapaAemetFormatConf = readInternalConfig[Init.Storage.IfapaAemetFormatConf]("config/spark/init/storage/ifapa-aemet-format.conf", Some(configDirPath)),
     )
   )
 
   val queries: QueriesConf = QueriesConf(
     execution = QueriesExecutionConf(
-      climographConf = readConfigFromFile[Queries.Execution.ClimographConf]("config/spark/queries/execution/climograph.conf"),
-      interestingStudiesConf = readConfigFromFile[Queries.Execution.InterestingStudiesConf]("config/spark/queries/execution/interesting-studies.conf"),
-      singleParamStudiesConf = readConfigFromFile[Queries.Execution.SingleParamStudiesConf]("config/spark/queries/execution/single-param-studies.conf"),
-      stationsConf = readConfigFromFile[Queries.Execution.StationsConf]("config/spark/queries/execution/stations.conf")
+      climographConf = readInternalConfig[Queries.Execution.ClimographConf]("config/spark/queries/execution/climograph.conf", Some(configDirPath)),
+      interestingStudiesConf = readInternalConfig[Queries.Execution.InterestingStudiesConf]("config/spark/queries/execution/interesting-studies.conf", Some(configDirPath)),
+      singleParamStudiesConf = readInternalConfig[Queries.Execution.SingleParamStudiesConf]("config/spark/queries/execution/single-param-studies.conf", Some(configDirPath)),
+      stationsConf = readInternalConfig[Queries.Execution.StationsConf]("config/spark/queries/execution/stations.conf", Some(configDirPath))
     ),
     log = QueriesLogConf(
-      climographConf = readConfigFromFile[Queries.Log.ClimographConf]("config/spark/queries/log/climograph.conf"),
-      globalConf = readConfigFromFile[Queries.Log.GlobalConf]("config/spark/queries/log/global.conf"),
-      interestingStudiesConf = readConfigFromFile[Queries.Log.InterestingStudiesConf]("config/spark/queries/log/interesting-studies.conf"),
-      singleParamStudiesConf = readConfigFromFile[Queries.Log.SingleParamStudiesConf]("config/spark/queries/log/single-param-studies.conf"),
-      stationsConf = readConfigFromFile[Queries.Log.StationsConf]("config/spark/queries/log/stations.conf")
+      climographConf = readInternalConfig[Queries.Log.ClimographConf]("config/spark/queries/log/climograph.conf", Some(configDirPath)),
+      globalConf = readInternalConfig[Queries.Log.GlobalConf]("config/spark/queries/log/global.conf", Some(configDirPath)),
+      interestingStudiesConf = readInternalConfig[Queries.Log.InterestingStudiesConf]("config/spark/queries/log/interesting-studies.conf", Some(configDirPath)),
+      singleParamStudiesConf = readInternalConfig[Queries.Log.SingleParamStudiesConf]("config/spark/queries/log/single-param-studies.conf", Some(configDirPath)),
+      stationsConf = readInternalConfig[Queries.Log.StationsConf]("config/spark/queries/log/stations.conf", Some(configDirPath))
     ),
     storage = QueriesStorageConf(
-      climographConf = readConfigFromFile[Queries.Storage.ClimographConf]("config/spark/queries/storage/climograph.conf"),
-      globalConf = readConfigFromFile[Queries.Storage.GlobalConf]("config/spark/queries/storage/global.conf"),
-      interestingStudiesConf = readConfigFromFile[Queries.Storage.InterestingStudiesConf]("config/spark/queries/storage/interesting-studies.conf"),
-      singleParamStudiesConf = readConfigFromFile[Queries.Storage.SingleParamStudiesConf]("config/spark/queries/storage/single-param-studies.conf"),
-      stationsConf = readConfigFromFile[Queries.Storage.StationsConf]("config/spark/queries/storage/stations.conf")
+      climographConf = readInternalConfig[Queries.Storage.ClimographConf]("config/spark/queries/storage/climograph.conf", Some(configDirPath)),
+      globalConf = readInternalConfig[Queries.Storage.GlobalConf]("config/spark/queries/storage/global.conf", Some(configDirPath)),
+      interestingStudiesConf = readInternalConfig[Queries.Storage.InterestingStudiesConf]("config/spark/queries/storage/interesting-studies.conf", Some(configDirPath)),
+      singleParamStudiesConf = readInternalConfig[Queries.Storage.SingleParamStudiesConf]("config/spark/queries/storage/single-param-studies.conf", Some(configDirPath)),
+      stationsConf = readInternalConfig[Queries.Storage.StationsConf]("config/spark/queries/storage/stations.conf", Some(configDirPath))
     )
   )
 }

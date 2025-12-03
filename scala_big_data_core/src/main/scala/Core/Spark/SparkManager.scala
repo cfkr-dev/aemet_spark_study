@@ -21,14 +21,12 @@ object SparkManager {
   private val ctsSpecialColumns = GlobalConf.Constants.schema.sparkConf.specialColumns
   private val ctsGroupMethods = GlobalConf.Constants.schema.sparkConf.groupMethods
   private val ctsAllStationSpecialValues = ctsExecutionDataframeConf.allStationsDf.specialValues
+  private val ctsGlobalInit = GlobalConf.Constants.init
   private val ctsGlobalUtils = GlobalConf.Constants.utils
 
   private val chronometer = ChronoUtils.Chronometer()
 
-  private implicit val storage: Storage = Storage(
-    ctsGlobalUtils.environmentVars.values.storagePrefix,
-    ctsGlobalUtils.environmentVars.values.awsS3Endpoint
-  )
+  private implicit val dataStorage: Storage = GlobalConf.Constants.dataStorage
 
   private object SparkCore {
     private val ctsExecutionSessionConf = SparkConf.Constants.init.execution.sessionConf
@@ -41,7 +39,7 @@ object SparkManager {
       ctsExecutionSessionConf.sessionLogLevel
     )
 
-    private val storagePrefix: String = setStoragePrefix(ctsGlobalUtils.environmentVars.values.storagePrefix)
+    private val storagePrefix: String = setStoragePrefix(ctsGlobalInit.environmentVars.values.storagePrefix)
 
     def startSparkSession(): Unit = {
       chronometer.start()
@@ -86,12 +84,12 @@ object SparkManager {
     }
 
     private def createSparkSession(name: String, master: String, logLevel: String): SparkSession = {
-      val spark = if (ctsGlobalUtils.environmentVars.values.runningInEmr.getOrElse(false)) {
+      val spark = if (ctsGlobalInit.environmentVars.values.runningInEmr.getOrElse(false)) {
         SparkSession.builder()
           .appName(name)
           .getOrCreate()
       } else {
-        ctsGlobalUtils.environmentVars.values.awsS3Endpoint match {
+        ctsGlobalInit.environmentVars.values.awsS3Endpoint match {
           case Some(endpoint) => SparkSession.builder()
             .appName(name)
             .master(master)
@@ -119,11 +117,11 @@ object SparkManager {
     private def setStoragePrefix(prefix: Option[String]): String = {
       val checkedPrefix = prefix.getOrElse(
         throw new Exception(ctsGlobalUtils.errors.environmentVariableNotFound.format(
-          ctsGlobalUtils.environmentVars.names.storagePrefix
+          ctsGlobalInit.environmentVars.names.storagePrefix
         ))
       )
 
-      val (bucket, rest, isS3) = storage.selectS3orLocal(checkedPrefix + "/")
+      val (bucket, rest, isS3) = dataStorage.selectS3orLocal(checkedPrefix + "/")
 
       if (isS3) s"s3a://$bucket" else rest
     }

@@ -13,9 +13,9 @@ import java.net.URI
 import java.nio.file.Paths
 
 object InitApp extends App {
-  //AemetAPIClient.aemetDataExtraction()
+  AemetAPIClient.aemetDataExtraction()
   //IfapaAPIClient.ifapaDataExtraction()
   //IfapaToAemetConverter.ifapaToAemetConversion()
   //SparkQueries.execute()
-  PlotGenerator.generate()
+  //PlotGenerator.generate()
 }
