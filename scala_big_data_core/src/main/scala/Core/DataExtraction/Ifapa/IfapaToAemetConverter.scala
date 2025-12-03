@@ -11,14 +11,12 @@ import ujson.{Arr, Value}
 object IfapaToAemetConverter {
   private val ctsExecutionAemet = DataExtractionConf.Constants.execution.aemetConf
   private val ctsLogs = DataExtractionConf.Constants.log.ifapaAemetFormatConf
+  private val ctsGlobalInit = GlobalConf.Constants.init
   private val ctsGlobalUtils = GlobalConf.Constants.utils
 
   private val chronometer = ChronoUtils.Chronometer()
 
-  private implicit val storage: Storage = Storage(
-    ctsGlobalUtils.environmentVars.values.storagePrefix,
-    ctsGlobalUtils.environmentVars.values.awsS3Endpoint
-  )
+  private implicit val dataStorage: Storage = GlobalConf.Constants.dataStorage
 
   private def genEmptyAemetJSONFromMetadata(metadataJSON: ujson.Value): ujson.Value = {
     ujson.Obj.from(

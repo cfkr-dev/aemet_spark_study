@@ -19,14 +19,12 @@ object IfapaAPIClient {
   private val ctsLog = DataExtractionConf.Constants.log.ifapaConf
   private val ctsStorage = DataExtractionConf.Constants.storage.ifapaConf
   private val ctsUrl = DataExtractionConf.Constants.url.ifapaConf
+  private val ctsGlobalInit = GlobalConf.Constants.init
   private val ctsGlobalUtils = GlobalConf.Constants.utils
 
   private val chronometer = ChronoUtils.Chronometer()
 
-  private implicit val storage: Storage = Storage(
-    ctsGlobalUtils.environmentVars.values.storagePrefix,
-    ctsGlobalUtils.environmentVars.values.awsS3Endpoint
-  )
+  private implicit val dataStorage: Storage = GlobalConf.Constants.dataStorage
 
   private def getIfapaAPIResource(uri: Uri): Either[Exception, Value] = {
     sendGetRequest(uri) match {

@@ -1,20 +1,33 @@
 package Config.GlobalConf
 
 import Config.GlobalConf.Schema.AutoPlotConf
-import Utils.PureConfigUtils.readConfigFromFile
+import Utils.Storage.Core.Storage
+import Utils.Storage.PureConfig.PureConfigStorageBackend.readInternalConfig
 import pureconfig.generic.auto._
 
 case class SchemaConf(aemetConf: Schema.AemetConf, ifapaConf: Schema.IfapaConf, sparkConf: Schema.SparkConf, autoPlotConf: AutoPlotConf)
 
 object Constants {
-  val schema: SchemaConf = SchemaConf(
-    aemetConf = readConfigFromFile[Schema.AemetConf]("config/global/schema/aemet.conf"),
-    ifapaConf = readConfigFromFile[Schema.IfapaConf]("config/global/schema/ifapa.conf"),
-    sparkConf = readConfigFromFile[Schema.SparkConf]("config/global/schema/spark.conf"),
-    autoPlotConf = readConfigFromFile[Schema.AutoPlotConf]("config/global/schema/autoplot.conf"),
+  val init: InitConf = readInternalConfig[InitConf]("config/global/init.conf")
+
+  implicit val dataStorage: Storage = Storage(
+    init.environmentVars.values.storagePrefix,
+    init.environmentVars.values.awsS3Endpoint
   )
 
-  val storage: StorageConf = readConfigFromFile[StorageConf]("config/global/storage.conf")
+  private val configDirPath: String = dataStorage.readDirectoryRecursive(
+    s"${init.storageBaseData}config",
+    includeDirs = Seq("/config/global")
+  ).toString.replace("\\", "/").concat("/")
 
-  val utils: UtilsConf = readConfigFromFile[UtilsConf]("config/global/utils.conf")
+  val schema: SchemaConf = SchemaConf(
+    aemetConf = readInternalConfig[Schema.AemetConf]("global/schema/aemet.conf", Some(configDirPath)),
+    ifapaConf = readInternalConfig[Schema.IfapaConf]("global/schema/ifapa.conf", Some(configDirPath)),
+    sparkConf = readInternalConfig[Schema.SparkConf]("global/schema/spark.conf", Some(configDirPath)),
+    autoPlotConf = readInternalConfig[Schema.AutoPlotConf]("global/schema/autoplot.conf", Some(configDirPath)),
+  )
+
+  val utils: UtilsConf = readInternalConfig[UtilsConf]("global/utils.conf", Some(configDirPath))
+
+  dataStorage.deleteLocalDirectoryRecursive(configDirPath)
 }

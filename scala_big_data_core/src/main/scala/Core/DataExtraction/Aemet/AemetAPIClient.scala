@@ -22,18 +22,16 @@ object AemetAPIClient {
   private val ctsLog = DataExtractionConf.Constants.log.aemetConf
   private val ctsStorage = DataExtractionConf.Constants.storage.aemetConf
   private val ctsUrl = DataExtractionConf.Constants.url.aemetConf
+  private val ctsGlobalInit = GlobalConf.Constants.init
   private val ctsGlobalUtils = GlobalConf.Constants.utils
 
   private val chronometer = ChronoUtils.Chronometer()
 
-  private implicit val storage: Storage = Storage(
-    ctsGlobalUtils.environmentVars.values.storagePrefix,
-    ctsGlobalUtils.environmentVars.values.awsS3Endpoint
-  )
+  private implicit val dataStorage: Storage = GlobalConf.Constants.dataStorage
 
-  private val aemetApiKey: String = ctsGlobalUtils.environmentVars.values.aemetOpenapiApiKey.getOrElse(
+  private val aemetApiKey: String = ctsGlobalInit.environmentVars.values.aemetOpenapiApiKey.getOrElse(
     throw new Exception(ctsGlobalUtils.errors.environmentVariableNotFound.format(
-      ctsGlobalUtils.environmentVars.names.aemetOpenapiApiKey
+      ctsGlobalInit.environmentVars.names.aemetOpenapiApiKey
     ))
   )
 

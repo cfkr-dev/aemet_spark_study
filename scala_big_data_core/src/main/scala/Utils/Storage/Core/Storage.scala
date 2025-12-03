@@ -1,6 +1,6 @@
 package Utils.Storage.Core
 
-import java.nio.file.Path
+import java.nio.file.{Files, Path, Paths}
 
 case class Storage(storagePrefix: Option[String], s3Endpoint: Option[String] = None) {
 
@@ -24,8 +24,8 @@ case class Storage(storagePrefix: Option[String], s3Endpoint: Option[String] = N
     }
   }
 
-  def read(path: String): Path = {
-    val (bucket, key, isS3) = selectS3orLocal(checkedPrefix + path)
+  def read(path: String, prefix: String = checkedPrefix): Path = {
+    val (bucket, key, isS3) = selectS3orLocal(prefix + path)
     try {
       if (isS3) S3StorageBackend.read(bucket, key, s3Endpoint) else LocalStorageBackend.read(key)
     } catch {
@@ -34,8 +34,19 @@ case class Storage(storagePrefix: Option[String], s3Endpoint: Option[String] = N
     }
   }
 
-  def write(path: String, localFile: Path): Unit = {
-    val (bucket, key, isS3) = selectS3orLocal(checkedPrefix + path)
+  def readDirectoryRecursive(dirPath: String, includeDirs: Seq[String] = Seq.empty, prefix: String = checkedPrefix): Path = {
+    val (bucket, key, isS3) = selectS3orLocal(prefix + dirPath)
+    try {
+      if (isS3) S3StorageBackend.readDirectoryRecursive(bucket, key, s3Endpoint, includeDirs)
+      else LocalStorageBackend.readDirectoryRecursive(key, includeDirs)
+    } catch {
+      case exception: Exception =>
+        throw new StorageException(s"Failed to read directory recursively: $dirPath", exception)
+    }
+  }
+
+  def write(path: String, localFile: Path, prefix: String = checkedPrefix): Unit = {
+    val (bucket, key, isS3) = selectS3orLocal(prefix + path)
     try {
       if (isS3) S3StorageBackend.write(bucket, key, localFile, s3Endpoint) else LocalStorageBackend.write(key, localFile)
     } catch {
@@ -51,6 +62,15 @@ case class Storage(storagePrefix: Option[String], s3Endpoint: Option[String] = N
     } catch {
       case exception: Exception =>
         throw new StorageException(s"Failed to copy from $src to $dst", exception)
+    }
+  }
+
+  def deleteLocalDirectoryRecursive(path: String): Unit = {
+    val pathAsPath = Paths.get(path)
+    if (Files.exists(pathAsPath)) {
+      Files.walk(pathAsPath)
+        .sorted(java.util.Comparator.reverseOrder())
+        .forEach(p => Files.deleteIfExists(p))
     }
   }
 }
