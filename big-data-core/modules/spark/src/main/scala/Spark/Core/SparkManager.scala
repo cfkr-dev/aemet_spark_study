@@ -43,19 +43,25 @@ object SparkManager {
 
     def startSparkSession(): Unit = {
       chronometer.start()
-      printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.startSparkSession)
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.startSparkSessionCheckStats.format(
+        if (ctsGlobalInit.environmentVars.values.runningInEmr.getOrElse(false)) {
+          "not available"
+        } else {
+          ctsExecutionSessionConf.sessionStatsUrl
+        }
+      ))
       SparkCore.sparkSession.conf.getAll.foreach {case (k, v) => printlnConsoleMessage(NotificationType.Information, s"$k = $v")}
       SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName).count()
       SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName).count()
     }
 
     def endSparkSession(): Unit = {
-      printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSessionCheckStats.format(ctsExecutionSessionConf.sessionStatsUrl))
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSession)
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.chrono.chronoResult.format(chronometer.stop()))
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.betweenStages.infoText.format(ctsGlobalUtils.betweenStages.millisBetweenStages / 1000))
       Thread.sleep(ctsGlobalUtils.betweenStages.millisBetweenStages)
       sparkSession.stop()
-      printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSession)
+      printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSessionClosed)
     }
 
     def saveDataframeAsParquet(dataframe: DataFrame, path: String): Either[Exception, String] = {
@@ -448,7 +454,7 @@ object SparkManager {
       queries.map(query => query.dataframe)
     }
 
-    object Stations {
+    private object Stations {
       private val ctsExecution = SparkConf.Constants.queries.execution.stationsConf
       private val ctsLogs = SparkConf.Constants.queries.log.stationsConf
       private val ctsStorage = SparkConf.Constants.queries.storage.stationsConf
@@ -522,7 +528,7 @@ object SparkManager {
       }
     }
 
-    object Climograph {
+    private object Climograph {
       private val ctsExecution = SparkConf.Constants.queries.execution.climographConf
       private val ctsLogs = SparkConf.Constants.queries.log.climographConf
       private val ctsStorage = SparkConf.Constants.queries.storage.climographConf
@@ -592,7 +598,7 @@ object SparkManager {
       }
     }
 
-    object SingleParamStudies {
+    private object SingleParamStudies {
       private val ctsExecution = SparkConf.Constants.queries.execution.singleParamStudiesConf
       private val ctsLogs = SparkConf.Constants.queries.log.singleParamStudiesConf
       private val ctsStorage = SparkConf.Constants.queries.storage.singleParamStudiesConf
