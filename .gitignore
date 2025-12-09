@@ -1,2 +1,8 @@
-# Inner
+# IntelliJ IDEA files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Data storage
 data/
