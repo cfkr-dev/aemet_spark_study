@@ -1,9 +1,9 @@
 package Spark.Config.SparkConf.Init.Log
 
 case class SessionConf(
-  startSparkSession: String,
-  endSparkSessionCheckStats: String,
+  startSparkSessionCheckStats: String,
   endSparkSession: String,
+  endSparkSessionClosed: String,
   startQueries: String,
   endQueries: String
 )

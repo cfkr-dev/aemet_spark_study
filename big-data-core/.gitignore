@@ -20,6 +20,9 @@ logs/
 # BSP configuration
 .bsp/
 
+# Run configuration
+.run/
+
 # OS and IDE specific files
 .DS_Store
 Thumbs.db
@@ -27,7 +30,7 @@ ehcache*
 hsperfdata*
 
 # Secrets
-secrets/
+.env
 
 # Documentation
 documentation/

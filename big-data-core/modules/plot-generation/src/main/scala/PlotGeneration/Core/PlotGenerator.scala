@@ -26,7 +26,13 @@ object PlotGenerator {
 
   private implicit val dataStorage: Storage = GlobalConf.Constants.dataStorage
 
-  object Stations {
+  ctsGlobalInit.environmentVars.values.autoPlotUrlBase.getOrElse(
+    throw new Exception(ctsGlobalUtils.errors.environmentVariableNotFound.format(
+      ctsGlobalInit.environmentVars.names.autoPlotUrlBase
+    ))
+  )
+
+  private object Stations {
     private val ctsExecution = PlotGenerator.ctsExecution.stationsConf
 
     def generate(): Unit = {
@@ -58,7 +64,7 @@ object PlotGenerator {
     }
   }
 
-  object Climograph {
+  private object Climograph {
     private case class StationInfo(stationName: String, stationId: String, state: String, latitude: String, longitude: String, altitude: Int)
     private case class MeteoParamInfo(meteoParam: String, meteoParamAbbrev: String, units: String, colAggMethod: String)
     private case class ClimographInfo(tempParamInfo: MeteoParamInfo, precParamInfo: MeteoParamInfo, climateType: String, climateSubtype: String, climateLocation: String)
@@ -220,7 +226,7 @@ object PlotGenerator {
 
   }
 
-  object SingleParamStudies {
+  private object SingleParamStudies {
     private case class MeteoParamInfo(meteoParam: String, meteoParamAbbrev: String, units: String, colAggMethod: String)
     private case class Top10TemporalInfo(value: String, title: String)
     private case class Top10FormatInfo(meteoParamInfo: MeteoParamInfo, order: String, temporal: Top10TemporalInfo)
@@ -668,7 +674,7 @@ object PlotGenerator {
     }
   }
 
-  object InterestingStudies {
+  private object InterestingStudies {
     private case class MeteoParamInfo(meteoParam: String, meteoParamAbbrev: String, units: String, colAggMethod: String)
     private case class StationInfo(stationName: String, stationId: String, state: String, stateNoSc: String, latitude: String, longitude: String, altitude: Int)
     private case class PrecPressEvolFormatInfo(precMeteoInfo: MeteoParamInfo, pressMeteoInfo: MeteoParamInfo, stationInfo: StationInfo)

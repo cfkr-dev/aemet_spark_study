@@ -11,11 +11,11 @@ case class StorageConf(aemetConf: Storage.AemetConf, ifapaConf: Storage.IfapaCon
 case class UrlConf(aemetConf: Url.AemetConf, ifapaConf: Url.IfapaConf)
 
 object Constants {
-  private val ctsGlobalInit = GlobalConf.Constants.init
+  private val storageBaseData = GlobalConf.Constants.storageBaseData
   private implicit val dataStorage: Core.Storage = GlobalConf.Constants.dataStorage
 
   private val configDirPath: String = dataStorage.readDirectoryRecursive(
-    s"${ctsGlobalInit.storageBaseData}config",
+    s"$storageBaseData/config",
     includeDirs = Seq("/config/global", "/config/data_extraction")
   ).toString.replace("\\", "/").concat("/")
 
