@@ -4,14 +4,18 @@ case class EnvironmentVarsNames(
   runningInEmr: String,
   awsS3Endpoint: String,
   storagePrefix: String,
-  aemetOpenapiApiKey: String
+  storageBase: String,
+  aemetOpenapiApiKey: String,
+  autoPlotUrlBase: String
 )
 
 case class EnvironmentVarsValues(
   runningInEmr: Option[Boolean],
   awsS3Endpoint: Option[String],
   storagePrefix: Option[String],
-  aemetOpenapiApiKey: Option[String]
+  storageBase: Option[String],
+  aemetOpenapiApiKey: Option[String],
+  autoPlotUrlBase: Option[String]
 )
 
 case class EnvironmentVars(
@@ -19,4 +23,4 @@ case class EnvironmentVars(
   values: EnvironmentVarsValues
 )
 
-case class InitConf(environmentVars: EnvironmentVars, storageBaseData: String)
+case class InitConf(environmentVars: EnvironmentVars, storageBaseData: Option[String])

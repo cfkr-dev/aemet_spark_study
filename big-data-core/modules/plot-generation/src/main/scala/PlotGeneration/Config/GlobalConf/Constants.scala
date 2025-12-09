@@ -8,6 +8,9 @@ case class SchemaConf(aemetConf: Schema.AemetConf, ifapaConf: Schema.IfapaConf, 
 
 object Constants {
   val init: InitConf = readInternalConfig[InitConf]("config/global/init.conf")
+  val storageBaseData: String = init.storageBaseData.getOrElse(
+    throw new Exception(s"Environment variable not found (${init.environmentVars.names.storageBase})")
+  )
 
   implicit val dataStorage: Storage = Storage(
     init.environmentVars.values.storagePrefix,
@@ -15,7 +18,7 @@ object Constants {
   )
 
   private val configDirPath: String = dataStorage.readDirectoryRecursive(
-    s"${init.storageBaseData}config",
+    s"$storageBaseData/config",
     includeDirs = Seq("/config/global")
   ).toString.replace("\\", "/").concat("/")
 

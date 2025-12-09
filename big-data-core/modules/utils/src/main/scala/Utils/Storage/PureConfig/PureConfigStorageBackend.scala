@@ -4,6 +4,8 @@ import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 import pureconfig.error.CannotConvert
 import pureconfig.{ConfigReader, ConfigSource}
 
+import java.io.InputStream
+import scala.io.Source
 import scala.reflect.ClassTag
 
 object PureConfigStorageBackend {
@@ -20,12 +22,31 @@ object PureConfigStorageBackend {
       }
   }
 
-  def readInternalConfig[T: ClassTag](filepath: String, customPrefix: Option[String] = None)(implicit reader: ConfigReader[T]): T = {
-    val configFile: java.io.File = customPrefix match {
-      case Some(prefix) => new java.io.File(prefix + filepath)
-      case None => new java.io.File(getClass.getClassLoader.getResource(filepath).toURI)
+  def readInternalConfig[T: ClassTag](
+    filepath: String,
+    customPrefix: Option[String] = None
+  )(implicit reader: ConfigReader[T]): T = {
+
+    val config: TypesafeConfig = customPrefix match {
+      case Some(prefix) =>
+        val configFile = new java.io.File(prefix, filepath)
+        if (!configFile.exists())
+          throw new RuntimeException(s"Config file not found: ${configFile.getAbsolutePath}")
+        ConfigFactory.parseFile(configFile).resolve()
+
+      case None =>
+        val resource: InputStream = Option(getClass.getClassLoader.getResourceAsStream(filepath))
+          .getOrElse(throw new RuntimeException(s"Config file '$filepath' not found in classpath"))
+
+        val reader = Source.fromInputStream(resource).bufferedReader()
+        try {
+          ConfigFactory.parseReader(reader).resolve()
+        } finally {
+          reader.close()
+          resource.close()
+        }
     }
-    val resolvedConfig: TypesafeConfig = ConfigFactory.parseFile(configFile).resolve()
-    ConfigSource.fromConfig(resolvedConfig).loadOrThrow[T]
+
+    ConfigSource.fromConfig(config).loadOrThrow[T]
   }
 }
