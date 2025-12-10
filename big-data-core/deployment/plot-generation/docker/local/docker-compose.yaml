@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  auto-plot:
+    image: ${AUTO_PLOT_IMAGE_NAME}
+    container_name: auto-plot
+    environment:
+      - STORAGE_PREFIX=${AUTO_PLOT_STORAGE_PREFIX}
+      - STORAGE_BASE=${AUTO_PLOT_STORAGE_BASE}
+    ports:
+      - "8080:8080"
+    volumes:
+      - "${HOST_STORAGE_PREFIX}${HOST_STORAGE_BASE}:${AUTO_PLOT_STORAGE_PREFIX}${AUTO_PLOT_STORAGE_BASE}"
+
+  plot-generation:
+    image: ${IMAGE_NAME}
+    container_name: plot-generation
+    environment:
+      - STORAGE_PREFIX=${CONTAINER_STORAGE_PREFIX}
+      - STORAGE_BASE=${CONTAINER_STORAGE_BASE}
+      - AUTO_PLOT_URL_BASE=${AUTO_PLOT_URL_BASE}
+    volumes:
+      - "${HOST_STORAGE_PREFIX}${HOST_STORAGE_BASE}:${CONTAINER_STORAGE_PREFIX}${CONTAINER_STORAGE_BASE}"
+    depends_on:
+      - auto-plot
+    entrypoint: ["/bin/sh", "./entrypoint.sh"]
