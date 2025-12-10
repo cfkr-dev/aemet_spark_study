@@ -36,6 +36,6 @@ hsperfdata*
 documentation/
 
 # Subprojects
-../AutoPlot
+../auto-plot
 ../config
 ../dashboard-web
