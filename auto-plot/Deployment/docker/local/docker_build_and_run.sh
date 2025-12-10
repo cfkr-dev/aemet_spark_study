@@ -8,6 +8,12 @@ C_OK="\033[32m"
 C_ERR="\033[31m"
 C_RST="\033[0m"
 
+# ===== EXECUTION ARGS =====
+BUILD_ONLY=false
+if [[ "$1" == "--build-only" ]]; then
+    BUILD_ONLY=true
+fi
+
 # ===== MAIN VARIABLES =====
 CWD="$(pwd)"
 DOCKERFILE_FILE="./Dockerfile"
@@ -130,6 +136,12 @@ echo
 info "Checking Docker image"
 if docker_exists "$IMAGE_NAME"; then
     ok "Docker image already exists"
+
+    if [[ "$BUILD_ONLY" == true ]]; then
+        info "BUILD-ONLY active. Skipping execution"
+        exit 0
+    fi
+
     run_container
     exit 0
 else
@@ -181,6 +193,11 @@ remove_dir "$CWD/Resources"
 echo
 info "Cleaning copied app"
 remove_dir "$CWD/App"
+
+if [[ "$BUILD_ONLY" == true ]]; then
+    info "BUILD-ONLY active. Skipping execution"
+    exit 0
+fi
 
 echo
 info "Running Docker container"
