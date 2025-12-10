@@ -42,5 +42,5 @@ next-env.d.ts
 .vercel
 
 # Subprojects
-../AutoPlot
-../scala_big_data_core
+../auto-plot
+../big-data-core

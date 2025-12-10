@@ -4,13 +4,7 @@ FROM python:3.13
 # DEFINE LABELS
 LABEL authors="Alberto Pérez Pérez"
 LABEL version="1.0"
-LABEL description="Python Flask API image for creating plots with Plotly based on AEMET open API data"
-
-# SET ARGS
-ARG EXPOSED_PORT
-ARG AWS_S3_ENDPOINT
-ARG STORAGE_PREFIX
-ARG STORAGE_BASE_DIR
+LABEL description="A Flask application powered by Python running on a Gunicorn server that creates graphs with Plotly using meteorological data"
 
 # SET WORK DIRECTORY
 WORKDIR /AutoPlot
@@ -19,7 +13,7 @@ WORKDIR /AutoPlot
 RUN apt-get update && apt-get install ffmpeg libsm6 libxext6 -y
 
 # COPY AND RUN REQUIREMENTS.TXT
-COPY ./Deployment/requirements.txt ./
+COPY ./requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # COPY ALL PROJECT FILES
@@ -29,12 +23,9 @@ COPY ./App ./App/
 COPY ./Resources/ ./Resources/
 
 # EXPOSE PORT FOR GUNICORN
-EXPOSE ${EXPOSED_PORT}
+EXPOSE 8000
 
 # CREATE ENVIROMENT VARIABLES
-ENV AWS_S3_ENDPOINT=${AWS_S3_ENDPOINT}
-ENV STORAGE_PREFIX=${STORAGE_PREFIX}
-ENV STORAGE_BASE_DIR=${STORAGE_BASE_DIR}
 ENV PYTHONPATH="/AutoPlot/"
 
 WORKDIR /AutoPlot/App/
