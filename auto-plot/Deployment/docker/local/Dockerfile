@@ -2,7 +2,7 @@
 FROM python:3.13
 
 # DEFINE LABELS
-LABEL authors="Alberto Pérez Pérez"
+LABEL authors="cfkr-dev"
 LABEL version="1.0"
 LABEL description="A Flask application powered by Python running on a Gunicorn server that creates graphs with Plotly using meteorological data"
 
