@@ -1,0 +1,89 @@
+@startuml
+actor User
+
+participant "AemetAPIClient" as Client
+participant "AllStationsData" as StationData
+participant "AllStationsMeteo" as MeteoData
+participant "HTTPUtils" as HTTP
+participant "FileUtils" as Storage
+
+User -> Client : aemetDataExtraction()
+activate Client
+
+'--- Station Metadata ---
+Client -> StationData : saveStationInfoMetadata()
+activate StationData
+StationData -> StationData : doWhileWithGetAndSave()
+alt retry until success
+    StationData -> HTTP : getAemetAPIResource(metadata=true)
+    alt success
+        HTTP --> StationData : JSON response
+        StationData -> Storage : saveContentToPath(metadata)
+        Storage --> StationData : success
+    else failure
+        HTTP --> StationData : exception
+        StationData -> StationData : retry doWhileWithGetAndSave()
+    end
+end
+StationData --> Client : done
+deactivate StationData
+
+'--- Meteo Metadata ---
+Client -> MeteoData : saveStationMeteoInfoMetadata()
+activate MeteoData
+MeteoData -> MeteoData : doWhileWithGetAndSave()
+alt retry until success
+    MeteoData -> HTTP : getAemetAPIResource(metadata=true)
+    alt success
+        HTTP --> MeteoData : JSON response
+        MeteoData -> Storage : saveContentToPath(metadata)
+        Storage --> MeteoData : success
+    else failure
+        HTTP --> MeteoData : exception
+        MeteoData -> MeteoData : retry doWhileWithGetAndSave()
+    end
+end
+MeteoData --> Client : done
+deactivate MeteoData
+
+'--- Station Data ---
+Client -> StationData : saveStationInfo()
+activate StationData
+StationData -> StationData : doWhileWithGetAndSave()
+alt retry until success
+    StationData -> HTTP : getAemetAPIResource(metadata=false)
+    alt success
+        HTTP --> StationData : JSON response
+        StationData -> Storage : saveContentToPath(data)
+        Storage --> StationData : success
+    else failure
+        HTTP --> StationData : exception
+        StationData -> StationData : retry doWhileWithGetAndSave()
+    end
+end
+StationData --> Client : done
+deactivate StationData
+
+'--- Meteo Data ---
+Client -> MeteoData : saveStationMeteoInfo()
+activate MeteoData
+MeteoData -> MeteoData : saveStationMeteoInfoAction() [loop over date ranges]
+alt retry until success
+    MeteoData -> HTTP : getAemetAPIResource(metadata=false)
+    alt success
+        HTTP --> MeteoData : JSON response
+        MeteoData -> Storage : saveContentToPath(data)
+        Storage --> MeteoData : success
+        MeteoData -> Storage : save last saved date
+        Storage --> MeteoData : done
+    else failure
+        HTTP --> MeteoData : exception
+        MeteoData -> MeteoData : retry doWhileWithGetAndSave()
+    end
+end
+MeteoData --> Client : done
+deactivate MeteoData
+
+Client --> User : finished
+deactivate Client
+@enduml

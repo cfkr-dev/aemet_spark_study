@@ -1,0 +1,34 @@
+@startuml
+participant "PlotGenerator" as PG
+participant "InterestingStudies" as IS
+participant "JSONUtils" as JSON
+participant "Plot API" as API
+
+PG -> IS : generate()
+activate IS
+
+group EVOL PREC/PRESS
+    loop each state
+        IS -> JSON : readJSON(station2024)
+        JSON --> IS : station JSON
+        IS -> API : generatePlot(evolPrecPress2024)
+        API --> IS : ok
+
+        IS -> JSON : readJSON(stationGlobal)
+        JSON --> IS : station JSON
+        IS -> API : generatePlot(evolPrecPressYearlyGroup)
+        API --> IS : ok
+    end
+end
+
+group TOP 10 STATES
+    loop each study
+        IS -> API : generatePlot(top10States)
+        API --> IS : ok
+    end
+end
+
+IS --> PG : done
+deactivate IS
+
+@enduml

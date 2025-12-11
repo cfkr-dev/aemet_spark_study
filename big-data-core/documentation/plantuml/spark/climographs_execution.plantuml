@@ -1,0 +1,34 @@
+@startuml
+participant "SparkQueries" as SQ
+participant "Climograph" as CG
+participant "QueryFunction" as QF
+participant "SparkCore" as SC
+
+SQ -> CG : execute()
+activate CG
+
+loop climateGroups
+    CG -> CG : foreach climateGroup
+
+    loop climates inside group
+        CG -> CG : foreach climateRecord
+
+        group Station metadata
+            CG -> QF : getStationInfoById()
+            QF --> CG : StationInfo DF
+            CG -> SC : saveDataframeAsJSON()
+        end
+
+        group Monthly temperature & precipitation
+            CG -> QF : getStationMonthlyAvgTempAndSumPrecInAYear()
+            QF --> CG : Climate DF
+            CG -> SC : saveDataframeAsParquet()
+        end
+
+    end
+end
+
+CG --> SQ : done
+deactivate CG
+
+@enduml

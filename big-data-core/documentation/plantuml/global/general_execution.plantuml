@@ -1,0 +1,139 @@
+@startuml
+actor User
+
+participant "App" as APP
+
+== DATA EXTRACTION ==
+
+participant "AemetAPIClient" as AEMET
+participant "AEMET API" as AEMET_API
+participant "IfapaAPIClient" as IFAPA
+participant "IFAPA API" as IFAPA_API
+participant "IfapaToAemetConverter" as IFAPA_TO_AEMET
+participant "Storage" as STORAGE
+
+User -> APP : start app
+
+activate APP
+APP -> STORAGE : get constants
+STORAGE --> APP : constants
+
+APP -> AEMET : start AEMET data extraction
+activate AEMET
+AEMET -> AEMET_API : get AEMET data
+AEMET_API --> AEMET : ok
+AEMET -> STORAGE : save AEMET data
+STORAGE --> AEMET : saved
+AEMET --> APP : end AEMET data extraction
+deactivate AEMET
+
+APP -> IFAPA : start IFAPA data extraction
+activate IFAPA
+IFAPA -> IFAPA_API : get IFAPA data
+IFAPA_API --> IFAPA : ok
+IFAPA -> STORAGE : save IFAPA data
+STORAGE --> IFAPA : saved
+IFAPA --> APP : end IFAPA data extraction
+deactivate IFAPA
+
+APP -> IFAPA_TO_AEMET : start IFAPA to AEMET format
+activate IFAPA_TO_AEMET
+IFAPA_TO_AEMET -> STORAGE : save converted IFAPA to AEMET data
+STORAGE --> IFAPA_TO_AEMET : saved
+IFAPA_TO_AEMET --> APP : end IFAPA to AEMET format
+deactivate IFAPA_TO_AEMET
+
+== SPARK PROCESSING ==
+
+participant "SparkCore" as SPARK_CORE
+participant "StationsDf" as STATIONS_DF
+participant "MeteoDf" as METEO_DF
+participant "SparkQueries" as SPARK_QUERIES
+participant "StationStudies" as STATION_STUDIES
+participant "ClimographStudies" as CLIMOGRAPH_STUDIES
+participant "SingleParamStudies" as SINGLE_PARAM_STUDIES
+participant "InterestingStudies" as INTERESTING_STUDIES
+
+APP -> STORAGE : get constants
+STORAGE --> APP : constants
+
+APP -> SPARK_CORE : start Spark session
+activate SPARK_CORE
+
+SPARK_CORE -> STORAGE : load stations data
+STORAGE --> SPARK_CORE : stations DF
+SPARK_CORE -> STATIONS_DF : create DataFrame
+STATIONS_DF --> SPARK_CORE : created DataFrame
+
+SPARK_CORE -> STORAGE : load meteo data
+STORAGE --> SPARK_CORE : meteo DF
+SPARK_CORE -> METEO_DF : create DataFrame
+METEO_DF --> SPARK_CORE : created DataFrame
+
+SPARK_CORE -> SPARK_QUERIES : execute queries
+activate SPARK_QUERIES
+
+SPARK_QUERIES -> STATION_STUDIES : StationStudies.execute()
+STATION_STUDIES --> STORAGE : save results
+STORAGE --> STATION_STUDIES : saved
+
+SPARK_QUERIES -> CLIMOGRAPH_STUDIES : ClimographStudies.execute()
+CLIMOGRAPH_STUDIES --> STORAGE : save results
+STORAGE --> CLIMOGRAPH_STUDIES : saved
+
+SPARK_QUERIES -> SINGLE_PARAM_STUDIES : SingleParamStudies.execute()
+SINGLE_PARAM_STUDIES --> STORAGE : save results
+STORAGE --> SINGLE_PARAM_STUDIES : saved
+
+SPARK_QUERIES -> INTERESTING_STUDIES : InterestingStudies.execute()
+INTERESTING_STUDIES --> STORAGE : save results
+STORAGE --> INTERESTING_STUDIES : saved
+
+SPARK_QUERIES --> SPARK_CORE : end queries
+
+deactivate SPARK_QUERIES
+
+SPARK_CORE --> APP : end Spark session
+
+deactivate SPARK_CORE
+
+== PLOT GENERATION ==
+
+participant "PlotGenerator" as PLOT_GENERATOR
+participant "AUTOPLOT API" as AUTO_PLOT_API
+
+APP -> STORAGE : get constants
+STORAGE --> APP : constants
+
+APP -> PLOT_GENERATOR : start plot generation
+activate PLOT_GENERATOR
+
+PLOT_GENERATOR -> AUTO_PLOT_API : StationStudies.generate()
+AUTO_PLOT_API --> STORAGE : save plot
+STORAGE --> AUTO_PLOT_API : saved
+AUTO_PLOT_API --> PLOT_GENERATOR : ok
+
+PLOT_GENERATOR -> AUTO_PLOT_API : ClimographStudies.generate()
+AUTO_PLOT_API --> STORAGE : save plot
+STORAGE --> AUTO_PLOT_API : saved
+AUTO_PLOT_API --> PLOT_GENERATOR : ok
+
+PLOT_GENERATOR -> AUTO_PLOT_API : SingleParamStudies.generate()
+AUTO_PLOT_API --> STORAGE : save plot
+STORAGE --> AUTO_PLOT_API : saved
+AUTO_PLOT_API --> PLOT_GENERATOR : ok
+
+PLOT_GENERATOR -> AUTO_PLOT_API : InterestingStudies.generate()
+AUTO_PLOT_API --> STORAGE : save plot
+STORAGE --> AUTO_PLOT_API : saved
+AUTO_PLOT_API --> PLOT_GENERATOR : ok
+
+deactivate PLOT_GENERATOR
+
+PLOT_GENERATOR --> APP : end plot generation
+
+APP --> User : end app
+
+deactivate APP
+
+@enduml

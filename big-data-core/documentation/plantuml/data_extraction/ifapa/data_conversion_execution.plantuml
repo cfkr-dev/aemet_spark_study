@@ -1,0 +1,53 @@
+@startuml
+actor User
+
+participant "IfapaToAemetConverter" as Converter
+participant "SingleStationInfo" as StationInfo
+participant "SingleStationMeteoInfo" as MeteoInfo
+participant "FileUtils" as Storage
+participant "JSONUtils" as JSON
+
+User -> Converter : ifapaToAemetConversion()
+activate Converter
+
+'--- Convert Station Info ---
+Converter -> StationInfo : saveSingleStationInfoAemetFormat()
+activate StationInfo
+StationInfo -> JSON : readJSON(ifapa station info)
+JSON --> StationInfo : JSON response
+StationInfo -> JSON : readJSON(aemet metadata)
+JSON --> StationInfo : metadata JSON
+StationInfo -> JSON : buildJSONFromSchemaAndData()
+JSON --> StationInfo : structured JSON
+StationInfo -> JSON : transformJSONValues(formatters)
+JSON --> StationInfo : transformed JSON
+StationInfo -> Storage : saveContentToPath(data)
+Storage --> StationInfo : success
+StationInfo -> Storage : copyFile(metadata)
+Storage --> StationInfo : success
+StationInfo --> Converter : done
+deactivate StationInfo
+
+'--- Convert Meteo Info ---
+Converter -> MeteoInfo : saveSingleStationMeteoInfoAemetFormat()
+activate MeteoInfo
+MeteoInfo -> JSON : readJSON(ifapa meteo info)
+JSON --> MeteoInfo : JSON response
+MeteoInfo -> JSON : readJSON(station info)
+JSON --> MeteoInfo : JSON response
+MeteoInfo -> JSON : readJSON(aemet metadata)
+JSON --> MeteoInfo : metadata JSON
+MeteoInfo -> JSON : buildJSONFromSchemaAndData()
+JSON --> MeteoInfo : structured JSON
+MeteoInfo -> JSON : transformJSONValues(formatters)
+JSON --> MeteoInfo : transformed JSON
+MeteoInfo -> Storage : saveContentToPath(data)
+Storage --> MeteoInfo : success
+MeteoInfo -> Storage : copyFile(metadata)
+Storage --> MeteoInfo : success
+MeteoInfo --> Converter : done
+deactivate MeteoInfo
+
+Converter --> User : finished
+deactivate Converter
+@enduml

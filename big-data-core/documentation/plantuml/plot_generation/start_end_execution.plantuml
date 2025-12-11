@@ -1,0 +1,28 @@
+@startuml
+actor User
+
+participant "PlotGenerator" as PG
+participant "Stations" as ST
+participant "Climograph" as CG
+participant "SingleParamStudies" as SP
+participant "InterestingStudies" as IS
+
+User -> PG : generate()
+activate PG
+
+PG -> ST : Stations.generate()
+ST --> PG : done
+
+PG -> CG : Climograph.generate()
+CG --> PG : done
+
+PG -> SP : SingleParamStudies.generate()
+SP --> PG : done
+
+PG -> IS : InterestingStudies.generate()
+IS --> PG : done
+
+PG --> User : finished
+deactivate PG
+
+@enduml

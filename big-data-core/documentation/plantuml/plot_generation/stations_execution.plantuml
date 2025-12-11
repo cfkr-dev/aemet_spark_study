@@ -1,0 +1,21 @@
+@startuml
+participant "PlotGenerator" as PG
+participant "Stations" as ST
+participant "Plot API" as API
+
+PG -> ST : generate()
+activate ST
+
+ST -> API : generatePlot(countEvolution)
+API --> ST : ok
+
+ST -> API : generatePlot(countByState2024)
+API --> ST : ok
+
+ST -> API : generatePlot(countByAltitude2024)
+API --> ST : ok
+
+ST --> PG : done
+deactivate ST
+
+@enduml

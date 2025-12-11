@@ -1,0 +1,55 @@
+@startuml
+participant "PlotGenerator" as PG
+participant "SingleParamStudies" as SP
+participant "JSONUtils" as JSON
+participant "Plot API" as API
+
+PG -> SP : generate()
+activate SP
+
+loop each meteoParam
+    SP -> SP : foreach meteoParam
+
+    group TOP 10
+        loop each order
+            loop each temporal
+                SP -> API : generatePlot(top10)
+                API --> SP : ok
+            end
+        end
+    end
+
+    group TOP 5 INC
+        loop each order
+            SP -> API : generatePlot(top5Inc)
+            API --> SP : ok
+        end
+    end
+
+    group EVOLUTION
+        loop each state
+            SP -> JSON : readJSON(station2024)
+            JSON --> SP : station JSON
+            SP -> API : generatePlot(evol2024)
+            API --> SP : ok
+
+            SP -> JSON : readJSON(stationGlobal)
+            JSON --> SP : station JSON
+            SP -> API : generatePlot(evolYearlyGroup)
+            API --> SP : ok
+        end
+    end
+
+    group HEATMAP 2024
+        loop each location
+            SP -> API : generatePlot(heatMap2024)
+            API --> SP : ok
+        end
+    end
+
+end
+
+SP --> PG : done
+deactivate SP
+
+@enduml

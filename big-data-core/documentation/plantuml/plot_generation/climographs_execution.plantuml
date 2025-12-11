@@ -1,0 +1,29 @@
+@startuml
+participant "PlotGenerator" as PG
+participant "Climograph" as CG
+participant "JSONUtils" as JSON
+participant "Plot API" as API
+
+PG -> CG : generate()
+activate CG
+
+loop each climateGroup
+    CG -> CG : foreach climateGroup
+
+    loop each climateRecord
+        CG -> CG : foreach climateRecord
+
+        loop each location
+            CG -> JSON : readJSON(stationInfo)
+            JSON --> CG : station JSON
+
+            CG -> API : generatePlot(climograph)
+            API --> CG : ok
+        end
+    end
+end
+
+CG --> PG : done
+deactivate CG
+
+@enduml
