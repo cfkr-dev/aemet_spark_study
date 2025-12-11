@@ -1,0 +1,85 @@
+version: "3.9"
+
+services:
+  localstack:
+    image: localstack/localstack:stable
+    container_name: localstack
+    environment:
+      - SERVICES=s3
+      - DEBUG=0
+    ports:
+      - "4566:4566"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  auto-plot:
+    image: ${AUTO_PLOT_IMAGE_NAME}
+    container_name: auto-plot
+    environment:
+      - AWS_S3_ENDPOINT=${AWS_S3_ENDPOINT}
+      - STORAGE_PREFIX=${REMOTE_STORAGE_PREFIX}
+      - STORAGE_BASE=${REMOTE_STORAGE_BASE}
+    ports:
+      - "8080:8080"
+    volumes:
+      - "${HOST_STORAGE_PREFIX}${HOST_STORAGE_BASE}:${AUTO_PLOT_STORAGE_PREFIX}${AUTO_PLOT_STORAGE_BASE}"
+
+  data-extraction:
+    image: ${DATA_EXTRACTION_IMAGE_NAME}
+    container_name: data-extraction
+    environment:
+      - AEMET_OPENAPI_API_KEY=${AEMET_OPENAPI_API_KEY}
+      - AWS_S3_ENDPOINT=${AWS_S3_ENDPOINT}
+      - STORAGE_PREFIX=${REMOTE_STORAGE_PREFIX}
+      - CONTAINER_STORAGE_PREFIX=${DATA_EXTRACTION_STORAGE_PREFIX}
+      - STORAGE_BASE=${REMOTE_STORAGE_BASE}
+      - CONTAINER_STORAGE_BASE=${DATA_EXTRACTION_STORAGE_BASE}
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - "${HOST_STORAGE_PREFIX}${HOST_STORAGE_BASE}:${DATA_EXTRACTION_STORAGE_PREFIX}${DATA_EXTRACTION_STORAGE_BASE}"
+    depends_on:
+      - localstack
+    entrypoint: [ "/bin/sh", "./entrypoint.sh" ]
+
+  spark-app:
+    image: ${SPARK_APP_IMAGE_NAME}
+    container_name: spark-app
+    environment:
+      - AWS_S3_ENDPOINT=${AWS_S3_ENDPOINT}
+      - STORAGE_PREFIX=${REMOTE_STORAGE_PREFIX}
+      - CONTAINER_STORAGE_PREFIX=${SPARK_APP_STORAGE_PREFIX}
+      - STORAGE_BASE=${REMOTE_STORAGE_BASE}
+      - CONTAINER_STORAGE_BASE=${SPARK_APP_STORAGE_BASE}
+      - RUNNING_IN_EMR=${RUNNING_IN_EMR}
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    ports:
+      - "4040:4040"
+    volumes:
+      - "${HOST_STORAGE_PREFIX}${HOST_STORAGE_BASE}:${SPARK_APP_STORAGE_PREFIX}${SPARK_APP_STORAGE_BASE}"
+    depends_on:
+      - localstack
+    entrypoint: [ "/bin/sh", "./entrypoint.sh", "--no-aws" ]
+
+  plot-generation:
+    image: ${PLOT_GENERATION_IMAGE_NAME}
+    container_name: plot-generation
+    environment:
+      - AWS_S3_ENDPOINT=${AWS_S3_ENDPOINT}
+      - STORAGE_PREFIX=${REMOTE_STORAGE_PREFIX}
+      - CONTAINER_STORAGE_PREFIX=${PLOT_GENERATION_STORAGE_PREFIX}
+      - STORAGE_BASE=${REMOTE_STORAGE_BASE}
+      - CONTAINER_STORAGE_BASE=${PLOT_GENERATION_STORAGE_BASE}
+      - AUTO_PLOT_URL_BASE=${AUTO_PLOT_URL_BASE}
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - "${HOST_STORAGE_PREFIX}${HOST_STORAGE_BASE}:${PLOT_GENERATION_STORAGE_PREFIX}${PLOT_GENERATION_STORAGE_BASE}"
+    depends_on:
+      - auto-plot
+      - localstack
+    entrypoint: [ "/bin/sh", "./entrypoint.sh", "--no-aws" ]

@@ -2,6 +2,14 @@
 
 set -e
 
+NO_AWS=false
+
+for arg in "$@"; do
+  if [ "$arg" = "--no-aws" ]; then
+    NO_AWS=true
+  fi
+done
+
 echo "Waiting for LocalStack S3..."
 
 MAX_RETRIES=30
@@ -23,15 +31,14 @@ if [ "$COUNT" -ge "$MAX_RETRIES" ]; then
   exit 1
 fi
 
-# Create bucket
-aws s3 mb "$STORAGE_PREFIX" --endpoint-url="$AWS_S3_ENDPOINT"
+if [ "$NO_AWS" = false ]; then
+  aws s3 mb "$STORAGE_PREFIX" --endpoint-url="$AWS_S3_ENDPOINT"
 
-# Upload config
-aws s3 cp \
-  "${CONTAINER_STORAGE_PREFIX}${CONTAINER_STORAGE_BASE}/config" \
-  "${STORAGE_PREFIX}${STORAGE_BASE}/config" --recursive \
-  --endpoint-url="$AWS_S3_ENDPOINT"
+  aws s3 cp \
+    "${CONTAINER_STORAGE_PREFIX}${CONTAINER_STORAGE_BASE}/config" \
+    "${STORAGE_PREFIX}${STORAGE_BASE}/config" --recursive \
+    --endpoint-url="$AWS_S3_ENDPOINT"
+fi
 
-# Run Scala app
 java -jar /DataExtraction/app.jar
 

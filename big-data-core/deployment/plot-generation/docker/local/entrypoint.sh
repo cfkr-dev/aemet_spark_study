@@ -23,6 +23,5 @@ if [ "$COUNT" -ge "$MAX_RETRIES" ]; then
   exit 1
 fi
 
-# Run Scala app
 java -jar /PlotGeneration/app.jar
 

@@ -8,21 +8,19 @@ set "C_OK=%ESC%[32m"
 set "C_ERR=%ESC%[31m"
 set "C_RST=%ESC%[0m"
 
-:: ===== EXECUTIONS ARGS =====
-set "BUILD_ONLY=0"
-if /I "%~1"=="--build-only" set "BUILD_ONLY=1"
-
 :: ===== MAIN VARIABLES =====
 set "CWD=%CD%"
-set "DOCKERFILE_FILE=.\Dockerfile"
+set "AUTO_PLOT_WD=..\..\..\..\..\auto-plot\Deployment\docker\local"
+set "DATA_EXTRACTION_WD=..\..\..\data-extraction\docker\local"
+set "SPARK_APP_WD=..\..\..\spark-app\docker\local"
+set "PLOT_GENERATION_WD=..\..\..\plot-generation\docker\local"
+set "BUILD_SCRIPT=.\docker_build_and_run.bat"
 set "COMPOSE_FILE=.\docker-compose.yaml"
 set "ENV_FILE=.\.env"
-set "ENTRYPOINT_SCRIPT=.\entrypoint.sh"
-set "JAR_PATH=..\..\plot-generation-1.0.0.jar"
-set "AUTO_PLOT_WD=..\..\..\..\..\auto-plot\Deployment\docker\local"
-set "AUTO_PLOT_BUILD_SCRIPT=.\docker_build_and_run.bat"
-set "IMAGE_NAME=plot-generation-localstack:v1.0"
 set "AUTO_PLOT_IMAGE_NAME=auto-plot:v1.0"
+set "DATA_EXTRACTION_IMAGE_NAME=data-extraction:v1.0"
+set "SPARK_APP_IMAGE_NAME=spark-app:v1.0"
+set "PLOT_GENERATION_IMAGE_NAME=plot-generation:v1.0"
 
 :: ===== EXIT FLAG =====
 set "SCRIPT_FAILED=0"
@@ -32,20 +30,31 @@ set "SCRIPT_FAILED=0"
 :: =================
 echo.
 call :info "Checking required files"
-call :check_file "%DOCKERFILE_FILE%"
-if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
-
 call :check_file "%COMPOSE_FILE%"
 if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
 
 call :check_file "%ENV_FILE%"
 if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
 
-call :check_file "%ENTRYPOINT_SCRIPT%"
+cd /d "!AUTO_PLOT_WD!"
+call :check_file "%BUILD_SCRIPT%"
 if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
+cd /d "!CWD!"
 
-call :check_file "%AUTO_PLOT_BUILD_SCRIPT%"
+cd /d "!DATA_EXTRACTION_WD!"
+call :check_file "%BUILD_SCRIPT%"
 if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
+cd /d "!CWD!"
+
+cd /d "!SPARK_APP_WD!"
+call :check_file "%BUILD_SCRIPT%"
+if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
+cd /d "!CWD!"
+
+cd /d "!PLOT_GENERATION_WD!"
+call :check_file "%BUILD_SCRIPT%"
+if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
+cd /d "!CWD!"
 
 echo.
 call :info "Loading environment variables"
@@ -56,42 +65,73 @@ echo.
 call :info "Checking auto-plot Docker image"
 call :docker_exists "!AUTO_PLOT_IMAGE_NAME!"
 if ERRORLEVEL 1 (
-    call :info "Auto-plot image does not exist, building it"
+    call :info "auto-plot image does not exist, building it"
     cd /d "!AUTO_PLOT_WD!"
-    call "!AUTO_PLOT_BUILD_SCRIPT!" --build-only
+    call "!BUILD_SCRIPT!" --build-only
     if ERRORLEVEL 1 (
         cd /d "!CWD!"
-        call :err "Auto-plot build script failed"
+        call :err "auto-plot build script failed"
         set SCRIPT_FAILED=1
         goto :end
     )
     cd /d "!CWD!"
 ) else (
-    call :ok "Auto-plot image already exists"
+    call :ok "auto-plot image already exists"
 )
 
 echo.
-call :info "Checking Docker image"
-call :docker_exists "!IMAGE_NAME!"
+call :info "Checking data-extraction Docker image"
+call :docker_exists "!DATA_EXTRACTION_IMAGE_NAME!"
 if ERRORLEVEL 1 (
-    call :info "Docker image does not exist, will build it"
-) else (
-    call :ok "Docker image already exists"
-
-    if "!BUILD_ONLY!"=="1" (
-        call :info "BUILD-ONLY active. Skipping execution"
+    call :info "data-extraction image does not exist, building it"
+    cd /d "!DATA_EXTRACTION_WD!"
+    call "!BUILD_SCRIPT!" --build-only
+    if ERRORLEVEL 1 (
+        cd /d "!CWD!"
+        call :err "data-extraction build script failed"
+        set SCRIPT_FAILED=1
         goto :end
     )
-
-    call :run_compose
-    if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
-    goto :end
+    cd /d "!CWD!"
+) else (
+    call :ok "data-extraction image already exists"
 )
 
 echo.
-call :info "Checking JAR file"
-call :check_file "!JAR_PATH!"
-if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
+call :info "Checking spark-app Docker image"
+call :docker_exists "!SPARK_APP_IMAGE_NAME!"
+if ERRORLEVEL 1 (
+    call :info "spark-app image does not exist, building it"
+    cd /d "!SPARK_APP_WD!"
+    call "!BUILD_SCRIPT!" --build-only
+    if ERRORLEVEL 1 (
+        cd /d "!CWD!"
+        call :err "spark-app build script failed"
+        set SCRIPT_FAILED=1
+        goto :end
+    )
+    cd /d "!CWD!"
+) else (
+    call :ok "spark-app image already exists"
+)
+
+echo.
+call :info "Checking plot-generation Docker image"
+call :docker_exists "!PLOT_GENERATION_IMAGE_NAME!"
+if ERRORLEVEL 1 (
+    call :info "plot-generation image does not exist, building it"
+    cd /d "!PLOT_GENERATION_WD!"
+    call "!BUILD_SCRIPT!" --build-only
+    if ERRORLEVEL 1 (
+        cd /d "!CWD!"
+        call :err "plot-generation build script failed"
+        set SCRIPT_FAILED=1
+        goto :end
+    )
+    cd /d "!CWD!"
+) else (
+    call :ok "plot-generation image already exists"
+)
 
 echo.
 call :info "Checking config directory"
@@ -107,42 +147,6 @@ if not defined HOST_STORAGE_BASE (
 )
 call :check_file "!HOST_STORAGE_PREFIX!!HOST_STORAGE_BASE!\config"
 if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
-
-echo.
-call :info "Copying JAR"
-call :copy "!JAR_PATH!" "!CWD!\app.jar"
-if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
-
-echo.
-call :info "Building Docker image"
-docker build -t "!IMAGE_NAME!" -f "!DOCKERFILE_FILE!" .
-if ERRORLEVEL 1 (
-    call :err "Docker build failed"
-    set SCRIPT_FAILED=1
-    goto :cleanup
-)
-
-echo.
-call :info "Waiting for Docker image to appear"
-call :wait_for_docker_image "!IMAGE_NAME!" 5
-if ERRORLEVEL 1 (
-    call :err "Docker image not found after retries"
-    set SCRIPT_FAILED=1
-    goto :cleanup
-)
-
-call :ok "Docker build success"
-
-:cleanup
-echo.
-call :info "Cleaning copied JAR"
-call :remove "!CWD!\app.jar"
-if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
-
-if "!BUILD_ONLY!"=="1" (
-    call :info "BUILD-ONLY active. Skipping execution"
-    goto :end
-)
 
 echo.
 call :info "Starting Docker Compose"
@@ -186,42 +190,9 @@ if not exist "!check_path!" (
 call :ok "%~1"
 exit /b 0
 
-:copy
-set "src=%~1"
-set "dst=%~2"
-set "src=!src:'=!"
-set "dst=!dst:'=!"
-copy /Y "!src!" "!dst!" >nul 2>&1
-if ERRORLEVEL 1 (
-    call :err "Failed copying !src! to !dst!"
-    exit /b 1
-)
-call :ok "Copied !src! to !dst!"
-exit /b 0
-
-:remove
-del /Q "%~1" >nul 2>&1
-if ERRORLEVEL 1 (
-    call :err "Failed removing %~1"
-    exit /b 1
-)
-call :ok "Removed %~1"
-exit /b 0
-
 :docker_exists
 docker image inspect %~1 >nul 2>&1
 exit /b %ERRORLEVEL%
-
-:wait_for_docker_image
-set "image=%~1"
-set "retries=%~2"
-:loop
-call :docker_exists "%image%"
-if ERRORLEVEL 0 exit /b 0
-set /a retries-=1
-if !retries! leq 0 exit /b 1
-timeout /t 2 /nobreak >nul
-goto loop
 
 :load_env_file
 for /f "usebackq tokens=* delims=" %%a in ("%~1") do (
@@ -242,7 +213,8 @@ for /f "usebackq tokens=* delims=" %%a in ("%~1") do (
 exit /b 0
 
 :run_compose
-start "LOCALSTACK" cmd /c docker-compose -f "%COMPOSE_FILE%" up --remove-orphans --force-recreate localstack
+docker-compose -f "%COMPOSE_FILE%" up --no-deps --remove-orphans --abort-on-container-exit data-extraction
+docker-compose -f "%COMPOSE_FILE%" up --no-deps --remove-orphans --abort-on-container-exit spark-app
 start "AUTO_PLOT" cmd /c docker-compose -f "%COMPOSE_FILE%" up --no-deps --remove-orphans --force-recreate auto-plot
 docker-compose -f "%COMPOSE_FILE%" up --no-deps --remove-orphans --abort-on-container-exit plot-generation
 docker-compose -f "%COMPOSE_FILE%" down --volumes --remove-orphans
