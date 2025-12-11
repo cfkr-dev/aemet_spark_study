@@ -32,9 +32,6 @@ hsperfdata*
 # Secrets
 .env
 
-# Documentation
-documentation/
-
 # Subprojects
 ../auto-plot
 ../config
