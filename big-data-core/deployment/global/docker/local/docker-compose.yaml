@@ -1,0 +1,48 @@
+version: "3.9"
+
+services:
+  auto-plot:
+    image: ${AUTO_PLOT_IMAGE_NAME}
+    container_name: auto-plot
+    environment:
+      - STORAGE_PREFIX=${AUTO_PLOT_STORAGE_PREFIX}
+      - STORAGE_BASE=${AUTO_PLOT_STORAGE_BASE}
+    ports:
+      - "8080:8080"
+    volumes:
+      - "${HOST_STORAGE_PREFIX}${HOST_STORAGE_BASE}:${AUTO_PLOT_STORAGE_PREFIX}${AUTO_PLOT_STORAGE_BASE}"
+
+  data-extraction:
+    image: ${DATA_EXTRACTION_IMAGE_NAME}
+    container_name: data-extraction
+    environment:
+      - AEMET_OPENAPI_API_KEY=${AEMET_OPENAPI_API_KEY}
+      - STORAGE_PREFIX=${DATA_EXTRACTION_STORAGE_PREFIX}
+      - STORAGE_BASE=${DATA_EXTRACTION_STORAGE_BASE}
+    volumes:
+      - "${HOST_STORAGE_PREFIX}${HOST_STORAGE_BASE}:${DATA_EXTRACTION_STORAGE_PREFIX}${DATA_EXTRACTION_STORAGE_BASE}"
+
+  spark-app:
+    image: ${SPARK_APP_IMAGE_NAME}
+    container_name: spark-app
+    environment:
+      - STORAGE_PREFIX=${SPARK_APP_STORAGE_PREFIX}
+      - STORAGE_BASE=${SPARK_APP_STORAGE_BASE}
+      - RUNNING_IN_EMR=${RUNNING_IN_EMR}
+    ports:
+      - "4040:4040"
+    volumes:
+      - "${HOST_STORAGE_PREFIX}${HOST_STORAGE_BASE}:${SPARK_APP_STORAGE_PREFIX}${SPARK_APP_STORAGE_BASE}"
+
+  plot-generation:
+    image: ${PLOT_GENERATION_IMAGE_NAME}
+    container_name: plot-generation
+    environment:
+      - STORAGE_PREFIX=${PLOT_GENERATION_STORAGE_PREFIX}
+      - STORAGE_BASE=${PLOT_GENERATION_STORAGE_BASE}
+      - AUTO_PLOT_URL_BASE=${AUTO_PLOT_URL_BASE}
+    volumes:
+      - "${HOST_STORAGE_PREFIX}${HOST_STORAGE_BASE}:${PLOT_GENERATION_STORAGE_PREFIX}${PLOT_GENERATION_STORAGE_BASE}"
+    depends_on:
+      - auto-plot
+    entrypoint: ["/bin/sh", "./entrypoint.sh"]

@@ -8,6 +8,10 @@ set "C_OK=%ESC%[32m"
 set "C_ERR=%ESC%[31m"
 set "C_RST=%ESC%[0m"
 
+:: ===== EXECUTIONS ARGS =====
+set "BUILD_ONLY=0"
+if /I "%~1"=="--build-only" set "BUILD_ONLY=1"
+
 :: ===== MAIN VARIABLES =====
 set "CWD=%CD%"
 set "DOCKERFILE_FILE=.\Dockerfile"
@@ -49,6 +53,12 @@ if ERRORLEVEL 1 (
     call :info "Docker image does not exist, will build it"
 ) else (
     call :ok "Docker image already exists"
+
+    if "!BUILD_ONLY!"=="1" (
+        call :info "BUILD-ONLY active. Skipping execution"
+        goto :end
+    )
+
     call :run_compose
     if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
     goto :end
@@ -104,6 +114,11 @@ echo.
 call :info "Cleaning copied JAR"
 call :remove "!CWD!\app.jar"
 if ERRORLEVEL 1 set SCRIPT_FAILED=1 & goto :end
+
+if "!BUILD_ONLY!"=="1" (
+    call :info "BUILD-ONLY active. Skipping execution"
+    goto :end
+)
 
 echo.
 call :info "Starting Docker Compose"
