@@ -1,0 +1,37 @@
+@startuml
+participant "SparkQueries" as SQ
+participant "InterestingStudies" as IS
+participant "Helper" as H
+participant "Storage" as S
+
+SQ -> IS : execute()
+activate IS
+
+group Precipitation & Pressure evolution
+    loop stationRecords
+        IS -> H : getStationInfoById()
+        H --> IS : DF
+        IS -> S : saveDataframeAsJSON()
+
+        IS -> H : getClimateParamInALapseById()
+        H --> IS : DF
+        IS -> S : saveDataframeAsParquet()
+
+        IS -> H : getClimateYearlyGroupById()
+        H --> IS : DF
+        IS -> S : saveDataframeAsParquet()
+    end
+end
+
+group Top 10 states by climate conditions
+    loop each top10 config
+        IS -> H : getTopNClimateConditionsInALapse(groupByState=true)
+        H --> IS : DF
+        IS -> S : saveDataframeAsParquet()
+    end
+end
+
+IS --> SQ : done
+deactivate IS
+
+@enduml

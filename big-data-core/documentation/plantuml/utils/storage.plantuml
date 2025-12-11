@@ -1,0 +1,72 @@
+@startuml
+autonumber
+
+actor Client
+
+Client -> JSONStorageBackend : readJSON(path)
+activate JSONStorageBackend
+
+JSONStorageBackend -> Storage : read(path)
+activate Storage
+
+Storage -> Storage : selectS3orLocal(prefix + path)
+
+alt Path is S3
+    Storage -> S3StorageBackend : read(bucket, key, endpoint)
+    activate S3StorageBackend
+    S3StorageBackend --> Storage : tmpFile(Path)
+    deactivate S3StorageBackend
+else Path is Local
+    Storage -> LocalStorageBackend : read(key)
+    activate LocalStorageBackend
+    LocalStorageBackend --> Storage : tmpFile(Path)
+    deactivate LocalStorageBackend
+end
+
+Storage --> JSONStorageBackend : tmpFile(Path)
+deactivate Storage
+
+JSONStorageBackend -> ujson : read(content)
+activate ujson
+ujson --> JSONStorageBackend : json(Value)
+deactivate ujson
+
+JSONStorageBackend --> Client : Either.Right(json)
+deactivate JSONStorageBackend
+
+
+== WRITE JSON ==
+
+Client -> JSONStorageBackend : writeJSON(path, json)
+activate JSONStorageBackend
+
+JSONStorageBackend -> JSONStorageBackend : create temp file
+JSONStorageBackend -> ujson : write(json)
+activate ujson
+ujson --> JSONStorageBackend : jsonString
+deactivate ujson
+
+JSONStorageBackend -> Storage : write(path, tmpFile)
+activate Storage
+
+Storage -> Storage : selectS3orLocal(prefix + path)
+
+alt Path is S3
+    Storage -> S3StorageBackend : write(bucket, key, tmpFile)
+    activate S3StorageBackend
+    S3StorageBackend --> Storage : success
+    deactivate S3StorageBackend
+else Path is Local
+    Storage -> LocalStorageBackend : write(key, tmpFile)
+    activate LocalStorageBackend
+    LocalStorageBackend --> Storage : success
+    deactivate LocalStorageBackend
+end
+
+Storage --> JSONStorageBackend : success
+deactivate Storage
+
+JSONStorageBackend --> Client : Either.Right(path)
+deactivate JSONStorageBackend
+
+@enduml

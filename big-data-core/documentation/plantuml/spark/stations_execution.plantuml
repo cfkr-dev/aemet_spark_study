@@ -1,0 +1,31 @@
+@startuml
+participant "SparkQueries" as SQ
+participant "Stations" as ST
+participant "Helper" as H
+participant "Storage" as S
+
+SQ -> ST : execute()
+activate ST
+
+group Station count evolution
+    ST -> H : getStationCountByColumnInLapse()
+    H --> ST : DataFrame
+    ST -> S : saveDataframeAsParquet()
+end
+
+group Station count by state (2024)
+    ST -> H : getStationCountByColumnInLapse()
+    H --> ST : DataFrame
+    ST -> S : saveDataframeAsParquet()
+end
+
+group Station count by altitude (2024)
+    ST -> H : getStationsCountByParamIntervalsInALapse()
+    H --> ST : DataFrame
+    ST -> S : saveDataframeAsParquet()
+end
+
+ST --> SQ : done
+deactivate ST
+
+@enduml

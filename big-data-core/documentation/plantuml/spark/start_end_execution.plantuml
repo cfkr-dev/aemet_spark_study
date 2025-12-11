@@ -1,0 +1,60 @@
+@startuml
+actor User
+
+participant "SparkManager" as SM
+participant "SparkCore" as SC
+participant "Dataframes" as DF
+participant "SparkQueries" as SQ
+participant "Stations" as ST
+participant "Climograph" as CG
+participant "SingleParamStudies" as SP
+participant "InterestingStudies" as IS
+
+User -> SM : execute()
+activate SM
+
+== Start Spark ==
+
+SM -> SC : startSparkSession()
+activate SC
+
+SC -> DF : load allStations
+DF --> SC : loaded
+
+SC -> DF : load allMeteoInfo
+DF --> SC : loaded
+
+SC --> SM : SparkSession ready
+deactivate SC
+
+== Run Studies ==
+
+SM -> SQ : execute()
+activate SQ
+
+SQ -> ST : Stations.execute()
+ST --> SQ : done
+
+SQ -> CG : Climograph.execute()
+CG --> SQ : done
+
+SQ -> SP : SingleParamStudies.execute()
+SP --> SQ : done
+
+SQ -> IS : InterestingStudies.execute()
+IS --> SQ : done
+
+SQ --> SM : studies completed
+deactivate SQ
+
+== End Spark ==
+
+SM -> SC : endSparkSession()
+activate SC
+SC --> SM : Spark stopped
+deactivate SC
+
+SM --> User : finished
+deactivate SM
+
+@enduml

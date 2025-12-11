@@ -1,0 +1,87 @@
+@startuml
+actor User
+
+participant "IfapaAPIClient" as Client
+participant "SingleStationInfo" as StationInfo
+participant "SingleStationMeteo" as MeteoInfo
+participant "HTTPUtils" as HTTP
+participant "FileUtils" as Storage
+
+User -> Client : ifapaDataExtraction()
+activate Client
+
+'--- Station Metadata ---
+Client -> StationInfo : saveSingleStationInfoMetadata()
+activate StationInfo
+StationInfo -> StationInfo : doWhileWithGetAndSave()
+alt retry until success
+    StationInfo -> HTTP : getIfapaAPIResource()
+    alt success
+        HTTP --> StationInfo : JSON response
+        StationInfo -> Storage : saveContentToPath(metadata)
+        Storage --> StationInfo : success
+    else failure
+        HTTP --> StationInfo : exception
+        StationInfo -> StationInfo : retry doWhileWithGetAndSave()
+    end
+end
+StationInfo --> Client : done
+deactivate StationInfo
+
+'--- Meteo Metadata ---
+Client -> MeteoInfo : saveSingleStationMeteoInfoMetadata()
+activate MeteoInfo
+MeteoInfo -> MeteoInfo : doWhileWithGetAndSave()
+alt retry until success
+    MeteoInfo -> HTTP : getIfapaAPIResource()
+    alt success
+        HTTP --> MeteoInfo : JSON response
+        MeteoInfo -> Storage : saveContentToPath(metadata)
+        Storage --> MeteoInfo : success
+    else failure
+        HTTP --> MeteoInfo : exception
+        MeteoInfo -> MeteoInfo : retry doWhileWithGetAndSave()
+    end
+end
+MeteoInfo --> Client : done
+deactivate MeteoInfo
+
+'--- Station Data ---
+Client -> StationInfo : saveSingleStationInfo()
+activate StationInfo
+StationInfo -> StationInfo : doWhileWithGetAndSave()
+alt retry until success
+    StationInfo -> HTTP : getIfapaAPIResource()
+    alt success
+        HTTP --> StationInfo : JSON response
+        StationInfo -> Storage : saveContentToPath(data)
+        Storage --> StationInfo : success
+    else failure
+        HTTP --> StationInfo : exception
+        StationInfo -> StationInfo : retry doWhileWithGetAndSave()
+    end
+end
+StationInfo --> Client : done
+deactivate StationInfo
+
+'--- Meteo Data ---
+Client -> MeteoInfo : saveSingleStationMeteoInfo()
+activate MeteoInfo
+MeteoInfo -> MeteoInfo : saveSingleStationMeteoInfoAction() [loop over date ranges]
+alt retry until success
+    MeteoInfo -> HTTP : getIfapaAPIResource()
+    alt success
+        HTTP --> MeteoInfo : JSON response
+        MeteoInfo -> Storage : saveContentToPath(data)
+        Storage --> MeteoInfo : success
+    else failure
+        HTTP --> MeteoInfo : exception
+        MeteoInfo -> MeteoInfo : retry doWhileWithGetAndSave()
+    end
+end
+MeteoInfo --> Client : done
+deactivate MeteoInfo
+
+Client --> User : finished
+deactivate Client
+@enduml

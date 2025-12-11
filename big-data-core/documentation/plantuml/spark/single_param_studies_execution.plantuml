@@ -1,0 +1,61 @@
+@startuml
+participant "SparkQueries" as SQ
+participant "SingleParamStudies" as SP
+participant "Helper" as H
+participant "Storage" as S
+
+SQ -> SP : execute()
+activate SP
+
+loop for each paramStudy
+
+    group Top 10 highest (year/decade/global)
+            SP -> H : getTopNClimateParamInALapse()
+            H --> SP : DF
+            SP -> S : saveDataframeAsParquet()
+        end
+
+    group Top 10 lowest (year/decade/global)
+        SP -> H : getTopNClimateParamInALapse(highest=false)
+        H --> SP : DF
+        SP -> S : saveDataframeAsParquet()
+    end
+
+    group Evolution for each state
+        loop reprStationRegs
+            SP -> H : getStationInfoById()
+            H --> SP : DF
+            SP -> S : saveDataframeAsJSON()
+
+            SP -> H : getClimateParamInALapseById()
+            H --> SP : DF
+            SP -> S : saveDataframeAsParquet()
+
+            SP -> H : getClimateYearlyGroupById()
+            H --> SP : DF
+            SP -> S : saveDataframeAsParquet()
+
+            SP -> H : getStationClimateParamRegressionModelInALapse()
+            H --> SP : DF
+            SP -> S : saveDataframeAsParquet()
+        end
+    end
+
+    group Top 5 highest/lowest increment
+        SP -> H : getTopNClimateParamIncrementInAYearLapse()
+        H --> SP : DF
+        SP -> S : saveDataframeAsParquet()
+    end
+
+    group Avg temperature 2024 (continental/canary)
+        SP -> H : getAllStationsByStatesAvgClimateParamInALapse()
+        H --> SP : DF
+        SP -> S : saveDataframeAsParquet()
+    end
+
+end
+
+SP --> SQ : done
+deactivate SP
+
+@enduml
