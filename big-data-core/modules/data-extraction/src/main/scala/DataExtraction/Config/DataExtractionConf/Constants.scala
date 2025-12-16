@@ -5,9 +5,9 @@ import Utils.Storage.Core
 import Utils.Storage.PureConfig.PureConfigStorageBackend.readInternalConfig
 import pureconfig.generic.auto._
 
-case class ExecutionConf(aemetConf: Execution.AemetConf, ifapaConf: Execution.IfapaConf, globalConf: Execution.GlobalConf)
-case class LogConf(aemetConf: Log.AemetConf, ifapaConf: Log.IfapaConf, ifapaAemetFormatConf: Log.IfapaAemetFormatConf)
-case class StorageConf(aemetConf: Storage.AemetConf, ifapaConf: Storage.IfapaConf, ifapaAemetFormatConf: Storage.IfapaAemetFormatConf, globalConf: Storage.GlobalConf)
+case class ExecutionConf(aemetConf: Execution.AemetConf, ifapaConf: Execution.IfapaConf, dataReformatterConf: Execution.DataReformatterConf, globalConf: Execution.GlobalConf)
+case class LogConf(aemetConf: Log.AemetConf, ifapaConf: Log.IfapaConf, ifapaAemetFormatConf: Log.IfapaAemetFormatConf, dataReformatterConf: Log.DataReformatterConf)
+case class StorageConf(aemetConf: Storage.AemetConf, ifapaConf: Storage.IfapaConf, ifapaAemetFormatConf: Storage.IfapaAemetFormatConf, dataReformatterConf: Storage.DataReformatterConf, globalConf: Storage.GlobalConf)
 case class UrlConf(aemetConf: Url.AemetConf, ifapaConf: Url.IfapaConf)
 
 object Constants {
@@ -22,6 +22,7 @@ object Constants {
   val execution: ExecutionConf = ExecutionConf(
     aemetConf = readInternalConfig[Execution.AemetConf]("data_extraction/execution/aemet.conf", Some(configDirPath)),
     ifapaConf = readInternalConfig[Execution.IfapaConf]("data_extraction/execution/ifapa.conf", Some(configDirPath)),
+    dataReformatterConf = readInternalConfig[Execution.DataReformatterConf]("data_extraction/execution/data-reformatter.conf", Some(configDirPath)),
     globalConf = readInternalConfig[Execution.GlobalConf]("data_extraction/execution/global.conf", Some(configDirPath)),
   )
 
@@ -29,12 +30,14 @@ object Constants {
     aemetConf = readInternalConfig[Log.AemetConf]("data_extraction/log/aemet.conf", Some(configDirPath)),
     ifapaConf = readInternalConfig[Log.IfapaConf]("data_extraction/log/ifapa.conf", Some(configDirPath)),
     ifapaAemetFormatConf = readInternalConfig[Log.IfapaAemetFormatConf]("data_extraction/log/ifapa-aemet-format.conf", Some(configDirPath)),
+    dataReformatterConf = readInternalConfig[Log.DataReformatterConf]("data_extraction/log/data-reformatter.conf", Some(configDirPath)),
   )
 
   val storage: StorageConf = StorageConf(
     aemetConf = readInternalConfig[Storage.AemetConf]("data_extraction/storage/aemet.conf", Some(configDirPath)),
     ifapaConf = readInternalConfig[Storage.IfapaConf]("data_extraction/storage/ifapa.conf", Some(configDirPath)),
     ifapaAemetFormatConf = readInternalConfig[Storage.IfapaAemetFormatConf]("data_extraction/storage/ifapa-aemet-format.conf", Some(configDirPath)),
+    dataReformatterConf = readInternalConfig[Storage.DataReformatterConf]("data_extraction/storage/data-reformatter.conf", Some(configDirPath)),
     globalConf = readInternalConfig[Storage.GlobalConf]("data_extraction/storage/global.conf", Some(configDirPath)),
   )
 

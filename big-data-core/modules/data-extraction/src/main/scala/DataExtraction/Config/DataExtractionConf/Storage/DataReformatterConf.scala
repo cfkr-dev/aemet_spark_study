@@ -1,0 +1,27 @@
+package DataExtraction.Config.DataExtractionConf.Storage
+
+case class DataReformatterAemetAllMeteoInfoDirs(data: String)
+case class DataReformatterAemetAllMeteoInfoFilenames(data: String)
+case class DataReformatterAemetAllmeteoInfoFilepaths(data: String)
+case class DataReformatterAemetAllMeteoInfo(dirs: DataReformatterAemetAllMeteoInfoDirs, filenames: DataReformatterAemetAllMeteoInfoFilenames, filepaths: DataReformatterAemetAllmeteoInfoFilepaths)
+
+case class DataReformatterAemetAllStationInfoDirs(data: String)
+case class DataReformatterAemetAllStationInfoFilenames(data: String)
+case class DataReformatterAemetAllStationInfoFilepaths(data: String)
+case class DataReformatterAemetAllStationInfo(dirs: DataReformatterAemetAllStationInfoDirs, filenames: DataReformatterAemetAllStationInfoFilenames, filepaths: DataReformatterAemetAllStationInfoFilepaths)
+
+case class DataReformatterAemetConf(allMeteoInfo: DataReformatterAemetAllMeteoInfo, allStationInfo: DataReformatterAemetAllStationInfo)
+
+case class DataReformatterIfapaSingleStationMeteoInfoDirs(data: String)
+case class DataReformatterIfapaSingleStationMeteoInfoFilenames(data: String)
+case class DataReformatterIfapaSingleStationMeteoInfoFilepaths(data: String)
+case class DataReformatterIfapaSingleStationMeteoInfo(dirs: DataReformatterIfapaSingleStationMeteoInfoDirs, filenames: DataReformatterIfapaSingleStationMeteoInfoFilenames, filepaths: DataReformatterIfapaSingleStationMeteoInfoFilepaths)
+
+case class DataReformatterIfapaSingleStationInfoDirs(data: String)
+case class DataReformatterIfapaSingleStationInfoFilenames(data: String)
+case class DataReformatterIfapaSingleStationInfoFilepaths(data: String)
+case class DataReformatterIfapaSingleStationInfo(dirs: DataReformatterIfapaSingleStationInfoDirs, filenames: DataReformatterIfapaSingleStationInfoFilenames, filepaths: DataReformatterIfapaSingleStationInfoFilepaths)
+
+case class DataReformatterIfapaConf(singleStationMeteoInfo: DataReformatterIfapaSingleStationMeteoInfo, singleStationInfo: DataReformatterIfapaSingleStationInfo)
+
+case class DataReformatterConf(baseDirAemet: String, baseDirIfapa: String, aemet: DataReformatterAemetConf, ifapa: DataReformatterIfapaConf)

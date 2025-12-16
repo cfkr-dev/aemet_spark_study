@@ -60,7 +60,17 @@ lazy val utils = (project in file("modules/utils"))
       "com.github.pureconfig" %% "pureconfig" % "0.17.8",
 
       // AWS SDK
-      "software.amazon.awssdk" % "s3" % "2.39.1"
+      "software.amazon.awssdk" % "s3" % "2.39.1",
+
+      // APACHE PARQUET AVRO
+      "org.apache.parquet" % "parquet-avro" % "1.13.0",
+
+      // APACHE AVRO
+      "org.apache.avro" % "avro" % "1.11.3",
+
+      // HADOOP
+      "org.apache.hadoop" % "hadoop-common" % "3.3.4",
+      "org.apache.hadoop" % "hadoop-mapreduce-client-core" % "3.3.4"
     ),
     assembly / assemblyJarName := "utils-1.0.0.jar"
   )
