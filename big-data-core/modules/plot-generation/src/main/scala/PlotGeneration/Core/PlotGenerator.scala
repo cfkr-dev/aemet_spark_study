@@ -1,3 +1,16 @@
+/**
+ * PlotGenerator orchestrates the creation of plots for the project.
+ *
+ * Responsibilities:
+ * - Read precomputed JSON data produced by Spark queries.
+ * - Format DTOs for the plotting microservice (AutoPlot) and send HTTP POST
+ *   requests to trigger plot generation.
+ * - Provide separate workflows for stations, climographs, single-parameter
+ *   studies and interesting studies, each encapsulated in a private object.
+ *
+ * The object is purely procedural: call `generate()` to run the whole
+ * generation pipeline (it reports progress via console logging utilities).
+ */
 package PlotGeneration.Core
 
 import PlotGeneration.Config.{GlobalConf, PlotGenerationConf}
@@ -32,27 +45,41 @@ object PlotGenerator {
     ))
   )
 
+  /**
+   * Stations subplot generator.
+   *
+   * Produces simple station-related plots such as station count evolution,
+   * counts by state and counts by altitude. This object prepares the DTOs
+   * from the configuration and forwards them to the plotting backend.
+   */
   private object Stations {
     private val ctsExecution = PlotGenerator.ctsExecution.stationsConf
 
+    /**
+     * Generate all station-related plots.
+     *
+     * Behavior:
+     * - Log start and end messages.
+     * - For each configured plot, build the DTO from configuration and call
+     *   `generatePlot` to POST it to the plotting service.
+     *
+     * @return Unit
+     */
     def generate(): Unit = {
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.globalConf.startPlotGeneration.format(
         ctsLogs.stationsConf.studyName
       ))
 
-      // Count evolution
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.globalConf.generatingPlot.format(
         ctsLogs.stationsConf.stationCountEvolFromStart
       ), encloseHalfLength = encloseHalfLength)
       generatePlot(buildUrl(ctsExecution.countEvol.uri), ctsExecution.countEvol.body)
 
-      // Count by state
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.globalConf.generatingPlot.format(
         ctsLogs.stationsConf.stationCountByState2024
       ), encloseHalfLength = encloseHalfLength)
       generatePlot(buildUrl(ctsExecution.countByState2024.uri), ctsExecution.countByState2024.body)
 
-      // Count by altitude
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.globalConf.generatingPlot.format(
         ctsLogs.stationsConf.stationCountByAltitude2024
       ), encloseHalfLength = encloseHalfLength)
@@ -64,16 +91,74 @@ object PlotGenerator {
     }
   }
 
+  /**
+   * Climograph generation helpers and workflow.
+   *
+   * Reads station JSON metadata and formats climograph DTOs per station
+   * and per configured climate group/location. Uses small formatter helpers
+   * to adapt the generic DTO templates with station- and climate-specific
+   * values.
+   */
   private object Climograph {
+    /**
+     * StationInfo holds basic station metadata used to format plot titles
+     * and labels.
+     *
+     * @param stationName human-readable station name
+     * @param stationId station identifier code
+     * @param state administrative state name
+     * @param latitude latitude as string (DMS or decimal as provided)
+     * @param longitude longitude as string (DMS or decimal as provided)
+     * @param altitude station altitude as integer meters
+     */
     private case class StationInfo(stationName: String, stationId: String, state: String, latitude: String, longitude: String, altitude: Int)
+
+    /**
+     * MeteoParamInfo describes a meteorological parameter used in climographs.
+     *
+     * @param meteoParam parameter long name (e.g. temperature)
+     * @param meteoParamAbbrev short abbreviation used in file names
+     * @param units units string (e.g. "°C", "mm")
+     * @param colAggMethod aggregation method name used in labels
+     */
     private case class MeteoParamInfo(meteoParam: String, meteoParamAbbrev: String, units: String, colAggMethod: String)
+
+    /**
+     * ClimographInfo groups temperature/precipitation parameter info and the
+     * climate group/type metadata used for path formatting.
+     *
+     * @param tempParamInfo temperature parameter metadata
+     * @param precParamInfo precipitation parameter metadata
+     * @param climateType climate group name
+     * @param climateSubtype climate subtype name
+     * @param climateLocation location label used in path formatting
+     */
     private case class ClimographInfo(tempParamInfo: MeteoParamInfo, precParamInfo: MeteoParamInfo, climateType: String, climateSubtype: String, climateLocation: String)
+
+    /**
+     * FormatInfo aggregates station and climograph metadata used by the
+     * DTO formatter.
+     *
+     * @param stationInfo station metadata
+     * @param climographInfo climograph metadata
+     */
     private case class FormatInfo(stationInfo: StationInfo, climographInfo: ClimographInfo)
 
     private val ctsExecution = PlotGenerator.ctsExecution.climographConf
     private val ctsStorage = PlotGenerator.ctsStorage.climographConf
     private val ctsLogs = PlotGenerator.ctsLogs.climographConf
 
+    /**
+     * Format a `ClimographDTO` using the provided `FormatInfo`.
+     *
+     * The function returns a new DTO with paths, axis names and lettering
+     * populated from station and climate metadata. It does not perform any
+     * IO; it only manipulates the DTO structure.
+     *
+     * @param dto template DTO read from configuration
+     * @param formatInfo metadata used to populate template fields
+     * @return formatted `ClimographDTO` ready to be serialized and sent
+     */
     private def climographDTOFormatter(dto: ClimographDTO, formatInfo: FormatInfo): ClimographDTO = {
       dto.copy(
         src = dto.src.copy(
@@ -141,6 +226,16 @@ object PlotGenerator {
       )
     }
 
+    /**
+     * Run the climograph generation workflow.
+     *
+     * Behavior:
+     * - Iterate configured climate groups/subtypes/locations.
+     * - Read station metadata from JSON storage.
+     * - Format the DTO and POST it to the plotting service via `generatePlot`.
+     *
+     * @return Unit
+     */
     def generate(): Unit = {
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startPlotGeneration.format(
         ctsLogs.studyName
@@ -226,19 +321,87 @@ object PlotGenerator {
 
   }
 
+  /**
+   * SingleParamStudies contains formatters and the workflow to generate
+   * plots that focus on a single meteorological parameter (top-N, evolutions,
+   * heatmaps, etc.).
+   */
   private object SingleParamStudies {
+    /**
+     * MeteoParamInfo describes a parameter used by single-parameter studies.
+     *
+     * @param meteoParam full parameter name
+     * @param meteoParamAbbrev short abbreviation used in file names
+     * @param units units string (e.g. "°C", "mm")
+     * @param colAggMethod aggregation method used for grouped labels
+     */
     private case class MeteoParamInfo(meteoParam: String, meteoParamAbbrev: String, units: String, colAggMethod: String)
+
+    /**
+     * Top10TemporalInfo contains temporal metadata for top-10 plots (e.g. "2024").
+     *
+     * @param value temporal value used in paths
+     * @param title human readable title for the temporal slice
+     */
     private case class Top10TemporalInfo(value: String, title: String)
+
+    /**
+     * Top10FormatInfo aggregates the information required to format a top-10 DTO.
+     *
+     * @param meteoParamInfo parameter metadata
+     * @param order order label (e.g. "highest") used in titles
+     * @param temporal temporal metadata
+     */
     private case class Top10FormatInfo(meteoParamInfo: MeteoParamInfo, order: String, temporal: Top10TemporalInfo)
+
+    /**
+     * Top5IncFormatInfo holds formatting info for top-5 increment plots.
+     *
+     * @param meteoParamInfo parameter metadata
+     * @param order order label for the increment plot
+     */
     private case class Top5IncFormatInfo(meteoParamInfo: MeteoParamInfo, order: String)
+
+    /**
+     * StationInfo used for evolutions and regression-based plots.
+     *
+     * @param stationName station human readable name
+     * @param stationId station code
+     * @param state administrative state name
+     * @param stateNoSc state code without special characters for path formatting
+     * @param latitude latitude as string (DMS or decimal)
+     * @param longitude longitude as string (DMS or decimal)
+     * @param altitude altitude in meters
+     */
     private case class StationInfo(stationName: String, stationId: String, state: String, stateNoSc: String, latitude: String, longitude: String, altitude: Int)
+
+    /**
+     * EvolFormatInfo ties a meteo parameter to a station for evolution plots.
+     *
+     * @param meteoParamInfo parameter metadata
+     * @param stationInfo station metadata
+     */
     private case class EvolFormatInfo(meteoParamInfo: MeteoParamInfo, stationInfo: StationInfo)
+
+    /**
+     * HeatMap2024FormatInfo contains formatting data for heatmap snapshots.
+     *
+     * @param meteoParamInfo parameter metadata
+     * @param location target location identifier used in path formatting
+     */
     private case class HeatMap2024FormatInfo(meteoParamInfo: MeteoParamInfo, location: String)
 
     private val ctsExecution = PlotGenerator.ctsExecution.singleParamStudiesConf
     private val ctsStorage = PlotGenerator.ctsStorage.singleParamStudiesConf
     private val ctsLogs = PlotGenerator.ctsLogs.singleParamStudiesConf
 
+    /**
+     * Format a BarDTO for top-10 plots using Top10FormatInfo.
+     *
+     * @param dto template BarDTO
+     * @param formatInfo formatting metadata
+     * @return formatted BarDTO
+     */
     private def barDTOTop10Formatter(dto: BarDTO, formatInfo: Top10FormatInfo): BarDTO = {
       dto.copy(
         src = dto.src.copy(
@@ -281,6 +444,13 @@ object PlotGenerator {
       )
     }
 
+    /**
+     * Format a BarDTO for top-5 increment plots.
+     *
+     * @param dto template BarDTO
+     * @param formatInfo formatting metadata for top-5 increments
+     * @return formatted BarDTO
+     */
     private def barDTOTop5IncFormatter(dto: BarDTO, formatInfo: Top5IncFormatInfo): BarDTO = {
       dto.copy(
         src = dto.src.copy(
@@ -310,6 +480,13 @@ object PlotGenerator {
       )
     }
 
+    /**
+     * Format a LinearDTO for evolution plots in 2024 using station metadata.
+     *
+     * @param dto template LinearDTO
+     * @param formatInfo metadata containing parameter and station info
+     * @return formatted LinearDTO
+     */
     private def linearDTOEvol2024Formatter(dto: LinearDTO, formatInfo: EvolFormatInfo): LinearDTO = {
       dto.copy(
         src = dto.src.copy(
@@ -359,6 +536,13 @@ object PlotGenerator {
       )
     }
 
+    /**
+     * Format a LinearRegressionDTO for yearly grouped evolution plots.
+     *
+     * @param dto template LinearRegressionDTO
+     * @param formatInfo metadata containing parameter and station info
+     * @return formatted LinearRegressionDTO
+     */
     private def linearRegressionDTOEvolYearlyGroupFormatter(dto: LinearRegressionDTO, formatInfo: EvolFormatInfo): LinearRegressionDTO = {
       dto.copy(
         src = dto.src.copy(
@@ -425,6 +609,13 @@ object PlotGenerator {
       )
     }
 
+    /**
+     * Format a HeatMapDTO for 2024 heatmap generation.
+     *
+     * @param dto template HeatMapDTO
+     * @param formatInfo metadata with parameter and location
+     * @return formatted HeatMapDTO
+     */
     private def heatMapDTOHeatMap2024Formatter(dto: HeatMapDTO, formatInfo: HeatMap2024FormatInfo): HeatMapDTO = {
       dto.copy(
         src = dto.src.copy(
@@ -470,6 +661,14 @@ object PlotGenerator {
       )
     }
 
+    /**
+     * Execute the single-parameter studies plotting workflow.
+     *
+     * Iterates configured parameters and states, reads required JSON
+     * metadata, formats DTOs and delegates actual HTTP POSTs to `generatePlot`.
+     *
+     * @return Unit
+     */
     def generate(): Unit = {
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startPlotGeneration.format(
         ctsLogs.studyName
@@ -481,7 +680,6 @@ object PlotGenerator {
           studyParamValue.studyParamName.capitalize
         ), encloseHalfLength = encloseHalfLength + 5)
 
-        // -- TOP 10 --
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.top10Study.format(
           studyParamValue.studyParamName
         ), encloseHalfLength = encloseHalfLength + 10)
@@ -521,7 +719,6 @@ object PlotGenerator {
           })
         })
 
-        // -- TOP 5 INC --
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.top5IncStudy.format(
           studyParamValue.studyParamName
         ), encloseHalfLength = encloseHalfLength + 10)
@@ -549,7 +746,6 @@ object PlotGenerator {
           )
         })
 
-        // -- EVOL --
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolStudy.format(
           studyParamValue.studyParamName.capitalize
         ), encloseHalfLength = encloseHalfLength + 10)
@@ -560,7 +756,6 @@ object PlotGenerator {
             stateValue.stateName.capitalize
           ), encloseHalfLength = encloseHalfLength + 15)
 
-          // -- EVOL 2024 --
           printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evol2024.format(
             studyParamValue.studyParamName.capitalize
           ), encloseHalfLength = encloseHalfLength + 20)
@@ -599,7 +794,6 @@ object PlotGenerator {
             )
           )
 
-          // -- EVOL YEARLY GROUP --
           printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolYearlyGroup.format(
             studyParamValue.studyParamName.capitalize
           ), encloseHalfLength = encloseHalfLength + 20)
@@ -639,7 +833,6 @@ object PlotGenerator {
           )
         })
 
-        // -- HEAT MAP 2024 --
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.heatMap2024.format(
           studyParamValue.studyParamName.capitalize
         ), encloseHalfLength = encloseHalfLength + 10)
@@ -674,16 +867,62 @@ object PlotGenerator {
     }
   }
 
+  /**
+   * InterestingStudies contains workflows that combine multiple parameters
+   * (e.g. precipitation and pressure) and top-state tables.
+   */
   private object InterestingStudies {
+    /**
+     * MeteoParamInfo used in interesting studies (precipitation/pressure etc.).
+     *
+     * @param meteoParam full parameter name
+     * @param meteoParamAbbrev short abbreviation used in file names
+     * @param units units string (e.g. "°C", "mm")
+     * @param colAggMethod aggregation method used for grouped labels
+     */
     private case class MeteoParamInfo(meteoParam: String, meteoParamAbbrev: String, units: String, colAggMethod: String)
+
+    /**
+     * StationInfo used to build plot titles and labels in interesting studies.
+     *
+     * @param stationName human-readable station name
+     * @param stationId station code
+     * @param state administrative state name
+     * @param stateNoSc state code without special characters for path formatting
+     * @param latitude latitude as string (DMS or decimal)
+     * @param longitude longitude as string (DMS or decimal)
+     * @param altitude altitude in meters
+     */
     private case class StationInfo(stationName: String, stationId: String, state: String, stateNoSc: String, latitude: String, longitude: String, altitude: Int)
+
+    /**
+     * PrecPressEvolFormatInfo groups parameter and station info for double-linear plots.
+     *
+     * @param precMeteoInfo precipitation parameter metadata
+     * @param pressMeteoInfo pressure parameter metadata
+     * @param stationInfo station metadata used in titles and path formatting
+     */
     private case class PrecPressEvolFormatInfo(precMeteoInfo: MeteoParamInfo, pressMeteoInfo: MeteoParamInfo, stationInfo: StationInfo)
+
+    /**
+     * Top10StatesFormatInfo contains data to format top-10-by-state tables.
+     *
+     * @param studyName human readable study name
+     * @param studyAbbrev short code used in paths
+     */
     private case class Top10StatesFormatInfo(studyName: String, studyAbbrev: String)
 
     private val ctsExecution = PlotGenerator.ctsExecution.interestingStudiesConf
     private val ctsStorage = PlotGenerator.ctsStorage.interestingStudiesConf
     private val ctsLogs = PlotGenerator.ctsLogs.interestingStudiesConf
 
+    /**
+     * Format a DoubleLinearDTO for precipitation/pressure evolution plots.
+     *
+     * @param dto template DoubleLinearDTO
+     * @param formatInfo formatting metadata that includes parameter and station info
+     * @return formatted DoubleLinearDTO
+     */
     private def doubleLinearDTOEvolPrecPressFormatter(dto: DoubleLinearDTO, formatInfo: PrecPressEvolFormatInfo): DoubleLinearDTO = {
       dto.copy(
         src = dto.src.copy(
@@ -747,6 +986,13 @@ object PlotGenerator {
       )
     }
 
+    /**
+     * Format a TableDTO for top-10 states outputs.
+     *
+     * @param dto template TableDTO
+     * @param formatInfo formatting metadata with study name/abbrev
+     * @return formatted TableDTO
+     */
     private def tableDTOTop10StatesFormatter(dto: TableDTO, formatInfo: Top10StatesFormatInfo): TableDTO = {
       dto.copy(
         src = dto.src.copy(
@@ -769,12 +1015,20 @@ object PlotGenerator {
       )
     }
 
+    /**
+     * Run the interesting studies plotting workflow.
+     *
+     * This method reads station JSONs, formats the DTOs and calls
+     * `generatePlot` to trigger plot creation for multiple combined-parameter
+     * studies and state-level tables.
+     *
+     * @return Unit
+     */
     def generate(): Unit = {
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startPlotGeneration.format(
         ctsLogs.studyName
       ))
 
-      // -- EVOL PREC PRESS --
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolPrecPressStudy, encloseHalfLength = encloseHalfLength + 5)
 
       ctsSchemaSpark.stateValues.toList.foreach(stateValue => {
@@ -783,7 +1037,6 @@ object PlotGenerator {
           stateValue.stateName.capitalize
         ), encloseHalfLength = encloseHalfLength + 10)
 
-        // -- EVOL PREC PRESS 2024 --
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolPrecPress2024, encloseHalfLength = encloseHalfLength + 15)
 
         val station2024JSON = readJSON(ctsStorage.evolPrecPress.evol2024.dataSrcStation.format(
@@ -825,7 +1078,6 @@ object PlotGenerator {
           )
         )
 
-        // -- EVOL PREC PRESS YEARLY GROUP --
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.evolPrecPressYearlyGroup, encloseHalfLength = encloseHalfLength + 15)
 
         val stationGlobalJSON = readJSON(ctsStorage.evolPrecPress.evolYearlyGroup.dataSrcStation.format(
@@ -869,7 +1121,6 @@ object PlotGenerator {
 
       })
 
-      // -- TOP 10 --
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsLogs.top10StatesStudy, encloseHalfLength = encloseHalfLength + 5)
 
       ctsExecution.top10StatesValues.foreach(study => {
@@ -894,10 +1145,29 @@ object PlotGenerator {
     }
   }
 
+  /**
+   * Serialize the provided DTO to JSON while removing keys with null values.
+   *
+   * The function is generic and requires an upickle ReadWriter in scope.
+   *
+   * @tparam T DTO type
+   * @param dto data transfer object to serialize
+   * @return low-level ujson.Value ready to be sent to the HTTP client
+   */
   private def generateRequestBody[T: ReadWriter](dto: T): Value = {
     removeNullKeys(writeJs(dto))
   }
 
+  /**
+   * Send a POST request to the plotting service with the generated DTO body.
+   *
+   * On success it logs the destination path returned by the plotting
+   * backend; on failure it logs a warning with the exception message.
+   *
+   * @param uri HTTP endpoint to post the DTO
+   * @param dto DTO value (will be serialized inside)
+   * @return Unit
+   */
   private def generatePlot[T: ReadWriter](uri: Uri, dto: T): Unit = {
     sendPostRequest(uri, generateRequestBody(dto)) match {
       case Left(exception: Exception) => ConsoleLogUtils.Message.printlnConsoleMessage(NotificationType.Warning, exception.toString)
@@ -908,19 +1178,23 @@ object PlotGenerator {
     }
   }
 
+  /**
+   * Entry point to generate all configured plots.
+   *
+   * Behavior:
+   * - Starts an internal chronometer.
+   * - Executes in sequence: Stations, Climograph, SingleParamStudies,
+   *   InterestingStudies.
+   * - Logs elapsed time and waits a configured pause before returning.
+   *
+   * @return Unit
+   */
   def generate(): Unit = {
     chronometer.start()
 
-    // STATIONS
     Stations.generate()
-
-    // CLIMOGRAPH
     Climograph.generate()
-
-    // SINGLE PARAM STUDIES
     SingleParamStudies.generate()
-
-    // INTERESTING STUDIES
     InterestingStudies.generate()
 
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.chrono.chronoResult.format(chronometer.stop()))

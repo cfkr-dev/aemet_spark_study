@@ -10,10 +10,21 @@ import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.util.UUID
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 
+/**
+ * S3 storage backend utilities. Supports reading single objects, recursive
+ * directory-like downloads and writing objects. When `endpoint` is provided
+ * a dummy client with static credentials is created (useful for localstack).
+ */
 object S3StorageBackend {
 
   private val tempDirBase: Path = Paths.get(System.getProperty("java.io.tmpdir"))
 
+  /**
+   * Create a lightweight S3 client pointing to a custom `endpoint` (used for testing/localstack).
+   *
+   * @param endpoint endpoint URL string
+   * @return configured `S3Client`
+   */
   private def createDummyClient(endpoint: String): S3Client = {
     S3Client.builder()
       .region(Region.US_EAST_1)
@@ -25,6 +36,12 @@ object S3StorageBackend {
       .build()
   }
 
+  /**
+   * Create a temporary path for a given S3 `key`, preserving file extension.
+   *
+   * @param key S3 object key
+   * @return temporary `Path` on the local filesystem
+   */
   private def tempPathForKey(key: String): Path = {
     val extension = {
       val name = new java.io.File(key).getName
@@ -37,6 +54,15 @@ object S3StorageBackend {
     tempDirBase.resolve(fileName)
   }
 
+  /**
+   * Read an object from S3 into a temporary `Path` and return it.
+   *
+   * @param bucket S3 bucket name
+   * @param key S3 object key
+   * @param endpoint optional custom endpoint (localstack/test)
+   * @return temporary `Path` where the downloaded object is stored
+   * @throws S3OperationException on download errors
+   */
   def read(bucket: String, key: String, endpoint: Option[String] = None): Path = {
     val client: S3Client = endpoint match {
       case Some(uri) => createDummyClient(uri)
@@ -58,6 +84,17 @@ object S3StorageBackend {
     tmp
   }
 
+  /**
+   * Recursively download a subset of an S3 "directory" (prefix) to a temporary directory.
+   * The `includeDirs` elements must start with the root folder name and are used to
+   * filter which keys are downloaded.
+   *
+   * @param bucket S3 bucket name
+   * @param key prefix representing the root key to download
+   * @param endpoint optional custom endpoint
+   * @param includeDirs sequence of include paths (must start with the root name)
+   * @return temporary `Path` containing the downloaded subset
+   */
   def readDirectoryRecursive(
     bucket: String,
     key: String,
@@ -65,27 +102,24 @@ object S3StorageBackend {
     includeDirs: Seq[String]
   ): Path = {
 
-    // Crear cliente S3
     val client = endpoint match {
       case Some(uri) => S3StorageBackend.createDummyClient(uri)
       case None     => S3Client.create()
     }
 
-    // Normalizar key y crear tempDir raíz
     val normalizedKey = key.stripSuffix("/")
     val rootName = Paths.get(normalizedKey).getFileName.toString
     val tempDirBasePath = Files.createTempDirectory(tempDirBase, null)
     val tempDir = tempDirBasePath.resolve(rootName)
     Files.createDirectories(tempDir)
 
-    // Normalizar includeDirs → relativo a la raíz del key
     val includePaths: Set[String] = includeDirs.map { p =>
       val normalized = p.replace('\\', '/').stripPrefix("/").stripSuffix("/")
       val parts = normalized.split("/").toList
 
       parts match {
         case head :: tail if head == rootName =>
-          tail.mkString("/") // solo la ruta dentro de la raíz
+          tail.mkString("/")
         case _ =>
           throw new IllegalArgumentException(
             s"includeDir must start with root directory '$rootName': $p"
@@ -93,7 +127,12 @@ object S3StorageBackend {
       }
     }.toSet
 
-    // Función recursiva para listar y descargar
+    /**
+     * Recursive helper that lists objects using `ListObjectsV2` and downloads
+     * each matching object into the temporary directory.
+     *
+     * @param continuationToken optional continuation token for paged listing
+     */
     def listAndDownload(continuationToken: Option[String]): Unit = {
       val reqBuilder = ListObjectsV2Request.builder()
         .bucket(bucket)
@@ -103,7 +142,6 @@ object S3StorageBackend {
       val resp = client.listObjectsV2(reqBuilder.build())
 
       resp.contents().asScala.foreach { obj =>
-        // Calcular ruta relativa respecto a la raíz del key
         val relative = obj.key()
           .stripPrefix(normalizedKey)
           .stripPrefix("/")
@@ -131,6 +169,14 @@ object S3StorageBackend {
     tempDir
   }
 
+  /**
+   * Write a local file to S3 under the provided `key`.
+   *
+   * @param bucket S3 bucket name
+   * @param key S3 object key
+   * @param localPath local file `Path` to upload
+   * @param endpoint optional custom endpoint
+   */
   def write(bucket: String, key: String, localPath: Path, endpoint: Option[String] = None): Unit = {
     val client: S3Client = endpoint match {
       case Some(uri) => createDummyClient(uri)

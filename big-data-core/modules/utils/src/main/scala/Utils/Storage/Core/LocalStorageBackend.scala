@@ -2,10 +2,22 @@ package Utils.Storage.Core
 
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 
+/**
+ * Local storage backend using the filesystem. Methods return `Path` to a
+ * temporary copy for reading and perform atomic copies for writing.
+ */
 object LocalStorageBackend {
 
   private val tempDirBase: Path = Paths.get(System.getProperty("java.io.tmpdir"))
 
+  /**
+   * Read a local file into a temporary path and return the temporary `Path`.
+   *
+   * @param path local filesystem path to read
+   * @return temporary `Path` where the file content can be accessed
+   * @throws LocalFileNotFoundException if the source file does not exist
+   * @throws StorageException on IO errors while copying
+   */
   def read(path: String): Path = {
     val src = Paths.get(path)
     if (!Files.exists(src)) throw new LocalFileNotFoundException(path)
@@ -19,6 +31,15 @@ object LocalStorageBackend {
     dst
   }
 
+  /**
+   * Recursively copy a subset of a directory to a temporary directory and
+   * return the temporary root `Path`.
+   *
+   * @param dirPath root directory path to copy
+   * @param includeDirs sequence of directory paths (relative to `dirPath`) to include
+   * @return temporary `Path` that mirrors the requested subset
+   * @throws LocalFileNotFoundException if `dirPath` is missing or not a directory
+   */
   def readDirectoryRecursive(dirPath: String, includeDirs: Seq[String]): Path = {
     val srcDir = Paths.get(dirPath)
     if (!Files.exists(srcDir) || !Files.isDirectory(srcDir)) {
@@ -65,6 +86,13 @@ object LocalStorageBackend {
     tempDir
   }
 
+  /**
+   * Write a file from `localPath` to the destination `path` on the local filesystem.
+   *
+   * @param path destination path (absolute or relative)
+   * @param localPath temporary `Path` to copy from
+   * @throws StorageException on IO errors while writing
+   */
   def write(path: String, localPath: Path): Unit = {
     val dst = Paths.get(path)
     try {

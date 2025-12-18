@@ -16,6 +16,21 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import scala.annotation.tailrec
 
+/**
+ * Client for interacting with the AEMET API.
+ *
+ * This object centralizes HTTP calls to the configured endpoints used to
+ * retrieve station metadata and meteorological data. It relies on
+ * configuration provided by `DataExtractionConf` and `GlobalConf`, and utility
+ * modules for timing, logging, JSON handling and storage.
+ *
+ * Main responsibilities:
+ * - Download and persist station metadata and time-range metadata.
+ * - Download and persist meteorological data in bounded time windows.
+ * - Retry failed requests according to configured backoff policies.
+ *
+ * The primary entry point for the extraction workflow is `aemetDataExtraction()`.
+ */
 object AemetAPIClient {
   private val ctsExecutionAemet = DataExtractionConf.Constants.execution.aemetConf
   private val ctsExecutionGlobal = DataExtractionConf.Constants.execution.globalConf
@@ -35,6 +50,18 @@ object AemetAPIClient {
     ))
   )
 
+  /**
+   * Execute the full data extraction flow from AEMET.
+   *
+   * Steps performed (informational messages are logged to the console):
+   * 1. Download and save metadata for all stations.
+   * 2. Download and save metadata for meteorological ranges.
+   * 3. Download and save static station information.
+   * 4. Download and save meteorological data in windows of time.
+   *
+   * The method measures the total execution time using an internal chronometer
+   * and applies pauses between stages according to global configuration.
+   */
   def aemetDataExtraction(): Unit = {
     chronometer.start()
 
@@ -59,6 +86,18 @@ object AemetAPIClient {
     Thread.sleep(ctsGlobalUtils.betweenStages.millisBetweenStages)
   }
 
+  /**
+   * Perform a GET request to the AEMET API and return the resulting JSON.
+   *
+   * Some AEMET endpoints follow an indirection pattern: the first response
+   * contains metadata including a URL to the actual resource containing the
+   * data. When `isMetadata` is true, the method will follow that indirection
+   * and fetch the final resource.
+   *
+   * @param uri initial request URI for AEMET.
+   * @param isMetadata when true, interpret the first response as metadata and follow the contained data URL.
+   * @return Right(ujson.Value) with the final JSON on success, or Left(Exception) on error.
+   */
   private def getAemetAPIResource(
     uri: Uri,
     isMetadata: Boolean = false
@@ -85,10 +124,30 @@ object AemetAPIClient {
     }
   }
 
+  /**
+   * Helper object that manages downloading and storing meteorological data
+   * for all stations within date ranges.
+   *
+   * Responsibilities:
+   * - Fetch and persist metadata needed to iterate available date windows.
+   * - Fetch and persist actual meteorological data segmented by windows.
+   */
   private object AllStationsMeteorologicalDataBetweenDates {
     private val ctsStorageAllMeteoInfo = ctsStorage.allMeteoInfo
     private val ctsExecutionApiResAllMeteoInfo = ctsExecutionAemet.apiResources.allMeteoInfo
 
+    /**
+     * Build the request URL, fetch from AEMET and write the resulting JSON to `path`.
+     *
+     * This method handles retries and logs warnings on failures.
+     *
+     * @param endpoint configured endpoint for the resource.
+     * @param startDate window start (ZonedDateTime).
+     * @param endDate window end (ZonedDateTime).
+     * @param isMetadata when true, the resource is treated as metadata and no post-processing of keys is applied.
+     * @param path file path where the JSON will be written.
+     * @return true when the operation succeeds and the JSON is written; false otherwise.
+     */
     private def getAndSave(
       endpoint: String,
       startDate: ZonedDateTime,
@@ -125,6 +184,12 @@ object AemetAPIClient {
       }
     }
 
+    /**
+     * Download and persist metadata required to iterate over the API time windows
+     * (for example, available date ranges and resource URLs).
+     *
+     * Retries are performed with configured wait intervals for transient failures.
+     */
     def saveStationMeteoInfoMetadata(): Unit = {
       def saveStationMeteoInfoMetadataAction(startDate: ZonedDateTime, endDate: ZonedDateTime): Unit = {
         @tailrec
@@ -156,6 +221,16 @@ object AemetAPIClient {
       )
     }
 
+    /**
+     * Download and persist meteorological data in recursive time windows. The
+     * process maintains a record of the last saved `lastEndDate` to continue
+     * progress incrementally.
+     *
+     * Execution strategy:
+     * - Read the last saved end date (if present).
+     * - Compute the next request window (start..end).
+     * - Fetch and save windows until reaching the configured final date.
+     */
     def saveStationMeteoInfo(): Unit = {
       @tailrec
       def saveStationMeteoInfoAction(startDate: ZonedDateTime, endDate: ZonedDateTime): Unit = {
@@ -246,9 +321,25 @@ object AemetAPIClient {
     }
   }
 
+  /**
+   * Helper object that manages downloading and storing static station
+   * information (metadata and station list data).
+   *
+   * Provides methods to fetch station metadata and the full list of stations
+   * and write them to the configured storage backend.
+   */
   private object AllStationsData {
     private val ctsStorageAllStationInfo = ctsStorage.allStationInfo
 
+    /**
+     * Perform the request to the stations endpoint and write the resulting JSON
+     * to the given `path`.
+     *
+     * @param endpoint configured endpoint for station information.
+     * @param path destination path where the JSON will be written.
+     * @param isMetadata when true, treat the response as metadata and skip key transformations.
+     * @return true when the write succeeds; false otherwise.
+     */
     private def getAndSave(
       endpoint: String,
       path: String,
@@ -277,6 +368,10 @@ object AemetAPIClient {
       }
     }
 
+    /**
+     * Download and persist metadata for all stations. Retries until the resource
+     * is successfully obtained, respecting configured wait intervals.
+     */
     def saveStationInfoMetadata(): Unit = {
       def saveStationInfoMetadataAction(): Unit = {
         @tailrec
@@ -301,6 +396,10 @@ object AemetAPIClient {
       saveStationInfoMetadataAction()
     }
 
+    /**
+     * Download and persist static station information (full station list).
+     * Retries on transient failures according to global configuration.
+     */
     def saveStationInfo(): Unit = {
       def saveStationInfoAction(): Unit = {
         @tailrec

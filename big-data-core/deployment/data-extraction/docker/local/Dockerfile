@@ -12,5 +12,5 @@ WORKDIR /DataExtraction
 # COPY JAR TO ./
 COPY ./app.jar ./app.jar
 
-# Comando por defecto para ejecutar la app
+# SET ENTRYPOINT FOR JAR EXECUTION
 ENTRYPOINT ["java", "-jar", "app.jar"]

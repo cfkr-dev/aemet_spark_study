@@ -28,7 +28,6 @@ services:
     environment:
       - STORAGE_PREFIX=${SPARK_APP_STORAGE_PREFIX}
       - STORAGE_BASE=${SPARK_APP_STORAGE_BASE}
-      - RUNNING_IN_EMR=${RUNNING_IN_EMR}
     ports:
       - "4040:4040"
     volumes:

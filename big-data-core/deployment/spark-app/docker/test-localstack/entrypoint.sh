@@ -40,10 +40,15 @@ if [ "$NO_AWS" = false ]; then
     --endpoint-url="$AWS_S3_ENDPOINT"
 
   aws s3 cp \
-    "${CONTAINER_STORAGE_PREFIX}${CONTAINER_STORAGE_BASE}/data_extraction" \
-    "${STORAGE_PREFIX}${STORAGE_BASE}/data_extraction" --recursive \
+    "${CONTAINER_STORAGE_PREFIX}${CONTAINER_STORAGE_BASE}/data_extraction/aemet_spark_format" \
+    "${STORAGE_PREFIX}${STORAGE_BASE}/data_extraction/aemet_spark_format" --recursive \
     --endpoint-url="$AWS_S3_ENDPOINT"
+
+  aws s3 cp \
+      "${CONTAINER_STORAGE_PREFIX}${CONTAINER_STORAGE_BASE}/data_extraction/ifapa_spark_format" \
+      "${STORAGE_PREFIX}${STORAGE_BASE}/data_extraction/ifapa_spark_format" --recursive \
+      --endpoint-url="$AWS_S3_ENDPOINT"
 fi
 
-java -jar /SparkApp/app.jar
+java -jar -Xmx8g -Xms4g /SparkApp/app.jar
 

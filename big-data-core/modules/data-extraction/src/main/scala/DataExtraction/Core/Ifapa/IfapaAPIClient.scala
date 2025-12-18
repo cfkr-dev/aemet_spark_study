@@ -13,6 +13,22 @@ import ujson.{Value, read}
 
 import scala.annotation.tailrec
 
+/**
+ * Client for interacting with the IFAPA data sources.
+ *
+ * This object encapsulates the HTTP interaction and storage logic required to
+ * fetch metadata and time-series data for single stations from IFAPA. It
+ * leverages project-wide configuration objects and utilities for retries,
+ * timing and JSON/storage helpers.
+ *
+ * Main responsibilities:
+ * - Download and persist metadata for single-station meteorological fields.
+ * - Download and persist meteorological time-series for a single station.
+ * - Download and persist metadata and static information for single stations.
+ *
+ * Entry point: `ifapaDataExtraction()` executes the full IFAPA extraction
+ * workflow (metadata then data) and logs progress to the console.
+ */
 object IfapaAPIClient {
   private val ctsExecutionIfapa = DataExtractionConf.Constants.execution.ifapaConf
   private val ctsExecutionGlobal = DataExtractionConf.Constants.execution.globalConf
@@ -26,6 +42,15 @@ object IfapaAPIClient {
 
   private implicit val dataStorage: Storage = GlobalConf.Constants.dataStorage
 
+  /**
+   * Perform a GET request to the IFAPA API and return the parsed JSON value.
+   *
+   * This helper centralizes the HTTP GET call and JSON parsing, returning an
+   * Either with an Exception on failure or the parsed ujson.Value on success.
+   *
+   * @param uri request URI to call
+   * @return Right(ujson.Value) with parsed JSON on success, Left(Exception) on failure
+   */
   private def getIfapaAPIResource(uri: Uri): Either[Exception, Value] = {
     sendGetRequest(uri) match {
       case Left(exception: Exception) => Left(exception)
@@ -33,6 +58,19 @@ object IfapaAPIClient {
     }
   }
 
+  /**
+   * Execute the full IFAPA data extraction flow.
+   *
+   * The flow executes the following steps sequentially and logs progress:
+   * 1. Fetch and persist single-station metadata for station info.
+   * 2. Fetch and persist single-station metadata for meteorological fields.
+   * 3. Fetch and persist static station information (station list/data).
+   * 4. Fetch and persist meteorological time-series for a single station.
+   *
+   * Execution stops if an unhandled exception is thrown by any step. Timing
+   * information is recorded and there is a pause between stages defined in
+   * global configuration.
+   */
   def ifapaDataExtraction(): Unit = {
     chronometer.start()
 
@@ -57,10 +95,25 @@ object IfapaAPIClient {
     Thread.sleep(ctsGlobalUtils.betweenStages.millisBetweenStages)
   }
 
+  /**
+   * Helper object that manages metadata and time-series fetching for a
+   * single station's meteorological information.
+   *
+   * Responsibilities:
+   * - Fetch and persist metadata that describes available fields and formats.
+   * - Fetch and persist time-series data for the configured station and date range.
+   */
   private object SingleStationMeteoInfo {
     private val ctsStorageSingleMeteoInfo = ctsStorage.singleStationMeteoInfo
     private val ctsExecutionApiResSingleStationMeteoInfo = ctsExecutionIfapa.apiResources.singleStationMeteoInfo
 
+    /**
+     * Fetch and persist metadata required to interpret single-station
+     * meteorological responses (field properties, formats, etc.).
+     *
+     * This method retries until success using configured wait periods for
+     * transient failures.
+     */
     def saveSingleStationMeteoInfoMetadata(): Unit = {
       def saveSingleStationMeteoInfoMetadataAction(): Unit = {
         @tailrec
@@ -106,6 +159,13 @@ object IfapaAPIClient {
       saveSingleStationMeteoInfoMetadataAction()
     }
 
+    /**
+     * Fetch and persist meteorological time-series for a single station.
+     *
+     * The inner action builds the appropriate request using state and station
+     * codes plus date range and optionally an ET0 flag. Transient failures are
+     * retried following configured policies.
+     */
     def saveSingleStationMeteoInfo(): Unit = {
       def saveSingleStationMeteoInfoAction(
         stateCode: String,
@@ -164,7 +224,8 @@ object IfapaAPIClient {
             endDate,
             getEt0,
             ctsStorageSingleMeteoInfo.filepaths.data.format(
-              startDate, endDate
+              ctsExecutionApiResSingleStationMeteoInfo.startDateAltFormat,
+              ctsExecutionApiResSingleStationMeteoInfo.endDateAltFormat
             )
           )) {
             await(ctsExecutionGlobal.delayTimes.requestSimple)
@@ -188,10 +249,23 @@ object IfapaAPIClient {
     }
   }
 
+  /**
+   * Helper object that manages fetching metadata and static information for
+   * single stations (station descriptors and lists).
+   *
+   * Responsibilities:
+   * - Fetch and persist metadata that describes station info fields.
+   * - Fetch and persist the static station information for a configured station.
+   */
   private object SingleStationInfo {
     private val ctsStorageSingleStationInfo = ctsStorage.singleStationInfo
     private val ctsExecutionApiResSingleStationInfo = ctsExecutionIfapa.apiResources.singleStationInfo
 
+    /**
+     * Fetch and persist metadata that describes single-station static fields.
+     *
+     * Retries until success using configured wait periods for transient failures.
+     */
     def saveSingleStationInfoMetadata(): Unit = {
       def saveSingleStationInfoMetadataAction(): Unit = {
         @tailrec
@@ -237,6 +311,11 @@ object IfapaAPIClient {
       saveSingleStationInfoMetadataAction()
     }
 
+    /**
+     * Fetch and persist static station information for a configured station.
+     *
+     * Retries are performed for transient failures following global policies.
+     */
     def saveSingleStationInfo(): Unit = {
       def saveSingleStationInfoAction(
         stateCode: String,

@@ -15,5 +15,5 @@ COPY ./app.jar ./app.jar
 # EXPOSE PORT FOR SPARK STATS
 EXPOSE 4040
 
-# Comando por defecto para ejecutar la app
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# SET ENTRYPOINT FOR JAR EXECUTION
+ENTRYPOINT ["java", "-Xmx8g","-Xms4g", "-jar", "app.jar"]

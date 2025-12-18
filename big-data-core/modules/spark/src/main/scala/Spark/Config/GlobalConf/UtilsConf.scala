@@ -13,7 +13,8 @@ case class UtilsErrors(
   failOnGettingJson: String,
   errorInReadingFile: String,
   errorInDirectoryCreation: String,
-  environmentVariableNotFound: String
+  environmentVariableNotFound: String,
+  notAvailable: String
 )
 
 case class Chrono(

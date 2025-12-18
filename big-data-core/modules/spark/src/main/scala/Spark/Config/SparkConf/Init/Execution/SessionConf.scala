@@ -21,6 +21,8 @@ case class S3AMockConfiguration(
 )
 
 case class SessionConf(
+  runningInEmr: Boolean,
+  showResults: Boolean,
   sessionName: String,
   sessionMaster: String,
   sessionLogLevel: String,

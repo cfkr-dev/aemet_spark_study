@@ -1,7 +1,7 @@
 package DataExtraction.Config.DataExtractionConf.Execution
 
 
-case class IfapaSingleStationMeteoInfo(startDate: String, endDate: String, stateCode: String, stationCode: String)
+case class IfapaSingleStationMeteoInfo(startDate: String, startDateAltFormat: String, endDate: String, endDateAltFormat: String, stateCode: String, stationCode: String)
 
 case class IfapaSingleStationInfo(stateCode: String, stationCode: String)
 

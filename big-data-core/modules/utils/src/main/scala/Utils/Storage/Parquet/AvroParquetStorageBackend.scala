@@ -9,11 +9,28 @@ import org.apache.parquet.hadoop.ParquetWriter
 import org.apache.parquet.hadoop.metadata.CompressionCodecName
 import org.apache.parquet.hadoop.util.HadoopOutputFile
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Path, Paths}
 import java.util.UUID
 import scala.util.Using
 
+/**
+ * Helper to create a temporary Avro Parquet file using a provided `Schema` and
+ * a write action that receives a `ParquetWriter[GenericRecord]`.
+ *
+ * The resulting temporary file is written to the configured `Storage` using
+ * the implicit `Storage` instance.
+ */
 object AvroParquetStorageBackend {
+  /**
+   * Create a Parquet file using the given `schema` and `writeAction`, then
+   * store it in the configured `Storage` under `path`.
+   *
+   * @param path destination storage path
+   * @param schema Avro `Schema` for the Parquet file
+   * @param writeAction function that receives a `ParquetWriter[GenericRecord]` and writes records
+   * @param storage implicit `Storage` backend used to persist the temporary file
+   * @return `Right(path)` on success or `Left(Exception)` on failure
+   */
   def withAvroParquetWriter(
     path: String,
     schema: Schema

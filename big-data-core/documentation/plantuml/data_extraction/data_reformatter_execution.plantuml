@@ -1,0 +1,65 @@
+@startuml
+actor User
+
+participant "DataReformatter" as DATA_REFORMAT
+participant "AemetDataReformatter" as AEMET_REFMT
+participant "IfapaDataReformatter" as IFAPA_REFMT
+participant "Storage" as STORAGE
+participant "AvroParquetWriter" as PARQUET
+
+User -> DATA_REFORMAT : reformatData()
+activate DATA_REFORMAT
+
+DATA_REFORMAT -> AEMET_REFMT : reformatStationsData()
+activate AEMET_REFMT
+AEMET_REFMT -> STORAGE : read stations JSON and metadata
+STORAGE --> AEMET_REFMT : stations JSON and metadata
+loop for each station in stations JSON
+  AEMET_REFMT -> PARQUET : write station record
+  PARQUET --> AEMET_REFMT : written
+end
+AEMET_REFMT --> DATA_REFORMAT : done
+deactivate AEMET_REFMT
+
+DATA_REFORMAT -> AEMET_REFMT : reformatMeteoData()
+activate AEMET_REFMT
+AEMET_REFMT -> STORAGE : list meteo JSON files
+STORAGE --> AEMET_REFMT : meteo file list
+loop for each chunk in chunks
+  loop for each file in chunk
+    AEMET_REFMT -> STORAGE : read meteo JSON file
+    STORAGE --> AEMET_REFMT : meteo JSON array
+    loop for each record in file
+      AEMET_REFMT -> PARQUET : write meteo record
+      PARQUET --> AEMET_REFMT : written
+    end
+  end
+end
+AEMET_REFMT --> DATA_REFORMAT : done
+deactivate AEMET_REFMT
+
+DATA_REFORMAT -> IFAPA_REFMT : reformatStationsData()
+activate IFAPA_REFMT
+IFAPA_REFMT -> STORAGE : read IFAPA station JSON and metadata
+STORAGE --> IFAPA_REFMT : station JSON and metadata
+IFAPA_REFMT -> PARQUET : write station record
+PARQUET --> IFAPA_REFMT : written
+IFAPA_REFMT --> DATA_REFORMAT : done
+deactivate IFAPA_REFMT
+
+DATA_REFORMAT -> IFAPA_REFMT : reformatMeteoData()
+activate IFAPA_REFMT
+IFAPA_REFMT -> STORAGE : read IFAPA meteo JSON
+STORAGE --> IFAPA_REFMT : meteo JSON array
+loop for each record in meteo JSON
+  IFAPA_REFMT -> PARQUET : write meteo record
+  PARQUET --> IFAPA_REFMT : written
+end
+IFAPA_REFMT --> DATA_REFORMAT : done
+deactivate IFAPA_REFMT
+
+DATA_REFORMAT --> User : end reformatData()
+deactivate DATA_REFORMAT
+
+
+@enduml

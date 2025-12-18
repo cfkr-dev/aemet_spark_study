@@ -35,7 +35,6 @@ case class QueriesConf(
 
 case class InitExecutionConf(
   dataframeConf: Init.Execution.DataframeConf,
-  globalConf: Init.Execution.GlobalConf,
   sessionConf: Init.Execution.SessionConf
 )
 
@@ -67,7 +66,6 @@ object Constants {
   val init: InitConf = InitConf(
     execution = InitExecutionConf(
       dataframeConf = readInternalConfig[Init.Execution.DataframeConf]("spark/init/execution/dataframe.conf", Some(configDirPath)),
-      globalConf = readInternalConfig[Init.Execution.GlobalConf]("spark/init/execution/global.conf", Some(configDirPath)),
       sessionConf = readInternalConfig[Init.Execution.SessionConf]("spark/init/execution/session.conf", Some(configDirPath)),
     ),
     log = InitLogConf(

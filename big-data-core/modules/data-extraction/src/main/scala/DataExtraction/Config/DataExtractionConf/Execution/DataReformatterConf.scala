@@ -6,4 +6,24 @@ case class MetadataStructure(
   fieldRequired: String
 )
 
-case class DataReformatterConf(metadataStructure: MetadataStructure, jsonFilesTargetChunkSize: Int)
+case class DataReformatterSingleStationMeteoInfo(
+  startDate: String,
+  endDate: String
+)
+
+case class DataReformatterSingleStationInfo(
+  stateCode: String,
+  stationCode: String
+)
+
+case class DataReformatterIfapa(
+  singleStationMeteoInfo: DataReformatterSingleStationMeteoInfo,
+  singleStationInfo: DataReformatterSingleStationInfo
+)
+
+case class DataReformatterConf(
+  metadataStructure: MetadataStructure,
+  ifapa: DataReformatterIfapa,
+  jsonFilesTargetChunkSize: Int,
+  filenameDelimiterChar: String
+)

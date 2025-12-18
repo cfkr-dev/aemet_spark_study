@@ -9,6 +9,7 @@ ThisBuild / assemblyMergeStrategy := {
   case PathList("org", "apache", xs @ _*) => MergeStrategy.last
   case PathList("org", "aopalliance", xs @ _*) => MergeStrategy.last
   case PathList("javax", "inject", xs @ _*) => MergeStrategy.last
+  case PathList("javax", "activation", xs @ _*) => MergeStrategy.first
   case PathList("google", "protobuf", xs @ _*) => MergeStrategy.last
   case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
   case x if x.endsWith("descriptor.proto") => MergeStrategy.discard
@@ -20,6 +21,7 @@ ThisBuild / assemblyMergeStrategy := {
   case x if x.contains("FastDoubleParser-NOTICE") => MergeStrategy.discard
   case x if x.endsWith("module-info.class") => MergeStrategy.discard
   case x if x.endsWith("Log4j2Plugins.dat") => MergeStrategy.first
+  case x if x.endsWith("FastDoubleParser-LICENSE") => MergeStrategy.discard
   case "git.properties" => MergeStrategy.discard
   case "mime.types" => MergeStrategy.last
   case x =>
@@ -63,14 +65,15 @@ lazy val utils = (project in file("modules/utils"))
       "software.amazon.awssdk" % "s3" % "2.39.1",
 
       // APACHE PARQUET AVRO
-      "org.apache.parquet" % "parquet-avro" % "1.13.0",
-
-      // APACHE AVRO
-      "org.apache.avro" % "avro" % "1.11.3",
+      "org.apache.parquet" % "parquet-avro" % "1.16.0",
 
       // HADOOP
-      "org.apache.hadoop" % "hadoop-common" % "3.3.4",
-      "org.apache.hadoop" % "hadoop-mapreduce-client-core" % "3.3.4"
+      ("org.apache.hadoop" % "hadoop-common" % "3.3.4")
+        .exclude("javax.activation", "activation")
+        .exclude("javax.ws.rs", "jsr311-api")
+        .exclude("javax.servlet", "javax.servlet-api")
+        .exclude("com.sun.jersey", "jersey-server")
+        .exclude("com.sun.jersey", "jersey-core")
     ),
     assembly / assemblyJarName := "utils-1.0.0.jar"
   )
@@ -110,16 +113,16 @@ lazy val sparkApp = (project in file("modules/spark"))
     mainClass := Some("Spark.Main"),
     libraryDependencies ++= Seq(
       // SPARK
-      "org.apache.spark" %% "spark-core" % "3.5.3" % Provided,
-      "org.apache.spark" %% "spark-sql" % "3.5.3" % Provided,
-      //"org.apache.spark" %% "spark-core" % "3.5.3", // Uncomment for local execution (comment the up one)
-      //"org.apache.spark" %% "spark-sql" % "3.5.3", // Uncomment for local execution (comment the up one)
+      //"org.apache.spark" %% "spark-core" % "3.5.3" % Provided,
+      //"org.apache.spark" %% "spark-sql" % "3.5.3" % Provided,
+      "org.apache.spark" %% "spark-core" % "3.5.3", // Uncomment for local execution (comment the up one)
+      "org.apache.spark" %% "spark-sql" % "3.5.3", // Uncomment for local execution (comment the up one)
 
       // HADOOP AWS
       "org.apache.hadoop" % "hadoop-aws" % "3.3.4"
     ),
-    assembly / assemblyJarName := "spark-app-cluster-1.0.0.jar",
-    //assembly / assemblyJarName := "spark-app-1.0.0.jar" // Uncomment for local execution (comment the up one)
+    //assembly / assemblyJarName := "spark-app-cluster-1.0.0.jar",
+    assembly / assemblyJarName := "spark-app-1.0.0.jar" // Uncomment for local execution (comment the up one)
   )
 
 

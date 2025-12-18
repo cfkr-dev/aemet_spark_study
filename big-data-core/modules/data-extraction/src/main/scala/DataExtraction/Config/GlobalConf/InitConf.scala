@@ -1,7 +1,6 @@
 package DataExtraction.Config.GlobalConf
 
 case class EnvironmentVarsNames(
-  runningInEmr: String,
   awsS3Endpoint: String,
   storagePrefix: String,
   storageBase: String,
@@ -10,7 +9,6 @@ case class EnvironmentVarsNames(
 )
 
 case class EnvironmentVarsValues(
-  runningInEmr: Option[Boolean],
   awsS3Endpoint: Option[String],
   storagePrefix: Option[String],
   storageBase: Option[String],

@@ -8,8 +8,15 @@ import java.io.InputStream
 import scala.io.Source
 import scala.reflect.ClassTag
 
+/**
+ * Utilities to read configuration files using `pureconfig` with additional
+ * helpers such as a `Double` reader that supports `inf` and `NaN` symbols.
+ */
 object PureConfigStorageBackend {
 
+  /**
+   * `ConfigReader[Double]` that accepts `+inf`, `-inf`, `NaN` and related symbols.
+   */
   implicit val doubleWithInfReader: ConfigReader[Double] = ConfigReader.fromString {
     case "+inf" | "inf" | "∞" | "Infinity" => Right(Double.PositiveInfinity)
     case "-inf" | "-∞" | "-Infinity" => Right(Double.NegativeInfinity)
@@ -22,6 +29,16 @@ object PureConfigStorageBackend {
       }
   }
 
+  /**
+   * Read an internal configuration file from the classpath or from a custom prefix.
+   *
+   * @param filepath path to the configuration resource
+   * @param customPrefix optional directory prefix to read the file from instead of the classpath
+   * @param reader implicit `ConfigReader[T]` for the target type
+   * @tparam T target configuration type
+   * @return parsed configuration of type `T`
+   * @throws java.lang.RuntimeException if the config file is not found when using `customPrefix` or the classpath lookup fails
+   */
   def readInternalConfig[T: ClassTag](
     filepath: String,
     customPrefix: Option[String] = None

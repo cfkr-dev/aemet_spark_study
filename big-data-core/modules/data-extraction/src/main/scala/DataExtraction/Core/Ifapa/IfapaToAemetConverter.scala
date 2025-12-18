@@ -18,6 +18,15 @@ object IfapaToAemetConverter {
 
   private implicit val dataStorage: Storage = GlobalConf.Constants.dataStorage
 
+  /**
+   * Generate an empty AEMET-formatted JSON object based on the AEMET metadata
+   * schema. The resulting object contains keys for every field defined in the
+   * AEMET schema with null values. This is used as a template to build
+   * records mapped from IFAPA data.
+   *
+   * @param metadataJSON metadata JSON that contains the AEMET schema definition
+   * @return an ujson.Value (object) with keys from the AEMET schema and null values
+   */
   private def genEmptyAemetJSONFromMetadata(metadataJSON: ujson.Value): ujson.Value = {
     ujson.Obj.from(
       metadataJSON(ctsExecutionAemet.reqResp.metadata.schemaDef).arr.map(field => {
@@ -26,6 +35,13 @@ object IfapaToAemetConverter {
     )
   }
 
+  /**
+   * Convert IFAPA-stored data into the AEMET-compatible JSON format and
+   * persist the converted files to storage.
+   *
+   * The method orchestrates conversion for both static station info and
+   * meteorological time-series, timing the operations and logging progress.
+   */
   def ifapaToAemetConversion(): Unit = {
     chronometer.start()
 
@@ -42,6 +58,16 @@ object IfapaToAemetConverter {
     Thread.sleep(ctsGlobalUtils.betweenStages.millisBetweenStages)
   }
 
+  /**
+   * Helper object responsible for converting IFAPA meteorological time-series
+   * for a single station into the AEMET schema.
+   *
+   * Responsibilities:
+   * - Map IFAPA record fields to the AEMET schema keys.
+   * - Apply formatting/transformations to values (e.g., numeric rounding,
+   *   string normalization).
+   * - Write the converted series to the configured AEMET-format storage path.
+   */
   private object SingleStationMeteoInfo {
     private val ctsSchemaAemetAllMeteoInfo = GlobalConf.Constants.schema.aemetConf.allMeteoInfo
     private val ctsSchemaIfapaSingleStationMeteoInfo = GlobalConf.Constants.schema.ifapaConf.singleStationMeteoInfo
@@ -147,12 +173,12 @@ object IfapaToAemetConverter {
 
       writeJSON(
         ctsStorageIfapaAemetFormatSingleStationMeteoInfo.filepaths.data.format(
-          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.startDate,
-          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.endDate
+          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.startDateAltFormat,
+          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.endDateAltFormat
         ),
         readJSON(ctsStorageIfapaSingleStationMeteoInfo.filepaths.data.format(
-          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.startDate,
-          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.endDate
+          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.startDateAltFormat,
+          ctsExecutionIfapa.apiResources.singleStationMeteoInfo.endDateAltFormat
         )) match {
           case Left(exception: Exception) => printlnConsoleMessage(NotificationType.Warning, exception.toString)
             return
@@ -183,6 +209,15 @@ object IfapaToAemetConverter {
     }
   }
 
+  /**
+   * Helper object responsible for converting IFAPA static station information
+   * into the AEMET-required station-info schema.
+   *
+   * Responsibilities:
+   * - Map IFAPA station fields to AEMET station keys.
+   * - Apply formatters to transform values to the expected AEMET presentation.
+   * - Persist the converted station data and copy the AEMET metadata template.
+   */
   private object SingleStationInfo {
     private val ctsSchemaAemetAllStationInfo = GlobalConf.Constants.schema.aemetConf.allStationInfo
     private val ctsSchemaIfapaSingleStationInfo = GlobalConf.Constants.schema.ifapaConf.singleStationInfo

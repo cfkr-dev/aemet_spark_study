@@ -4,7 +4,7 @@ import Spark.Config.{GlobalConf, SparkConf}
 import Utils.ChronoUtils
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
 import Utils.Storage.Core.Storage
-import Utils.Storage.JSON.JSONStorageBackend.{readJSON, writeJSON}
+import Utils.Storage.JSON.JSONStorageBackend.writeJSON
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
@@ -12,8 +12,21 @@ import org.apache.spark.sql.{Column, DataFrame, SaveMode, SparkSession}
 import org.apache.spark.storage.StorageLevel
 import ujson.read
 
+/**
+ * SparkManager is the top-level coordinator for Spark session lifecycle
+ * and query-driven studies in the project.
+ *
+ * Responsibilities:
+ * - Initialize and configure Spark via `SparkCore`.
+ * - Expose query workflows grouped under `SparkQueries` which build on the
+ *   preformatted DataFrames available in `SparkCore.dataframes`.
+ * - Provide a small set of utility methods to persist DataFrames using the
+ *   configured storage backend.
+ *
+ * This object is designed for programmatic invocation (for example, from a
+ * main runner) and orchestrates the main study executions.
+ */
 object SparkManager {
-  private val ctsExecutionGlobalConf = SparkConf.Constants.init.execution.globalConf
   private val ctsExecutionDataframeConf = SparkConf.Constants.init.execution.dataframeConf
   private val ctsSchemaAemetAllMeteoInfo = GlobalConf.Constants.schema.aemetConf.allMeteoInfo
   private val ctsSchemaAemetAllStation = GlobalConf.Constants.schema.aemetConf.allStationInfo
@@ -28,10 +41,28 @@ object SparkManager {
 
   private implicit val dataStorage: Storage = GlobalConf.Constants.dataStorage
 
+  /**
+   * SparkCore provides the internal SparkSession management and prepared
+   * DataFrames used by higher-level query workflows.
+   *
+   * Responsibilities:
+   * - Create and configure the SparkSession according to runtime environment
+   *   (EMR or local, with optional S3 endpoint mock settings).
+   * - Resolve and expose the resolved storage prefix used for reads/writes.
+   * - Read and normalize raw Parquet inputs into two cached DataFrames:
+   *   `allMeteoInfo` and `allStations`.
+   *
+   * The object is private to keep session and storage configuration
+   * encapsulated; other parts of the application should access its
+   * formatted DataFrames and persistence helpers rather than managing the
+   * SparkSession directly.
+   */
   private object SparkCore {
     private val ctsExecutionSessionConf = SparkConf.Constants.init.execution.sessionConf
     private val ctsInitLogs = SparkConf.Constants.init.log
     private val ctsAllMeteoInfoSpecialValues = ctsExecutionDataframeConf.allMeteoInfoDf.specialValues
+
+    val showResults: Boolean = ctsExecutionSessionConf.showResults
 
     val sparkSession: SparkSession = createSparkSession(
       ctsExecutionSessionConf.sessionName,
@@ -41,11 +72,18 @@ object SparkManager {
 
     private val storagePrefix: String = setStoragePrefix(ctsGlobalInit.environmentVars.values.storagePrefix)
 
+    /**
+     * Start the Spark session and perform a lightweight initialization check.
+     *
+     * This method starts an internal chronometer, prints session configuration,
+     * and triggers evaluation of key cached DataFrames to ensure they are
+     * materialized and the environment is ready for downstream queries.
+     */
     def startSparkSession(): Unit = {
       chronometer.start()
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.startSparkSessionCheckStats.format(
-        if (ctsGlobalInit.environmentVars.values.runningInEmr.getOrElse(false)) {
-          "not available"
+        if (ctsExecutionSessionConf.runningInEmr) {
+          ctsGlobalUtils.errors.notAvailable
         } else {
           ctsExecutionSessionConf.sessionStatsUrl
         }
@@ -55,15 +93,34 @@ object SparkManager {
       SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName).count()
     }
 
+    /**
+     * Stop the Spark session, print timing information, and perform a
+     * graceful shutdown.
+     *
+     * The method logs elapsed time measured by the internal chronometer and
+     * waits a small configured pause before closing the SparkSession.
+     */
     def endSparkSession(): Unit = {
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSession)
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.chrono.chronoResult.format(chronometer.stop()))
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalUtils.betweenStages.infoText.format(ctsGlobalUtils.betweenStages.millisBetweenStages / 1000))
       Thread.sleep(ctsGlobalUtils.betweenStages.millisBetweenStages)
+      SparkCore.dataframes.allStations.as(ctsExecutionDataframeConf.allStationsDf.aliasName).unpersist()
+      SparkCore.dataframes.allMeteoInfo.as(ctsExecutionDataframeConf.allMeteoInfoDf.aliasName).unpersist()
       sparkSession.stop()
       printlnConsoleEnclosedMessage(NotificationType.Information, ctsInitLogs.sessionConf.endSparkSessionClosed)
     }
 
+    /**
+     * Persist a DataFrame as Parquet using the configured storage prefix.
+     *
+     * This helper wraps the DataFrame write call and returns an Either with
+     * the destination path on success or the thrown Exception on failure.
+     *
+     * @param dataframe DataFrame to persist
+     * @param path destination path relative to the storage prefix
+     * @return Right(path) on success, Left(Exception) on failure
+     */
     def saveDataframeAsParquet(dataframe: DataFrame, path: String): Either[Exception, String] = {
       try {
         dataframe.write
@@ -76,6 +133,17 @@ object SparkManager {
       }
     }
 
+    /**
+     * Persist a DataFrame as a single JSON file using the project's JSON
+     * storage helper.
+     *
+     * This converts the DataFrame to JSON strings and delegates writing to
+     * the JSON backend. Returns an Either signaling success or failure.
+     *
+     * @param dataframe DataFrame to persist as JSON
+     * @param path destination path for the JSON file
+     * @return Right(path) on success, Left(Exception) on failure
+     */
     def saveDataframeAsJSON(dataframe: DataFrame, path: String): Either[Exception, String] = {
       try {
         writeJSON(
@@ -89,8 +157,25 @@ object SparkManager {
       }
     }
 
+    /**
+     * Create and configure a SparkSession instance.
+     *
+     * Behavior:
+     * - When running in EMR (controlled by configuration), returns an
+     *   application SparkSession using getOrCreate().
+     * - Otherwise, optionally applies S3 mock configurations (access/secret
+     *   key, endpoint, path-style access, and SSL) when an S3 endpoint is
+     *   provided in the environment configuration.
+     * - Sets the Spark log level and clears the catalog cache before
+     *   returning the session.
+     *
+     * @param name application name for the SparkSession
+     * @param master master URL (e.g., local[*] or spark://...)
+     * @param logLevel logging level for the Spark context
+     * @return initialized and configured SparkSession
+     */
     private def createSparkSession(name: String, master: String, logLevel: String): SparkSession = {
-      val spark = if (ctsGlobalInit.environmentVars.values.runningInEmr.getOrElse(false)) {
+      val spark = if (ctsExecutionSessionConf.runningInEmr) {
         SparkSession.builder()
           .appName(name)
           .getOrCreate()
@@ -120,6 +205,19 @@ object SparkManager {
       spark
     }
 
+    /**
+     * Validate and resolve the configured storage prefix.
+     *
+     * This helper reads the optional storage prefix from configuration, throws
+     * an Exception if it is not present, and determines whether the prefix
+     * refers to an S3 bucket or a local path by delegating to the project's
+     * storage backend. When S3 is used, the returned prefix is in the form
+     * `s3a://<bucket>`; otherwise the local path fragment is returned.
+     *
+     * @param prefix optional configured storage prefix (usually from env)
+     * @return resolved storage prefix string (S3 or local path)
+     * @throws Exception when the prefix is not defined in the environment
+     */
     private def setStoragePrefix(prefix: Option[String]): String = {
       val checkedPrefix = prefix.getOrElse(
         throw new Exception(ctsGlobalUtils.errors.environmentVariableNotFound.format(
@@ -132,40 +230,34 @@ object SparkManager {
       if (isS3) s"s3a://$bucket" else rest
     }
 
-    private def createDataframeFromJSONAndAemetMetadata(
+    /**
+     * Create a DataFrame by reading Parquet from the configured storage
+     * location.
+     *
+     * The function composes the resolved `storagePrefix` with `sourcePath` and
+     * delegates to Spark to read the Parquet files. It returns an Either that
+     * contains the DataFrame on success or an Exception on failure.
+     *
+     * @param session active SparkSession used for reading
+     * @param sourcePath relative path (under the storage prefix) to the Parquet data
+     * @return Right(DataFrame) on success, Left(Exception) on failure
+     */
+    private def createDataframeFromParquet(
       session: SparkSession,
-      sourcePath: String,
-      metadataPath: String
+      sourcePath: String
     ): Either[Exception, DataFrame] = {
-      def createDataframeSchemaAemet(metadataJSON: ujson.Value): StructType = {
-        StructType(
-          metadataJSON(ctsExecutionDataframeConf.aemetMetadataStructure.schemaDef).arr.map(field => {
-            StructField(
-              field(ctsExecutionDataframeConf.aemetMetadataStructure.fieldId).str,
-              StringType,
-              !field(ctsExecutionDataframeConf.aemetMetadataStructure.fieldRequired).bool
-            )
-          }).toArray
-        )
-      }
-
       Right(session
         .read
-        .format(ctsExecutionGlobalConf.readConfig.readFormat)
-        .option(ctsExecutionGlobalConf.readConfig.readMode, value = true)
-        .schema(
-          createDataframeSchemaAemet(
-            readJSON(
-              metadataPath
-            ) match {
-              case Right(json) => json
-              case Left(exception) => return Left(exception)
-            }
-          )
-        )
-        .json(storagePrefix + sourcePath))
+        .parquet(storagePrefix + sourcePath)
+      )
     }
 
+    /**
+     * Collection of prebuilt, formatted DataFrames used by queries.
+     *
+     * The `dataframes` object composes DataFrames by reading Parquet inputs
+     * and applying formatting functions to normalize types and values.
+     */
     object dataframes {
       private val ctsStorageAemet = SparkConf.Constants.init.storage.aemetConf
       private val ctsStorageIfapaAemetFormat = SparkConf.Constants.init.storage.ifapaAemetFormatConf
@@ -173,16 +265,14 @@ object SparkManager {
 
       val allMeteoInfo: DataFrame =
         formatAllMeteoInfoDataframe(
-          createDataframeFromJSONAndAemetMetadata(
+          createDataframeFromParquet(
             sparkSession,
-            ctsStorageAemet.allMeteoInfo.dirs.data,
-            ctsStorageAemet.allMeteoInfo.filepaths.metadata
+            ctsStorageAemet.allMeteoInfo.dirs.data
           ) match {
             case Left(exception) => throw exception
-            case Right(df) => df.union(createDataframeFromJSONAndAemetMetadata(
+            case Right(df) => df.union(createDataframeFromParquet(
               sparkSession,
-              ctsStorageIfapaAemetFormat.singleStationMeteoInfo.dirs.data,
-              ctsStorageIfapaAemetFormat.singleStationMeteoInfo.filepaths.metadata
+              ctsStorageIfapaAemetFormat.singleStationMeteoInfo.dirs.data
             ) match {
               case Left(exception) => throw exception
               case Right(df) => df
@@ -192,16 +282,14 @@ object SparkManager {
 
       val allStations: DataFrame =
         formatAllStationsDataframe(
-          createDataframeFromJSONAndAemetMetadata(
+          createDataframeFromParquet(
             sparkSession,
-            ctsStorageAemet.allStationInfo.dirs.data,
-            ctsStorageAemet.allStationInfo.filepaths.metadata
+            ctsStorageAemet.allStationInfo.dirs.data
           ) match {
             case Left(exception) => throw exception
-            case Right(df) => df.union(createDataframeFromJSONAndAemetMetadata(
+            case Right(df) => df.union(createDataframeFromParquet(
               sparkSession,
-              ctsStorageIfapaAemetFormat.singleStationInfo.dirs.data,
-              ctsStorageIfapaAemetFormat.singleStationInfo.filepaths.metadata
+              ctsStorageIfapaAemetFormat.singleStationInfo.dirs.data
             ) match {
               case Left(exception) => throw exception
               case Right(df) => df
@@ -209,6 +297,18 @@ object SparkManager {
           }
         ).persist(StorageLevel.MEMORY_AND_DISK_SER)
 
+      /**
+       * Format the merged AEMET/IFAPA meteorological DataFrame.
+       *
+       * This function applies a set of column-specific transformations to
+       * convert raw string fields into typed columns (dates, timestamps,
+       * integers, doubles) and to handle special placeholder values (e.g.
+       * "varias", no-data markers). Use this to obtain a typed DataFrame
+       * ready for analytical queries.
+       *
+       * @param dataframe raw dataframe read from Parquet with string values
+       * @return transformed DataFrame with typed and normalized columns
+       */
       private def formatAllMeteoInfoDataframe(dataframe: DataFrame): DataFrame = {
         val formatters: Map[String, String => Column] = Map(
           ctsSchemaAemetAllMeteoInfo.fecha ->
@@ -337,6 +437,19 @@ object SparkManager {
         }
       }
 
+      /**
+       * Format the stations DataFrame (convert coordinates and normalize
+       * textual fields).
+       *
+       * Responsibilities:
+       * - Normalize province names using configured special-values mapping.
+       * - Cast altitude to integer type.
+       * - Convert DMS coordinate strings (degrees/minutes/seconds with
+       *   cardinal direction) into decimal degrees.
+       *
+       * @param dataframe raw stations DataFrame read from Parquet
+       * @return DataFrame with normalized station fields and decimal coordinates
+       */
       private def formatAllStationsDataframe(dataframe: DataFrame): DataFrame = {
         val formatters: Map[String, String => Column] = Map(
           ctsSchemaAemetAllStation.provincia ->
@@ -382,12 +495,29 @@ object SparkManager {
     }
   }
 
+  /**
+   * SparkQueries groups query-oriented workflows that produce final datasets
+   * (studies, plots, and aggregations) based on the preformatted DataFrames in
+   * `SparkCore.dataframes`.
+   *
+   * Use `execute()` to run the full set of queries in sequence (it starts and
+   * stops the Spark session around the set of studies).
+   */
   object SparkQueries {
 
     import SparkCore.sparkSession.implicits._
 
     private val ctsGlobalLogs = SparkConf.Constants.queries.log.globalConf
 
+    /**
+     * Execute the complete set of query-driven studies.
+     *
+     * Behavior:
+     * - Starts the Spark session (initialization and sanity checks).
+     * - Executes each study (Stations, Climograph, SingleParamStudies,
+     *   InterestingStudies) in sequence.
+     * - Stops the Spark session when finished.
+     */
     def execute(): Unit = {
       SparkCore.startSparkSession()
       Stations.execute()
@@ -397,6 +527,16 @@ object SparkManager {
       SparkCore.endSparkSession()
     }
 
+    /**
+     * Small container describing a query to run and where to persist it.
+     *
+     * @param dataframe DataFrame result of the query
+     * @param pathToSave destination path to store the DataFrame
+     * @param title optional human-readable title for logging
+     * @param showInfoMessage message shown before printing the DataFrame
+     * @param saveInfoMessage message template shown before saving
+     * @param saveAsJSON whether to save the result as JSON instead of Parquet
+     */
     private case class FetchAndSaveInfo(
       dataframe: DataFrame,
       pathToSave: String,
@@ -406,6 +546,19 @@ object SparkManager {
       saveAsJSON: Boolean = false
     )
 
+    /**
+     * Simple helper to run a group of queries, display and persist their
+     * results.
+     *
+     * This function handles logging for query start/end, sub-query messages,
+     * printing DataFrame samples, and saving either as Parquet or JSON using
+     * the `SparkCore` helpers.
+     *
+     * @param queryTitle optional title for the overall query batch
+     * @param queries list of FetchAndSaveInfo describing sub-queries
+     * @param encloseHalfLengthStart formatting width for enclosed console messages
+     * @return sequence of DataFrames produced by the provided queries
+     */
     private def simpleFetchAndSave(
       queryTitle: String = "",
       queries: Seq[FetchAndSaveInfo],
@@ -422,8 +575,10 @@ object SparkManager {
             subQuery.title
           ), encloseHalfLength = encloseHalfLengthStart + 5)
 
-        printlnConsoleMessage(NotificationType.Information, subQuery.showInfoMessage)
-        subQuery.dataframe.show()
+        if (SparkCore.showResults) {
+          printlnConsoleMessage(NotificationType.Information, subQuery.showInfoMessage)
+          subQuery.dataframe.show()
+        }
 
         printlnConsoleMessage(NotificationType.Information, subQuery.saveInfoMessage.format(
           subQuery.pathToSave
@@ -454,17 +609,23 @@ object SparkManager {
       queries.map(query => query.dataframe)
     }
 
+    /**
+     * Stations study: executes several simple queries related to station counts
+     * and distributions, persisting results for downstream visualization.
+     */
     private object Stations {
       private val ctsExecution = SparkConf.Constants.queries.execution.stationsConf
       private val ctsLogs = SparkConf.Constants.queries.log.stationsConf
       private val ctsStorage = SparkConf.Constants.queries.storage.stationsConf
 
+      /**
+       * Execute the Stations study: run station-related queries and persist results.
+       */
       def execute(): Unit = {
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startStudy.format(
           ctsLogs.studyName
         ))
 
-        // Station count evolution from the beginning of the records
         simpleFetchAndSave(
           ctsLogs.stationCountEvolFromStart,
           List(
@@ -485,7 +646,6 @@ object SparkManager {
           )
         )
 
-        // Count of stations by state in 2024
         simpleFetchAndSave(
           ctsLogs.stationCountByState2024,
           List(
@@ -505,7 +665,6 @@ object SparkManager {
           )
         )
 
-        // Count of stations by altitude in 2024
         simpleFetchAndSave(
           ctsLogs.stationCountByAltitude2024,
           List(
@@ -528,11 +687,19 @@ object SparkManager {
       }
     }
 
+    /**
+     * Climograph study: groups stations into climate groups and produces
+     * station-level and monthly aggregates used for climographs.
+     */
     private object Climograph {
       private val ctsExecution = SparkConf.Constants.queries.execution.climographConf
       private val ctsLogs = SparkConf.Constants.queries.log.climographConf
       private val ctsStorage = SparkConf.Constants.queries.storage.climographConf
 
+      /**
+       * Execute the Climograph study: produce station-level and monthly aggregates
+       * used for climographs and persist the outputs.
+       */
       def execute(): Unit = {
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startStudy.format(
           ctsLogs.studyName
@@ -598,18 +765,24 @@ object SparkManager {
       }
     }
 
+    /**
+     * SingleParamStudies: runs parameter-specific studies (top-N, evolution,
+     * averages) for a configured list of climate parameters.
+     */
     private object SingleParamStudies {
       private val ctsExecution = SparkConf.Constants.queries.execution.singleParamStudiesConf
       private val ctsLogs = SparkConf.Constants.queries.log.singleParamStudiesConf
       private val ctsStorage = SparkConf.Constants.queries.storage.singleParamStudiesConf
 
+      /**
+       * Execute the configured single-parameter studies (top-N, evolutions, etc.).
+       */
       def execute(): Unit = {
         ctsExecution.singleParamStudiesValues.foreach(study => {
           printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startStudy.format(
             study.studyParam.replace("_", " ")
           ))
 
-          // Top 10 places with the highest temperatures in 2024
           simpleFetchAndSave(
             ctsLogs.top10Highest2024.format(
               study.studyParam
@@ -633,7 +806,6 @@ object SparkManager {
             )
           )
 
-          // Top 10 places with the highest eratures in the last decade
           simpleFetchAndSave(
             ctsLogs.top10HighestDecade.format(
               study.studyParam
@@ -657,7 +829,6 @@ object SparkManager {
             )
           )
 
-          // Top 10 places with the highest eratures from the beginning of the records
           simpleFetchAndSave(
             ctsLogs.top10HighestGlobal.format(
               study.studyParam
@@ -681,7 +852,6 @@ object SparkManager {
             )
           )
 
-          // Top 10 places with the lowest eratures in 2024
           simpleFetchAndSave(
             ctsLogs.top10Lowest2024.format(
               study.studyParam
@@ -707,7 +877,6 @@ object SparkManager {
             )
           )
 
-          // Top 10 places with the lowest eratures in the last decade
           simpleFetchAndSave(
             ctsLogs.top10LowestDecade.format(
               study.studyParam
@@ -733,7 +902,6 @@ object SparkManager {
             )
           )
 
-          // Top 10 places with the lowest eratures from the beginning of the records
           simpleFetchAndSave(
             ctsLogs.top10LowestGlobal.format(
               study.studyParam
@@ -759,7 +927,6 @@ object SparkManager {
             )
           )
 
-          // temperature evolution from the beginning of the records for each state
           val regressionModelDf: DataFrame = simpleFetchAndSave(
             ctsLogs.evolFromStartForEachState.format(
               study.studyParam.capitalize
@@ -872,7 +1039,6 @@ object SparkManager {
 
           regressionModelDf.count()
 
-          // Top 5 highest increment of temperature
           simpleFetchAndSave(
             ctsLogs.top5HighestInc.format(
               study.studyParam
@@ -899,7 +1065,6 @@ object SparkManager {
             )
           )
 
-          // Top 5 lowest increment of temperature
           simpleFetchAndSave(
             ctsLogs.top5LowestInc.format(
               study.studyParam
@@ -929,7 +1094,6 @@ object SparkManager {
 
           regressionModelDf.unpersist()
 
-          // Get average temperature in 2024 for all station in the spanish continental territory
           simpleFetchAndSave(
             ctsLogs.avg2024AllStationSpainContinental.format(
               study.studyParam
@@ -954,7 +1118,6 @@ object SparkManager {
             )
           )
 
-          // Get average temperature in 2024 for all station in the canary islands territory
           simpleFetchAndSave(
             ctsLogs.avg2024AllStationSpainCanary.format(
               study.studyParam
@@ -986,17 +1149,24 @@ object SparkManager {
       }
     }
 
+    /**
+     * InterestingStudies: executes more specialized studies that combine
+     * different climate parameters and produce aggregated comparisons by state
+     * and other dimensions.
+     */
     private object InterestingStudies {
       private val ctsExecution = SparkConf.Constants.queries.execution.interestingStudiesConf
       private val ctsLogs = SparkConf.Constants.queries.log.interestingStudiesConf
       private val ctsStorage = SparkConf.Constants.queries.storage.interestingStudiesConf
 
+      /**
+       * Execute the set of interesting multi-parameter studies and persist results.
+       */
       def execute(): Unit = {
         printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startStudy.format(
           ctsLogs.studyName
         ))
 
-        // Precipitation and pressure evolution from the beginning of the records for each state
         simpleFetchAndSave(
           ctsLogs.precAndPressureEvolFromStartForEachState,
           ctsExecution.stationRecords.flatMap(record => {
@@ -1071,7 +1241,6 @@ object SparkManager {
           })
         )
 
-        // Top 10 States
         ctsExecution.top10States.foreach(top10 => {
           simpleFetchAndSave(
             ctsLogs.top10States.format(top10.name),
@@ -1099,6 +1268,12 @@ object SparkManager {
       }
     }
 
+    /**
+     * Retrieve station information by station identifier.
+     *
+     * @param stationId station code to search in the stations DataFrame
+     * @return Right(DataFrame) with a single-row DataFrame containing basic station info, or Left(Exception)
+     */
     private def getStationInfoById(
       stationId: String
     )
@@ -1123,6 +1298,14 @@ object SparkManager {
       }
     }
 
+    /**
+     * Count distinct stations grouped by a column over a time lapse.
+     *
+     * @param column tuple containing a Column expression and the output column name
+     * @param startDate start of the interval (YYYY-MM-DD or year for yearly queries)
+     * @param endDate optional end date (if omitted a single-year aggregation is applied)
+     * @return Right(DataFrame) with counts or Left(Exception) on failure
+     */
     private def getStationCountByColumnInLapse(
       column: (Column, String),
       startDate: String,
@@ -1150,6 +1333,18 @@ object SparkManager {
       }
     }
 
+    /**
+     * Count stations falling into parameter intervals for a given lapse.
+     *
+     * For each interval the function computes min/max bounds if they are
+     * specified as infinities in configuration, then counts stations whose
+     * parameter lies in the interval.
+     *
+     * @param paramIntervals list of (columnName, min, max)
+     * @param startDate start date or year
+     * @param endDate optional end date
+     * @return Right(DataFrame) with rows per interval or Left(Exception)
+     */
     private def getStationsCountByParamIntervalsInALapse(
       paramIntervals: List[(String, Double, Double)],
       startDate: String,
@@ -1192,6 +1387,15 @@ object SparkManager {
       }
     }
 
+    /**
+     * Compute monthly averages for temperature and monthly sum of precipitation
+     * for a station in a given year.
+     *
+     * @param stationId station code
+     * @param studyParams tuple of (temperatureColumnName, precipitationColumnName)
+     * @param observationYear year to observe
+     * @return Right(DataFrame) with month, avg(temp) and sum(precip) columns
+     */
     private def getStationMonthlyAvgTempAndSumPrecInAYear(
       stationId: String,
       studyParams: (String, String),
@@ -1219,6 +1423,18 @@ object SparkManager {
       }
     }
 
+    /**
+     * Compute top-N stations for a climate parameter within a given lapse.
+     *
+     * @param climateParam column name to aggregate
+     * @param aggMethodName aggregation method (avg/sum/min/max)
+     * @param paramNameToShow short name to use in result column
+     * @param startDate start of lapse (or year)
+     * @param endDate optional end date
+     * @param topN number of rows to return
+     * @param highest whether to return the highest (true) or lowest (false)
+     * @return Right(DataFrame) with top-N stations or Left(Exception)
+     */
     private def getTopNClimateParamInALapse(
       climateParam: String,
       aggMethodName: String,
@@ -1284,6 +1500,18 @@ object SparkManager {
       }
     }
 
+    /**
+     * Compute top-N stations (or states) matching a set of climate parameter
+     * conditions within a lapse.
+     *
+     * @param climateParams list of (paramName, min, max) conditions
+     * @param startDate start of lapse
+     * @param endDate optional end date
+     * @param groupByState whether the aggregation is by state or by station
+     * @param topN max rows to return
+     * @param highest whether to return highest or lowest results
+     * @return Right(DataFrame) with top-N results, Left(Exception) on failure
+     */
     private def getTopNClimateConditionsInALapse(
       climateParams: List[(String, Double, Double)],
       startDate: String,
@@ -1362,6 +1590,17 @@ object SparkManager {
       }
     }
 
+    /**
+     * Retrieve daily climate parameters for a station in a lapse and return
+     * a DataFrame with dates and the requested parameters aggregated per day.
+     *
+     * @param stationId station code
+     * @param climateParams sequence of (columnName, displayName)
+     * @param aggMethodNames aggregation method names for each param
+     * @param startDate start of lapse
+     * @param endDate optional end date
+     * @return Right(DataFrame) with daily series or Left(Exception)
+     */
     private def getClimateParamInALapseById(
       stationId: String,
       climateParams: Seq[(String, String)],
@@ -1397,6 +1636,17 @@ object SparkManager {
       }
     }
 
+    /**
+     * Aggregate yearly groups for a station according to provided parameters
+     * and aggregation methods.
+     *
+     * @param stationId station code
+     * @param climateParams sequence of (colName, displayName)
+     * @param aggMethodNames aggregation methods corresponding to each param
+     * @param startDate start year or date
+     * @param endDate optional end year or date
+     * @return Right(DataFrame) grouped by year or Left(Exception)
+     */
     private def getClimateYearlyGroupById(
       stationId: String,
       climateParams: Seq[(String, String)],
@@ -1446,6 +1696,17 @@ object SparkManager {
       }
     }
 
+    /**
+     * Compute averages for all stations filtered by optional set of states.
+     *
+     * @param climateParam column to aggregate
+     * @param aggMethodName aggregation method (avg/sum/min/max)
+     * @param paramNameToShow display name used in result columns
+     * @param startDate start of lapse
+     * @param endDate optional end date
+     * @param states optional list of state names to filter
+     * @return Right(DataFrame) with aggregated station averages or Left(Exception)
+     */
     private def getAllStationsByStatesAvgClimateParamInALapse(
       climateParam: String,
       aggMethodName: String,
@@ -1512,6 +1773,18 @@ object SparkManager {
       }
     }
 
+    /**
+     * Compute a linear regression (beta1, beta0) for a climate parameter for
+     * a station over a year range and return the model parameters as a small
+     * DataFrame.
+     *
+     * @param stationId station code
+     * @param climateParam parameter column name
+     * @param aggMethodName aggregation method for yearly grouping
+     * @param startYear start year
+     * @param endYear optional end year
+     * @return Right(DataFrame(stationId, beta1, beta0)) or Left(Exception)
+     */
     private def getStationClimateParamRegressionModelInALapse(
       stationId: String,
       climateParam: String,
@@ -1582,6 +1855,21 @@ object SparkManager {
       }
     }
 
+    /**
+     * Compute the top-N stations with the highest (or lowest) increment
+     * of a climate parameter between two years using precomputed regression models.
+     *
+     * @param stationIds list of station codes to consider
+     * @param regressionModels DataFrame containing regression model params
+     * @param climateParam climate parameter column
+     * @param paramNameToShow display name used in outputs
+     * @param aggMethodName aggregation method used for yearly groupings
+     * @param startYear start year for increment calculation
+     * @param endYear end year for increment calculation
+     * @param highest true to return highest increments, false for lowest
+     * @param topN number of rows to return
+     * @return Right(DataFrame) with top-N stations and increment metrics or Left(Exception)
+     */
     private def getTopNClimateParamIncrementInAYearLapse(
       stationIds: Seq[String],
       regressionModels: DataFrame,
@@ -1664,130 +1952,5 @@ object SparkManager {
         case exception: Exception => Left(exception)
       }
     }
-
-     def getLongestOperativeStationsPerProvince(params: Seq[String], maxNullMonths: Int = 3): DataFrame = {
-      val df: DataFrame = SparkCore.dataframes.allMeteoInfo
-
-      val dfParsed = df
-        .withColumn("fecha", to_date(col("fecha"), "yyyy-MM-dd"))
-        .withColumn("year_month", date_format(col("fecha"), "yyyy-MM"))
-
-      val nullCondition = params.map(p => col(p).isNull).reduce(_ || _)
-
-      val monthlyStats = dfParsed
-        .groupBy("provincia", "indicativo", "nombre", "year_month")
-        .agg(
-          count("*").alias("n_registros"),
-          count(when(nullCondition, 1)).alias("null_param")
-        )
-
-      val inactiveMonths = monthlyStats
-        .withColumn("inactive", when(col("n_registros") === 0 || col("null_param") === col("n_registros"), 1).otherwise(0))
-
-      val window = Window.partitionBy("provincia", "indicativo", "nombre").orderBy("year_month")
-
-      val withCutFlag = inactiveMonths
-        .withColumn("inactive_seq", sum("inactive").over(window.rowsBetween(-maxNullMonths + 1, 0)))
-        .withColumn("cut_flag", when(col("inactive_seq") === maxNullMonths, 1).otherwise(0))
-
-      val withSegment = withCutFlag
-        .withColumn("segment_id", sum("cut_flag").over(window.rowsBetween(Window.unboundedPreceding, 0)))
-
-      // Volver a unir con fechas completas
-      val fullDates = dfParsed
-        .select("provincia", "indicativo", "nombre", "fecha")
-        .withColumn("year_month", date_format(col("fecha"), "yyyy-MM"))
-
-      val joinedWithDates = withSegment
-        .join(fullDates, Seq("provincia", "indicativo", "nombre", "year_month"))
-
-      val activePeriods = joinedWithDates
-        .filter(col("inactive") === 0)
-        .groupBy("provincia", "indicativo", "nombre", "segment_id")
-        .agg(
-          count("*").alias("active_months"),
-          min("fecha").alias("start_date"),
-          max("fecha").alias("end_date")
-        )
-
-      val maxDurations = activePeriods
-        .groupBy("provincia")
-        .agg(max("active_months").alias("max_months"))
-
-      val longestStations = activePeriods
-        .join(maxDurations, Seq("provincia"))
-        .filter(col("active_months") === col("max_months"))
-        .drop("max_months")
-
-      longestStations.orderBy("provincia", "start_date")
-    }
-
-    def getLongestOperativeStations2024(params: Seq[String], maxNullMonths: Int = 3): DataFrame = {
-      val df: DataFrame = SparkCore.dataframes.allMeteoInfo
-
-      // --- Filtrar solo registros de 2024 ---
-      val dfParsed = df
-        .withColumn("fecha", to_date(col("fecha"), "yyyy-MM-dd"))
-        .filter(year(col("fecha")) === 2024)
-        .withColumn("year_month", date_format(col("fecha"), "yyyy-MM"))
-
-      // --- Condición de parámetros nulos ---
-      val nullCondition = params.map(p => col(p).isNull).reduce(_ || _)
-
-      // --- Cálculo mensual ---
-      val monthlyStats = dfParsed
-        .groupBy("provincia", "indicativo", "nombre", "year_month")
-        .agg(
-          count("*").alias("n_registros"),
-          count(when(nullCondition, 1)).alias("null_param")
-        )
-
-      // Mes inactivo = sin registros o registros todos nulos
-      val inactiveMonths = monthlyStats
-        .withColumn("inactive",
-          when(col("n_registros") === 0 || col("null_param") === col("n_registros"), 1).otherwise(0)
-        )
-
-      val window = Window.partitionBy("provincia", "indicativo", "nombre").orderBy("year_month")
-
-      val withCutFlag = inactiveMonths
-        .withColumn("inactive_seq", sum("inactive").over(window.rowsBetween(-maxNullMonths + 1, 0)))
-        .withColumn("cut_flag", when(col("inactive_seq") === maxNullMonths, 1).otherwise(0))
-
-      val withSegment = withCutFlag
-        .withColumn("segment_id", sum("cut_flag").over(window.rowsBetween(Window.unboundedPreceding, 0)))
-
-      // Volver a unir fechas completas del año 2024
-      val fullDates = dfParsed
-        .select("provincia", "indicativo", "nombre", "fecha")
-        .withColumn("year_month", date_format(col("fecha"), "yyyy-MM"))
-
-      val joinedWithDates = withSegment
-        .join(fullDates, Seq("provincia", "indicativo", "nombre", "year_month"))
-
-      // Segmentos activos
-      val activePeriods = joinedWithDates
-        .filter(col("inactive") === 0)
-        .groupBy("provincia", "indicativo", "nombre", "segment_id")
-        .agg(
-          count("*").alias("active_months"),
-          min("fecha").alias("start_date"),
-          max("fecha").alias("end_date")
-        )
-
-      // Duración máxima por provincia
-      val maxDurations = activePeriods
-        .groupBy("provincia")
-        .agg(max("active_months").alias("max_months"))
-
-      // Estación más longeva por provincia
-      val longestStations = activePeriods
-        .join(maxDurations, Seq("provincia"))
-        .filter(col("active_months") === col("max_months"))
-        .drop("max_months")
-
-      longestStations.orderBy("provincia", "start_date")
-    }
-
   }
 }
