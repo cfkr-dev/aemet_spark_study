@@ -1,0 +1,39 @@
+# IntelliJ IDEA files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Scala and Spark files
+target/
+project/project/
+project/target
+lib_managed/
+
+# Scala compilation output
+*.class
+
+# Spark and Scala logs
+logs/
+*.log
+
+# BSP configuration
+.bsp/
+
+# Run configuration
+.run/
+
+# OS and IDE specific files
+.DS_Store
+Thumbs.db
+ehcache*
+hsperfdata*
+
+# Secrets
+.env
+
+# Subprojects
+../big-data-core-local
+../../auto-plot
+../../config
+../../dashboard-web
