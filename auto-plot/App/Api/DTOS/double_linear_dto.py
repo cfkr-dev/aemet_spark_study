@@ -1,67 +1,36 @@
+"""
+DTOs for DoubleLinear endpoint.
+
+Defines the request payload model (flask-restx) expected by the double-linear API.
+
+.. module:: App.Api.DTOS.double_linear_dto
+"""
+
 from flask_restx import fields, Namespace
 
 from App.Config.constants import FORMATTERS_LIST
 
-"""
-
-    {
-        "src": {
-            "path": "spark/temp/evol/cadiz/evol",
-            "axis": {
-                "x": {
-                    "name": "date",
-                    "format": "timestamp"
-                },
-                "y_1": {
-                    "name": "temp_daily_avg"
-                },
-                "y_2": {
-                    "name": "temp_daily_avg"
-                },
-            }
-        },
-        "dest" : {
-            "path": "temp/evol/cadiz/evol",
-            "filename": "plot_test",
-            "export_png": true
-        },
-        "style": {
-            "lettering": {
-                "title": "TITLE TEST",
-                "subtitle": "SUBTITLE TEST",
-                "x_label": "Date",
-                "y_1_label": "Var (u)",
-                "y_2_label": "Var (u)"
-            },
-            "figure_1": {
-                "name": "var",
-                "color": "#4169e1"
-            },
-            "figure_2": {
-                "name": "var",
-                "color": "#4169e1"
-            },
-            "margin": {
-                "left": 120,
-                "right": 120,
-                "top": 100,
-                "bottom": 100
-            },
-            "legend": {
-                "y_offset": -0.05
-            }
-        }
-    }
-
-
-"""
 
 class DoubleLinearDTO:
+    """Container for the DoubleLinear endpoint request model.
+
+    Exposes `post_input` which is a flask-restx model describing the expected JSON
+    payload for POST requests to the double-linear endpoint.
+
+    :param ns: The flask-restx Namespace used to register models and routes.
+    :type ns: flask_restx.Namespace
+    """
     def __init__(self, ns: Namespace):
         self.post_input = _create_input_post_dto(ns)
 
 
 def _create_input_post_dto(ns: Namespace):
+    """Create and return the flask-restx model describing the POST input payload.
+
+    :param ns: The flask-restx Namespace used to register the model.
+    :type ns: flask_restx.Namespace
+    :returns: A flask-restx model describing the double-linear POST payload.
+    """
     return ns.model('DoubleLinearInput', {
         'src': fields.Nested(ns.model('DoubleLinearSrc', {
             'path': fields.String(required=True, description="Relative route to data"),

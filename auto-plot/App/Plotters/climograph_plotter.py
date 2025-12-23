@@ -1,3 +1,10 @@
+"""Climograph plotter: temperature and precipitation combined view.
+
+This module provides :class:`ClimographPlotter` that takes a
+:class:`App.Api.Models.climograph_model.ClimographModel` and renders a
+combined precipitation bar chart and temperature line chart using Plotly.
+"""
+
 import math
 from pathlib import Path
 
@@ -6,20 +13,38 @@ from plotly.graph_objs import Figure
 from plotly.subplots import make_subplots
 
 from App.Api.Models.climograph_model import ClimographModel
-from App.Config.constants import MONTHS_SP_LIST
+from App.Config.constants import MONTHS_EN_LIST
 from App.Plotters.abstract_plotter import Plotter
-from App.Utils.Storage.Core.storage import Storage
 from App.Utils.Storage.PlotExport.plot_export_storage_backend import PlotExportStorageBackend
 from App.Utils.file_utils import get_response_dest_path
 
 
 class ClimographPlotter(Plotter):
+    """Plotter for climograph visualizations (precipitation + temperature).
+
+    :param climograph_model: Configuration model for the climograph plot.
+    :type climograph_model: App.Api.Models.climograph_model.ClimographModel
+    """
+
     def __init__(self, climograph_model: ClimographModel):
+        """Initialize and load the source dataframe.
+
+        :param climograph_model: The climograph configuration model.
+        :type climograph_model: ClimographModel
+        """
         self.storage = climograph_model.storage
         self.model = climograph_model
         self.dataframe = self.load_dataframe(climograph_model.src.path, climograph_model.storage)
 
     def create_plot(self):
+        """Create the combined climograph Plotly figure.
+
+        The X axis displays month labels (three-letter English
+        abbreviations provided by ``MONTHS_EN_LIST``).
+
+        :returns: A Plotly figure combining bar and line traces.
+        :rtype: plotly.graph_objs.Figure
+        """
         x_col = self.model.src.axis.x.name
         y_temp_col = self.model.src.axis.y_temp.name
         y_prec_col = self.model.src.axis.y_prec.name
@@ -60,7 +85,7 @@ class ClimographPlotter(Plotter):
             xaxis=dict(
                 tickmode="array",
                 tickvals=self.dataframe[x_col],
-                ticktext=MONTHS_SP_LIST,
+                ticktext=MONTHS_EN_LIST,
                 title=style.lettering.x_label
             )
         ).update_yaxes(
@@ -102,6 +127,10 @@ class ClimographPlotter(Plotter):
         )
 
     def save_plot(self, figure: Figure):
+        """Export the climograph figure using the PlotExport backend.
+
+        :param figure: Plotly figure to save.
+        """
         if figure is None:
             return None
 

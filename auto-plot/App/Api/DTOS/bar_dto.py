@@ -1,93 +1,34 @@
+"""
+DTOs for Bar endpoint.
+
+Defines the request payload model (flask-restx) expected by the bar API.
+
+.. module:: App.Api.DTOS.bar_dto
+"""
+
 from flask_restx import fields, Namespace
 
-"""
-
-    {
-        "src": {
-            "path": "spark/temp/evol/cadiz/evol",
-            "axis": {
-                "x": {
-                    "name": "top"
-                },
-                "y": {
-                    "name": "inc"
-                }
-            }
-        },
-        "dest" : {
-            "path": "temp/evol/cadiz/evol",
-            "filename": "plot_test",
-            "export_png": true
-        },
-        "style": {
-            "lettering": {
-                "title": "TITLE TEST",
-                "subtitle": "SUBTITLE TEST",
-                "x_label": "Date",
-                "y_label": "Var (u)",
-                "inside_info": [
-                    {
-                        "label": "Station",
-                        "build": [
-                            {
-                                "text_before": "",
-                                "name": "station_id", 
-                                "text_after": ""
-                            },
-                            {
-                                "text_before": "(",
-                                "name": "state", 
-                                "text_after": ")."
-                            }
-                        ]
-                    },
-                    {
-                        "label": "Location",
-                        "build": [
-                            {
-                                "text_before": "",
-                                "name": "lat_dms", 
-                                "text_after": ""
-                            },
-                            {
-                                "text_before": "",
-                                "name": "long_dms", 
-                                "text_after": ""
-                            },
-                            {
-                                "text_before": "(",
-                                "name": "altitude", 
-                                "text_after": " m)."
-                            }
-                        ]
-                    }
-                ]
-            },
-            "figure": {
-                "inverted_horizontal_axis": false,
-                "threshold_limit_max_min": 0.5,
-                "threshold_perc_limit_outside_text": 0.3,
-                "range_margin_perc": 0.05,
-                "color": "#4169e1"
-            },
-            "margin": {
-                "left": 120,
-                "right": 120,
-                "top": 100,
-                "bottom": 100
-            }
-        }
-    }
-
-
-"""
 
 class BarDTO:
+    """Container for the Bar endpoint request model.
+
+    Exposes `post_input` which is a flask-restx model describing the expected JSON
+    payload for POST requests to the bar endpoint.
+
+    :param ns: The flask-restx Namespace used to register models and routes.
+    :type ns: flask_restx.Namespace
+    """
     def __init__(self, ns: Namespace):
         self.post_input = _create_input_post_dto(ns)
 
 
 def _create_input_post_dto(ns: Namespace):
+    """Create and return the flask-restx model describing the POST input payload.
+
+    :param ns: The flask-restx Namespace used to register the model.
+    :type ns: flask_restx.Namespace
+    :returns: A flask-restx model describing the bar POST payload.
+    """
     return ns.model('BarInput', {
         'src': fields.Nested(ns.model('BarSrc', {
             'path': fields.String(required=True, description="Relative route to data"),
@@ -122,8 +63,10 @@ def _create_input_post_dto(ns: Namespace):
             }), required=True),
             'figure': fields.Nested(ns.model('BarStyleFigure', {
                 'inverted_horizontal_axis': fields.Boolean(required=True, description="Inverted horizontal axis"),
-                'threshold_limit_max_min': fields.Float(required=True, description="Threshold limit of extension between the maximum and minimum value to zoom the chart"),
-                'threshold_perc_limit_outside_text': fields.Float(required=True, description="Threshold percentage limit for putting text outside the bars"),
+                'threshold_limit_max_min': fields.Float(required=True,
+                                                        description="Threshold limit of extension between the maximum and minimum value to zoom the chart"),
+                'threshold_perc_limit_outside_text': fields.Float(required=True,
+                                                                  description="Threshold percentage limit for putting text outside the bars"),
                 'range_margin_perc': fields.Float(required=True, description="Percentage margin of the value ranges"),
                 'color': fields.String(required=True, description="Figure color"),
             }), required=True),

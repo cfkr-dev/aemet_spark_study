@@ -1,3 +1,11 @@
+"""
+Double linear chart controller.
+
+Handles POST requests that create a double stacked linear chart.
+
+.. module:: App.Api.Controllers.double_linear_controller
+"""
+
 from flask import current_app
 from flask_restx import Resource, abort, Namespace
 
@@ -12,8 +20,18 @@ double_linear_dto = DoubleLinearDTO(ns)
 
 @ns.route('')
 class DoubleLinearController(Resource):
+    """Controller to generate a double linear plot from input payload.
+
+    :cvar double_linear_dto: DTO describing expected POST payload.
+    """
     @ns.expect(double_linear_dto.post_input, validate=True)
     def post(self):
+        """Process request, validate data and create the double linear plot.
+
+        :returns: JSON object with `dest_path` of saved resource.
+        :rtype: dict
+        :raises werkzeug.exceptions.BadRequest: If model validation fails.
+        """
         storage = Storage(STORAGE_PREFIX, AWS_S3_ENDPOINT)
         model = DoubleLinearModel(storage)
         model.setup(ns.payload)

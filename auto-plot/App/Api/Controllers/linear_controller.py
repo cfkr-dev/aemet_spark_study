@@ -1,3 +1,11 @@
+"""
+Linear chart controller.
+
+Accepts a POST request with the required payload to generate a linear chart.
+
+.. module:: App.Api.Controllers.linear_controller
+"""
+
 from flask import current_app
 from flask_restx import Resource, abort, Namespace
 
@@ -12,8 +20,15 @@ linear_dto = LinearDTO(ns)
 
 @ns.route('')
 class LinearController(Resource):
+    """Controller handling requests to create a simple linear chart."""
     @ns.expect(linear_dto.post_input, validate=True)
     def post(self):
+        """Handle POST request to generate a linear chart.
+
+        :returns: JSON object with `dest_path` key for exported resource.
+        :rtype: dict
+        :raises werkzeug.exceptions.BadRequest: If validation fails the endpoint will abort with 400.
+        """
         storage = Storage(STORAGE_PREFIX, AWS_S3_ENDPOINT)
         model = LinearModel(storage)
         model.setup(ns.payload)

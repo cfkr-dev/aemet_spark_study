@@ -1,3 +1,9 @@
+"""Pie chart plotter using Plotly.
+
+This module implements :class:`PiePlotter` which creates a pie chart from
+configured lower/upper bound columns and a value column.
+"""
+
 from pathlib import Path
 
 import plotly.graph_objects as go
@@ -5,18 +11,32 @@ from plotly.graph_objs import Figure
 
 from App.Api.Models.pie_model import PieModel
 from App.Plotters.abstract_plotter import Plotter
-from App.Utils.Storage.Core.storage import Storage
 from App.Utils.Storage.PlotExport.plot_export_storage_backend import PlotExportStorageBackend
 from App.Utils.file_utils import get_response_dest_path
 
 
 class PiePlotter(Plotter):
+    """Plotter for categorical pie charts.
+
+    :param pie_model: Model describing source, destination and style for the chart.
+    :type pie_model: App.Api.Models.pie_model.PieModel
+    """
     def __init__(self, pie_model: PieModel):
+        """Initialize and load the source dataframe.
+
+        :param pie_model: Configuration model for pie plots.
+        :type pie_model: PieModel
+        """
         self.storage = pie_model.storage
         self.model = pie_model
         self.dataframe = self.load_dataframe(pie_model.src.path, pie_model.storage)
 
     def create_plot(self):
+        """Create a Plotly pie chart based on the configuration.
+
+        :returns: A Plotly figure instance containing the pie chart.
+        :rtype: plotly.graph_objs.Figure
+        """
         lower_bound_col = self.model.src.names.lower_bound
         upper_bound_col = self.model.src.names.upper_bound
         values_col = self.model.src.names.value
@@ -38,6 +58,10 @@ class PiePlotter(Plotter):
         )
 
     def save_plot(self, figure: Figure):
+        """Export the pie chart figure using the PlotExport backend.
+
+        :param figure: Plotly figure created by :meth:`create_plot`.
+        """
         if figure is None:
             return None
 

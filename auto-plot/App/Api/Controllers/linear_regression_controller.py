@@ -1,3 +1,11 @@
+"""
+Linear regression chart controller.
+
+Handles requests that render a linear chart with regression overlay.
+
+.. module:: App.Api.Controllers.linear_regression_controller
+"""
+
 from flask import current_app
 from flask_restx import Resource, abort, Namespace
 
@@ -12,8 +20,15 @@ linear_regression_dto = LinearRegressionDTO(ns)
 
 @ns.route('')
 class LinearController(Resource):
+    """Controller to produce a linear chart with regression line."""
     @ns.expect(linear_regression_dto.post_input, validate=True)
     def post(self):
+        """Validate request, render regression chart and save the output.
+
+        :returns: JSON object with exported `dest_path`.
+        :rtype: dict
+        :raises werkzeug.exceptions.BadRequest: If model validation fails.
+        """
         storage = Storage(STORAGE_PREFIX, AWS_S3_ENDPOINT)
         model = LinearRegressionModel(storage)
         model.setup(ns.payload)

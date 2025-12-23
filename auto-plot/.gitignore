@@ -18,6 +18,7 @@ hsperfdata*
 
 # Documentation
 Documentation/
+docs/
 
 # Subprojects
 ../dashboard-web

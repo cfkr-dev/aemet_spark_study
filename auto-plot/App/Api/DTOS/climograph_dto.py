@@ -1,64 +1,34 @@
+"""
+DTOs for Climograph endpoint.
+
+Defines the request payload model (flask-restx) expected by the climograph API.
+
+.. module:: App.Api.DTOS.climograph_dto
+"""
+
 from flask_restx import fields, Namespace
 
-"""
-
-    {
-        "src": {
-            "path": "spark/temp/evol/cadiz/evol",
-            "axis": {
-                "x": {
-                    "name": "date"
-                },
-                "y_temp": {
-                    "name": "temp_daily_avg"
-                },
-                "y_prec": {
-                    "name": "temp_daily_avg"
-                }
-            }
-        },
-        "dest" : {
-            "path": "temp/evol/cadiz/evol",
-            "filename": "plot_test",
-            "export_png": true
-        },
-        "style": {
-            "lettering": {
-                "title": "TITLE TEST",
-                "subtitle": "SUBTITLE TEST",
-                "x_label": "Date",
-                "y_temp_label": "Var (u)",
-                "y_prec_label": "Var (u)"
-            },
-            "figure_temp": {
-                "name": "var",
-                "color": "#4169e1"
-            },
-            "figure_prec": {
-                "name": "var",
-                "color": "#4169e1"
-            },
-            "margin": {
-                "left": 120,
-                "right": 120,
-                "top": 100,
-                "bottom": 100
-            },
-            "legend": {
-                "y_offset": -0.05
-            }
-        }
-    }
-
-
-"""
 
 class ClimographDTO:
+    """Container for the Climograph endpoint request model.
+
+    Exposes `post_input` which is a flask-restx model describing the expected JSON
+    payload for POST requests to the climograph endpoint.
+
+    :param ns: The flask-restx Namespace used to register models and routes.
+    :type ns: flask_restx.Namespace
+    """
     def __init__(self, ns: Namespace):
         self.post_input = _create_input_post_dto(ns)
 
 
 def _create_input_post_dto(ns: Namespace):
+    """Create and return the flask-restx model describing the POST input payload.
+
+    :param ns: The flask-restx Namespace used to register the model.
+    :type ns: flask_restx.Namespace
+    :returns: A flask-restx model describing the climograph POST payload.
+    """
     return ns.model('ClimographInput', {
         'src': fields.Nested(ns.model('ClimographSrc', {
             'path': fields.String(required=True, description="Relative route to data"),

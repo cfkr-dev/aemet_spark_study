@@ -1,3 +1,30 @@
+"""Flask application factory script and API namespace registration.
+
+This module creates the Flask `app` and the Flask-RESTX `api` instance and
+registers the available API namespaces used by the application.
+
+The module-level objects exposed are:
+
+- ``app``: The Flask application instance.
+- ``api``: The Flask-RESTX Api wrapper used to register namespaces.
+
+The API namespaces are registered under the following paths:
+
+- /health
+- /linear
+- /double-linear
+- /linear-regression
+- /pie
+- /bar
+- /table
+- /climograph
+- /heat-map
+
+This file is meant to be executed directly for local development
+(e.g. ``python App/app.py``). In production it can be imported by a WSGI
+server (gunicorn, uWSGI) which will use the ``app`` object.
+"""
+
 import logging
 
 from flask import Flask
@@ -13,11 +40,9 @@ from App.Api.Controllers.table_controller import ns as table_linear_ns
 from App.Api.Controllers.climograph_controller import ns as climograph_ns
 from App.Api.Controllers.heat_map_controller import ns as heat_map_ns
 
-# Init Flask App
 app = Flask(__name__)
 api =  Api(app, version = '1.0', title = 'Autoplot Flask API', description = 'An API in Flask for creating a charts using meteorological data')
 
-# Registry all namespaces
 api.add_namespace(health_ns, path='/health')
 api.add_namespace(linear_ns, path='/linear')
 api.add_namespace(double_linear_ns, path='/double-linear')
@@ -32,6 +57,5 @@ gunicorn_error_logger = logging.getLogger('gunicorn.error')
 app.logger.handlers = gunicorn_error_logger.handlers
 app.logger.setLevel(gunicorn_error_logger.level)
 
-# Ejecutar la aplicación
 if __name__ == '__main__':
     app.run(debug=True)

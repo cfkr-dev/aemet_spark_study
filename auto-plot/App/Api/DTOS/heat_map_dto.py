@@ -1,98 +1,36 @@
+"""
+DTOs for Heat Map endpoint.
+
+Defines the request payload model (flask-restx) expected by the heat-map API.
+
+.. module:: App.Api.DTOS.heat_map_dto
+"""
+
 from flask_restx import fields, Namespace
 
 from App.Config.constants import SPAIN_GEOGRAPHIC_LOCATIONS_LIST
 
-"""
-
-    {
-        "src": {
-            "path": "spark/temp/evol/cadiz/evol",
-            "names": {
-                "longitude" : "long_dec",
-                "latitude" : "lat_dec",
-                "value": ""
-            },
-            "location": "continental"
-        },
-        "dest" : {
-            "path": "temp/evol/cadiz/evol",
-            "filename": "plot_test",
-            "export_png": true
-        },
-        "style": {
-            "lettering": {
-                "title": "TITLE TEST",
-                "subtitle": "SUBTITLE TEST",
-                "long_label": "Longitud",
-                "lat_label": "Latitud",
-                "legend_label": "Var (u)",
-                "point_info": [
-                    {
-                        "label": "Station",
-                        "build": [
-                            {
-                                "text_before": "",
-                                "name": "station_id", 
-                                "text_after": " "
-                            },
-                            {
-                                "text_before": "",
-                                "name": "station_name", 
-                                "text_after": " "
-                            },
-                            {
-                                "text_before": "(",
-                                "name": "state", 
-                                "text_after": ")."
-                            }
-                        ]
-                    },
-                    {
-                        "label": "Location",
-                        "build": [
-                            {
-                                "text_before": "",
-                                "name": "lat_dms", 
-                                "text_after": " "
-                            },
-                            {
-                                "text_before": "",
-                                "name": "long_dms", 
-                                "text_after": " "
-                            },
-                            {
-                                "text_before": "(",
-                                "name": "altitude", 
-                                "text_after": " m)."
-                            }
-                        ]
-                    }
-                ] 
-            },
-            "figure": {
-                "name": "var",
-                "color": "#000000",
-                "color_opacity": 0.5,
-                "point_size": 3
-            },
-            "margin": {
-                "left": 120,
-                "right": 120,
-                "top": 100,
-                "bottom": 100
-            }
-        }
-    }
-
-
-"""
 
 class HeatMapDTO:
+    """Container for the HeatMap endpoint request model.
+
+    Exposes `post_input` which is a flask-restx model describing the expected JSON
+    payload for POST requests to the heat-map endpoint.
+
+    :param ns: The flask-restx Namespace used to register models and routes.
+    :type ns: flask_restx.Namespace
+    """
     def __init__(self, ns: Namespace):
         self.post_input = _create_input_post_dto(ns)
 
 
 def _create_input_post_dto(ns: Namespace):
+    """Create and return the flask-restx model describing the POST input payload.
+
+    :param ns: The flask-restx Namespace used to register the model.
+    :type ns: flask_restx.Namespace
+    :returns: A flask-restx model describing the heat-map POST payload.
+    """
     return ns.model('HeatMapInput', {
         'src': fields.Nested(ns.model('HeatMapSrc', {
             'path': fields.String(required=True, description="Relative route to data"),
@@ -101,7 +39,8 @@ def _create_input_post_dto(ns: Namespace):
                 'latitude': fields.String(required=True, description="Latitude column name"),
                 'value': fields.String(required=True, description="Value column name"),
             }), required=True),
-            'location': fields.String(required=True, description="Spain geographic location", enum=SPAIN_GEOGRAPHIC_LOCATIONS_LIST),
+            'location': fields.String(required=True, description="Spain geographic location",
+                                      enum=SPAIN_GEOGRAPHIC_LOCATIONS_LIST),
         })),
         'dest': fields.Nested(ns.model('HeatMapDest', {
             'path': fields.String(required=True, description="Relative output route"),

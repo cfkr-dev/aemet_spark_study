@@ -1,3 +1,9 @@
+"""Double-linear plotter for two vertically stacked line charts.
+
+This plotter renders two lines sharing the same X axis but separated in
+rows, useful for comparing two series with different scales.
+"""
+
 from pathlib import Path
 
 import plotly.graph_objects as go
@@ -6,14 +12,24 @@ from plotly.subplots import make_subplots
 
 from App.Api.Models.double_linear_model import DoubleLinearModel
 from App.Plotters.abstract_plotter import Plotter
-from App.Utils.Storage.Core.storage import Storage
 from App.Utils.Storage.PlotExport.plot_export_storage_backend import PlotExportStorageBackend
 from App.Utils.dataframe_formatter import format_df
 from App.Utils.file_utils import get_response_dest_path
 
 
 class DoubleLinearPlotter(Plotter):
+    """Plotter for double-linear charts (two rows of line charts).
+
+    :param double_linear_model: Configuration model for the double-linear chart.
+    :type double_linear_model: App.Api.Models.double_linear_model.DoubleLinearModel
+    """
+
     def __init__(self, double_linear_model: DoubleLinearModel):
+        """Initialize plotter and load/format the dataframe.
+
+        :param double_linear_model: The configuration model to use.
+        :type double_linear_model: DoubleLinearModel
+        """
         self.storage = double_linear_model.storage
         self.model = double_linear_model
         self.dataframe = format_df(self.load_dataframe(double_linear_model.src.path, double_linear_model.storage), {
@@ -21,6 +37,11 @@ class DoubleLinearPlotter(Plotter):
         })
 
     def create_plot(self):
+        """Create the stacked line Plotly figure.
+
+        :returns: A Plotly Figure with two line traces arranged vertically.
+        :rtype: plotly.graph_objs.Figure
+        """
         x_col = self.model.src.axis.x.name
         y_1_col = self.model.src.axis.y_1.name
         y_2_col = self.model.src.axis.y_2.name
@@ -36,7 +57,7 @@ class DoubleLinearPlotter(Plotter):
             rows=2,
             cols=1,
             shared_xaxes=True,
-            row_heights=[0.5, 0.5],  # Puedes ajustar el espacio visual
+            row_heights=[0.5, 0.5],
             vertical_spacing=0.07
         )
 
@@ -90,6 +111,10 @@ class DoubleLinearPlotter(Plotter):
         return fig
 
     def save_plot(self, figure: Figure):
+        """Export the generated figure via the PlotExport storage backend.
+
+        :param figure: The Plotly figure produced by :meth:`create_plot`.
+        """
         if figure is None:
             return None
 

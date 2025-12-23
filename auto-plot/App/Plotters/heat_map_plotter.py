@@ -1,3 +1,10 @@
+"""Heat map plotter producing geospatial heatmaps over Spain.
+
+This module implements :class:`HeatMapPlotter` which interpolates point
+measurements over Spain using ordinary kriging and renders the result
+as a Plotly figure with an overlaid raster image.
+"""
+
 import base64
 from pathlib import Path
 
@@ -25,18 +32,36 @@ from App.Config.constants import (
 )
 from App.Config.enumerations import SpainGeographicLocations
 from App.Plotters.abstract_plotter import Plotter
-from App.Utils.Storage.Core.storage import Storage
 from App.Utils.Storage.PlotExport.plot_export_storage_backend import PlotExportStorageBackend
 from App.Utils.file_utils import get_response_dest_path
 
 
 class HeatMapPlotter(Plotter):
+    """Plotter that creates interpolated geographic heat maps for Spain.
+
+    :param heat_map_model: Heat map configuration model.
+    :type heat_map_model: App.Api.Models.heat_map_model.HeatMapModel
+    """
+
     def __init__(self, heat_map_model: HeatMapModel):
+        """Initialize and load the source dataframe.
+
+        :param heat_map_model: Configuration model containing source and style.
+        :type heat_map_model: HeatMapModel
+        """
         self.storage = heat_map_model.storage
         self.model = heat_map_model
         self.dataframe = self.load_dataframe(heat_map_model.src.path, heat_map_model.storage)
 
     def _generate_point_info(self):
+        """Generate per-point HTML tooltip text based on model configuration.
+
+        The function reads ``point_info`` definitions from the model's
+        style and formats them using values from the dataframe rows.
+
+        :returns: A mapping from (longitude, latitude) tuples to HTML strings.
+        :rtype: dict[tuple,float->str]
+        """
         long_col = self.model.src.names.longitude
         lat_col = self.model.src.names.latitude
         style = self.model.style
@@ -58,6 +83,15 @@ class HeatMapPlotter(Plotter):
 
 
     def create_plot(self):
+        """Interpolate the provided points and generate a Plotly heatmap figure.
+
+        The method performs KNN filtering, Ordinary Kriging interpolation,
+        masks results to Spain's geometry and overlays the resulting raster
+        as an image under point scatter traces.
+
+        :returns: A Plotly Figure containing the heatmap with markers.
+        :rtype: plotly.graph_objs.Figure
+        """
         long_col = self.model.src.names.longitude
         lat_col = self.model.src.names.latitude
         value_col = self.model.src.names.value
@@ -238,6 +272,10 @@ class HeatMapPlotter(Plotter):
         )
 
     def save_plot(self, figure: Figure):
+        """Export the generated heatmap figure.
+
+        :param figure: Plotly figure to export.
+        """
         if figure is None:
             return None
 

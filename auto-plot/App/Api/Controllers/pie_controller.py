@@ -1,3 +1,11 @@
+"""
+Pie controller module.
+
+Provides endpoint to create and export pie charts.
+
+.. module:: App.Api.Controllers.pie_controller
+"""
+
 from flask import current_app
 from flask_restx import Resource, abort, Namespace
 
@@ -12,8 +20,15 @@ pie_dto = PieDTO(ns)
 
 @ns.route('')
 class PieController(Resource):
+    """Controller exposing POST endpoint to create pie charts."""
     @ns.expect(pie_dto.post_input, validate=True)
     def post(self):
+        """Validate request, render pie chart and persist output.
+
+        :returns: JSON object with `dest_path` of exported file.
+        :rtype: dict
+        :raises werkzeug.exceptions.BadRequest: If validation fails.
+        """
         storage = Storage(STORAGE_PREFIX, AWS_S3_ENDPOINT)
         model = PieModel(storage)
         model.setup(ns.payload)

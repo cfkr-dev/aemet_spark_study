@@ -1,54 +1,39 @@
+"""
+DTOs for Table endpoint.
+
+Defines the request payload model (flask-restx) expected by the table API.
+
+.. module:: App.Api.DTOS.table_dto
+"""
+
 from flask_restx import fields, Namespace
 
 from App.Config.constants import TABLE_ALIGNS_LIST
 
-"""
-
-    {
-        "src": {
-            "path": "spark/temp/evol/cadiz/evol",
-            "col_names": ["top", "state"]
-        },
-        "dest" : {
-            "path": "temp/evol/cadiz/evol",
-            "filename": "plot_test",
-            "export_png": true
-        },
-        "style": {
-            "lettering": {
-                "title": "TITLE TEST",
-                "subtitle": "SUBTITLE TEST",
-                "headers": ["Top", "Comunidad Autónoma"]
-            },
-            "figure": {
-                "headers": {
-                    "align": "center",
-                    "color": "#4169e1"
-                },
-                "cells": {
-                    "align": "center",
-                    "color": "#4169e1"
-                }
-            },
-            "margin": {
-                "left": 120,
-                "right": 120,
-                "top": 100,
-                "bottom": 100
-            }
-        }
-    }
-
-
-"""
-
 
 class TableDTO:
+    """Container for the Table endpoint request model.
+
+    The object exposes `post_input` which is a flask-restx model describing the
+    expected JSON payload for POST requests to the table endpoint.
+
+    :param ns: The flask-restx `Namespace` used to register models and routes.
+    :type ns: flask_restx.Namespace
+    """
     def __init__(self, ns: Namespace):
         self.post_input = _create_input_post_dto(ns)
 
 
 def _create_input_post_dto(ns: Namespace):
+    """Create and return the flask-restx model describing the POST input payload.
+
+    The model is built using nested `fields` definitions and mirrors the expected
+    JSON structure consumed by the table endpoint.
+
+    :param ns: The flask-restx Namespace used to build and register the model.
+    :type ns: flask_restx.Namespace
+    :returns: A flask-restx model describing the table POST payload.
+    """
     return ns.model('TableInput', {
         'src': fields.Nested(ns.model('TableSrc', {
             'path': fields.String(required=True, description="Relative route to data"),

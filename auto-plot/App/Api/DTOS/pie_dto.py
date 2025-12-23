@@ -1,45 +1,34 @@
+"""
+DTOs for Pie endpoint.
+
+Defines request payload model (flask-restx) for the pie API.
+
+.. module:: App.Api.DTOS.pie_dto
+"""
+
 from flask_restx import fields, Namespace
 
-"""
-
-    {
-        "src": {
-            "path": "spark/temp/evol/cadiz/evol",
-            "names": {
-                "lower_bound": "min_value",
-                "upper_bound": "max_value",
-                "value": "count"
-            }
-        },
-        "dest" : {
-            "path": "temp/evol/cadiz/evol",
-            "filename": "plot_test",
-            "export_png": true
-        },
-        "style": {
-            "lettering": {
-                "title": "TITLE TEST",
-                "subtitle": "SUBTITLE TEST"
-            },
-            "margin": {
-                "left": 120,
-                "right": 120,
-                "top": 100,
-                "bottom": 100
-            },
-            "show_legend": true
-        }
-    }
-
-
-"""
 
 class PieDTO:
+    """Container for Pie endpoint request model.
+
+    Exposes `post_input` which is a flask-restx model describing the expected JSON
+    payload for POST requests to the pie endpoint.
+
+    :param ns: The flask-restx Namespace used to register models and routes.
+    :type ns: flask_restx.Namespace
+    """
     def __init__(self, ns: Namespace):
         self.post_input = _create_input_post_dto(ns)
 
 
 def _create_input_post_dto(ns: Namespace):
+    """Create and return the flask-restx model describing the POST input payload.
+
+    :param ns: The flask-restx Namespace used to register the model.
+    :type ns: flask_restx.Namespace
+    :returns: A flask-restx model describing the pie POST payload.
+    """
     return ns.model('PieInput', {
         'src': fields.Nested(ns.model('PieSrc', {
             'path': fields.String(required=True, description="Relative route to data"),

@@ -1,3 +1,11 @@
+"""
+Climograph controller module.
+
+Provides endpoint to create climograph charts (precipitation + temperature).
+
+.. module:: App.Api.Controllers.climograph_controller
+"""
+
 from flask import current_app
 from flask_restx import Resource, abort, Namespace
 
@@ -12,8 +20,18 @@ climograph_dto = ClimographDTO(ns)
 
 @ns.route('')
 class ClimographController(Resource):
+    """Resource that exposes a POST endpoint to create a climograph chart.
+
+    :cvar climograph_dto: DTO describing the expected payload for POST requests.
+    """
     @ns.expect(climograph_dto.post_input, validate=True)
     def post(self):
+        """Validate request payload, render climograph and persist the resulting figure.
+
+        :returns: JSON object with `dest_path` pointing to exported resource.
+        :rtype: dict
+        :raises werkzeug.exceptions.BadRequest: If model validation fails.
+        """
         storage = Storage(STORAGE_PREFIX, AWS_S3_ENDPOINT)
         model = ClimographModel(storage)
         model.setup(ns.payload)

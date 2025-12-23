@@ -1,3 +1,11 @@
+"""
+Heat map controller module.
+
+Provides endpoint to create and export spatial heat maps.
+
+.. module:: App.Api.Controllers.heat_map_controller
+"""
+
 from flask import current_app
 from flask_restx import Resource, abort, Namespace
 
@@ -12,8 +20,15 @@ heat_map_dto = HeatMapDTO(ns)
 
 @ns.route('')
 class HeatMapController(Resource):
+    """Controller responsible for heat map generation requests."""
     @ns.expect(heat_map_dto.post_input, validate=True)
     def post(self):
+        """Validate request payload, render a heat map and persist the exported files.
+
+        :returns: JSON object with `dest_path` pointing to exported resource.
+        :rtype: dict
+        :raises werkzeug.exceptions.BadRequest: If payload validation fails.
+        """
         storage = Storage(STORAGE_PREFIX, AWS_S3_ENDPOINT)
         model = HeatMapModel(storage)
         model.setup(ns.payload)
