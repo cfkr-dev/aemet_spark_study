@@ -1,34 +1,42 @@
 @startuml
-participant "SparkQueries" as SQ
-participant "Climograph" as CG
-participant "QueryFunction" as QF
-participant "SparkCore" as SC
+participant "SparkQueriesCore" as SPARK_QUERIES_CORE
+participant "ClimographsQueriesCore" as CLIMOGRAPHS_QUERIES_CORE
+participant "SparkSessionCore" as SPARK_SESSION_CORE
+participant "Storage" as STORAGE
 
-SQ -> CG : execute()
-activate CG
+SPARK_QUERIES_CORE -> CLIMOGRAPHS_QUERIES_CORE : execute()
+activate CLIMOGRAPHS_QUERIES_CORE
 
 loop climateGroups
-    CG -> CG : foreach climateGroup
+    CLIMOGRAPHS_QUERIES_CORE -> CLIMOGRAPHS_QUERIES_CORE : foreach climateGroup
 
-    loop climates inside group
-        CG -> CG : foreach climateRecord
+    loop climates
+        CLIMOGRAPHS_QUERIES_CORE -> CLIMOGRAPHS_QUERIES_CORE : foreach climateRecord
 
-        group Station metadata
-            CG -> QF : getStationInfoById()
-            QF --> CG : StationInfo DF
-            CG -> SC : saveDataframeAsJSON()
-        end
+        loop records
+            group Station metadata
+                CLIMOGRAPHS_QUERIES_CORE -> SPARK_QUERIES_CORE : getStationInfoById(stationId)
+                SPARK_QUERIES_CORE --> CLIMOGRAPHS_QUERIES_CORE : StationInfo DF
+                CLIMOGRAPHS_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsJSON(stationDf, path)
+                SPARK_SESSION_CORE -> STORAGE : write json
+                STORAGE --> SPARK_SESSION_CORE : saved
+                SPARK_SESSION_CORE --> CLIMOGRAPHS_QUERIES_CORE : saved
+            end
 
-        group Monthly temperature & precipitation
-            CG -> QF : getStationMonthlyAvgTempAndSumPrecInAYear()
-            QF --> CG : Climate DF
-            CG -> SC : saveDataframeAsParquet()
+            group Monthly temperature & precipitation
+                CLIMOGRAPHS_QUERIES_CORE -> SPARK_QUERIES_CORE : getStationMonthlyAvgTempAndSumPrecInAYear(stationId, params)
+                SPARK_QUERIES_CORE --> CLIMOGRAPHS_QUERIES_CORE : Climate DF
+                CLIMOGRAPHS_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(climateDf, path)
+                SPARK_SESSION_CORE -> STORAGE : write parquet
+                STORAGE --> SPARK_SESSION_CORE : saved
+                SPARK_SESSION_CORE --> CLIMOGRAPHS_QUERIES_CORE : saved
+            end
         end
 
     end
 end
 
-CG --> SQ : done
-deactivate CG
+CLIMOGRAPHS_QUERIES_CORE --> SPARK_QUERIES_CORE : done
+deactivate CLIMOGRAPHS_QUERIES_CORE
 
 @enduml

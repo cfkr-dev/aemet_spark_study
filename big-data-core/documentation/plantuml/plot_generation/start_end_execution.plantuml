@@ -1,28 +1,28 @@
 @startuml
 actor User
 
-participant "PlotGenerator" as PG
-participant "Stations" as ST
-participant "Climograph" as CG
-participant "SingleParamStudies" as SP
-participant "InterestingStudies" as IS
+participant "PlotGenerator" as PLOT_GENERATOR
+participant "Stations" as STATIONS
+participant "Climograph" as CLIMOGRAPH
+participant "SingleParamStudies" as SINGLE_PARAM_STUDIES
+participant "InterestingStudies" as INTERESTING_STUDIES
 
-User -> PG : generate()
-activate PG
+User -> PLOT_GENERATOR : generate()
+activate PLOT_GENERATOR
 
-PG -> ST : Stations.generate()
-ST --> PG : done
+PLOT_GENERATOR -> STATIONS : Stations.generate()
+STATIONS --> PLOT_GENERATOR : done
 
-PG -> CG : Climograph.generate()
-CG --> PG : done
+PLOT_GENERATOR -> CLIMOGRAPH : Climograph.generate()
+CLIMOGRAPH --> PLOT_GENERATOR : done
 
-PG -> SP : SingleParamStudies.generate()
-SP --> PG : done
+PLOT_GENERATOR -> SINGLE_PARAM_STUDIES : SingleParamStudies.generate()
+SINGLE_PARAM_STUDIES --> PLOT_GENERATOR : done
 
-PG -> IS : InterestingStudies.generate()
-IS --> PG : done
+PLOT_GENERATOR -> INTERESTING_STUDIES : InterestingStudies.generate()
+INTERESTING_STUDIES --> PLOT_GENERATOR : done
 
-PG --> User : finished
-deactivate PG
+PLOT_GENERATOR --> User : finished
+deactivate PLOT_GENERATOR
 
 @enduml

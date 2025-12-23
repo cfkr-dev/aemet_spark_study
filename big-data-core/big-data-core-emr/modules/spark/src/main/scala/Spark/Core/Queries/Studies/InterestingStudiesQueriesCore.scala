@@ -6,6 +6,16 @@ import Spark.Core.Session.SparkSessionCore
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
 import org.apache.spark.sql.DataFrame
 
+/**
+ * Core queries implementation for multi-parameter "interesting" studies.
+ *
+ * This case class provides the logic to run configured multi-parameter analyses
+ * (for example, precipitation and pressure evolutions) and to persist the
+ * resulting DataFrames to the configured storage locations.
+ *
+ * @param sparkSessionCore helper containing the Spark session and context utilities
+ * @param sparkQueriesCore component that exposes reusable Spark query functions
+ */
 case class InterestingStudiesQueriesCore(sparkSessionCore: SparkSessionCore, sparkQueriesCore: SparkQueriesCore)
   extends StudyQueriesCore(sparkSessionCore) {
 
@@ -17,6 +27,13 @@ case class InterestingStudiesQueriesCore(sparkSessionCore: SparkSessionCore, spa
 
   /**
    * Execute the set of interesting multi-parameter studies and persist results.
+   *
+   * Behaviour:
+   * - Runs queries defined in configuration for each configured record and top-N sets.
+   * - For each configured record it fetches station info, climate parameter evolutions,
+   *   and yearly grouped aggregates as required by the study.
+   * - Persists results and logs progress. When query methods return `Left(exception)`
+   *   a warning is logged and the failing fetch is skipped.
    */
   def execute(): Unit = {
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startStudy.format(

@@ -1,37 +1,49 @@
 @startuml
-participant "SparkQueries" as SQ
-participant "InterestingStudies" as IS
-participant "Helper" as H
-participant "Storage" as S
+participant "SparkQueriesCore" as SPARK_QUERIES_CORE
+participant "InterestingStudiesQueriesCore" as INTERESTING_STUDIES_QUERIES_CORE
+participant "SparkSessionCore" as SPARK_SESSION_CORE
+participant "Storage" as STORAGE
 
-SQ -> IS : execute()
-activate IS
+SPARK_QUERIES_CORE -> INTERESTING_STUDIES_QUERIES_CORE : execute()
+activate INTERESTING_STUDIES_QUERIES_CORE
 
 group Precipitation & Pressure evolution
     loop stationRecords
-        IS -> H : getStationInfoById()
-        H --> IS : DF
-        IS -> S : saveDataframeAsJSON()
+        INTERESTING_STUDIES_QUERIES_CORE -> SPARK_QUERIES_CORE : getStationInfoById(stationId)
+        SPARK_QUERIES_CORE --> INTERESTING_STUDIES_QUERIES_CORE : StationInfo DF
+        INTERESTING_STUDIES_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsJSON(stationDf, path)
+        SPARK_SESSION_CORE -> STORAGE : write json
+        STORAGE --> SPARK_SESSION_CORE : saved
+        SPARK_SESSION_CORE --> INTERESTING_STUDIES_QUERIES_CORE : saved
 
-        IS -> H : getClimateParamInALapseById()
-        H --> IS : DF
-        IS -> S : saveDataframeAsParquet()
+        INTERESTING_STUDIES_QUERIES_CORE -> SPARK_QUERIES_CORE : getClimateParamInALapseById(stationId, params)
+        SPARK_QUERIES_CORE --> INTERESTING_STUDIES_QUERIES_CORE : DataFrame
+        INTERESTING_STUDIES_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(resultsDF, path)
+        SPARK_SESSION_CORE -> STORAGE : write parquet
+        STORAGE --> SPARK_SESSION_CORE : saved
+        SPARK_SESSION_CORE --> INTERESTING_STUDIES_QUERIES_CORE : saved
 
-        IS -> H : getClimateYearlyGroupById()
-        H --> IS : DF
-        IS -> S : saveDataframeAsParquet()
+        INTERESTING_STUDIES_QUERIES_CORE -> SPARK_QUERIES_CORE : getClimateYearlyGroupById(stationId, params)
+        SPARK_QUERIES_CORE --> INTERESTING_STUDIES_QUERIES_CORE : DataFrame
+        INTERESTING_STUDIES_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(resultsDF, path)
+        SPARK_SESSION_CORE -> STORAGE : write parquet
+        STORAGE --> SPARK_SESSION_CORE : saved
+        SPARK_SESSION_CORE --> INTERESTING_STUDIES_QUERIES_CORE : saved
     end
 end
 
 group Top 10 states by climate conditions
     loop each top10 config
-        IS -> H : getTopNClimateConditionsInALapse(groupByState=true)
-        H --> IS : DF
-        IS -> S : saveDataframeAsParquet()
+        INTERESTING_STUDIES_QUERIES_CORE -> SPARK_QUERIES_CORE : getTopNClimateConditionsInALapse(climateParams, startDate, endDate, groupByState=true)
+        SPARK_QUERIES_CORE --> INTERESTING_STUDIES_QUERIES_CORE : DataFrame
+        INTERESTING_STUDIES_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(resultsDF, path)
+        SPARK_SESSION_CORE -> STORAGE : write parquet
+        STORAGE --> SPARK_SESSION_CORE : saved
+        SPARK_SESSION_CORE --> INTERESTING_STUDIES_QUERIES_CORE : saved
     end
 end
 
-IS --> SQ : done
-deactivate IS
+INTERESTING_STUDIES_QUERIES_CORE --> SPARK_QUERIES_CORE : done
+deactivate INTERESTING_STUDIES_QUERIES_CORE
 
 @enduml

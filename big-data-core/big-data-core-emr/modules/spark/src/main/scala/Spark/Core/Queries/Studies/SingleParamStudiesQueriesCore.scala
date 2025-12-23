@@ -7,6 +7,16 @@ import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMe
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.storage.StorageLevel
 
+/**
+ * Core queries implementation for single-parameter studies.
+ *
+ * This case class executes a set of studies that analyze a single climate parameter
+ * (for example temperature or precipitation) across different configured time ranges
+ * and groupings (top-N, evolutions, averages, increments, regressions, etc.).
+ *
+ * @param sparkSessionCore helper containing the Spark session and context utilities
+ * @param sparkQueriesCore component that exposes reusable Spark query functions
+ */
 case class SingleParamStudiesQueriesCore(sparkSessionCore: SparkSessionCore, sparkQueriesCore: SparkQueriesCore)
   extends StudyQueriesCore(sparkSessionCore) {
 
@@ -17,6 +27,19 @@ case class SingleParamStudiesQueriesCore(sparkSessionCore: SparkSessionCore, spa
 
   /**
    * Execute the configured single-parameter studies (top-N, evolutions, etc.).
+   *
+   * Behaviour summary:
+   * - Loops through each configured study parameter entry and runs several
+   *   sub-studies: top highest/lowest for different ranges, evolutions per state,
+   *   regression-based increments, and aggregates for all stations.
+   * - Persists intermediate and final DataFrames to the configured storage paths.
+   * - Builds an in-memory DataFrame of regression models which is used by the
+   *   increment (top-N increase) queries and is persisted in memory during use.
+   *
+   * Return and error handling:
+   * - This method has no return value; its effect is persisted outputs and logs.
+   * - When a query function returns `Left(exception)`, a warning is logged and the
+   *   failing fetch is skipped for that record.
    */
   def execute(): Unit = {
     ctsExecution.singleParamStudiesValues.foreach(study => {

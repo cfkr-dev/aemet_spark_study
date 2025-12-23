@@ -1,0 +1,109 @@
+@startuml
+' Diagrama de Componentes para la aplicación web "auto-plot"
+' Generado a partir de la estructura del proyecto en App/
+
+title Diagrama de Componentes - auto-plot
+
+package "App (entry)" {
+  [app.py] as App
+}
+
+package "Api" {
+  package "Controllers" {
+    [bar_controller.py]
+    [linear_controller.py]
+    [heat_map_controller.py]
+    [linear_regression_controller.py]
+    [pie_controller.py]
+    [table_controller.py]
+    [climograph_controller.py]
+    [double_linear_controller.py]
+    [health_controller.py]
+  }
+
+  package "Models" {
+    [bar_model.py]
+    [climograph_model.py]
+    [double_linear_model.py]
+    [heat_map_model.py]
+    [linear_model.py]
+    [linear_regression_model.py]
+    [pie_model.py]
+    [table_model.py]
+  }
+
+  package "DTOS" {
+    [bar_dto.py]
+    [climograph_dto.py]
+    [double_linear_dto.py]
+    [heat_map_dto.py]
+    [linear_dto.py]
+    [linear_regression_dto.py]
+    [pie_dto.py]
+    [table_dto.py]
+  }
+}
+
+package "Plotters" {
+  [abstract_plotter.py] as AbstractPlotter
+  [bar_plotter.py] as BarPlotter
+  [linear_plotter.py] as LinearPlotter
+  [heat_map_plotter.py] as HeatMapPlotter
+  [linear_regression_plotter.py] as LRPlotter
+  [pie_plotter.py] as PiePlotter
+  [table_plotter.py] as TablePlotter
+  [climograph_plotter.py] as ClimographPlotter
+  [double_linear_plotter.py] as DoubleLinearPlotter
+}
+
+package "Config" {
+  [constants.py]
+  [enumerations.py]
+}
+
+package "Utils" {
+  [dataframe_formatter.py]
+  [file_utils.py]
+  [validator.py]
+  package "Storage" {
+    [Core]
+    [Parquet]
+    [PlotExport]
+  }
+}
+
+package "Resources" {
+  [countries_shapes]
+}
+
+' Relaciones principales (flechas con tipo):
+App --> Api.Controllers : inicializa / enruta peticiones
+Api.Controllers --> Api.DTOS : usa (DTOs - transformación de entrada/salida)
+Api.Controllers --> Api.Models : usa (obtiene/valida datos)
+Api.Controllers --> Plotters : delega renderizado de gráficos
+Api.Controllers --> Utils.file_utils : I/O y ayuda en ficheros
+Api.Controllers --> Config : lee constantes/enum
+
+AbstractPlotter <|-- BarPlotter
+AbstractPlotter <|-- LinearPlotter
+AbstractPlotter <|-- HeatMapPlotter
+AbstractPlotter <|-- LRPlotter
+AbstractPlotter <|-- PiePlotter
+AbstractPlotter <|-- TablePlotter
+AbstractPlotter <|-- ClimographPlotter
+AbstractPlotter <|-- DoubleLinearPlotter
+
+Plotters --> Api.Models : consume datos (Model -> dataframe)
+Plotters --> Utils.dataframe_formatter : formatea datos para plot
+Plotters --> Utils.file_utils : guarda/lee artefactos (imágenes/parquets)
+Plotters --> Resources.countries_shapes : usa shapes/geometrías (heatmap/climograph)
+
+Utils.file_utils --> Utils.Storage.PlotExport : exporta gráficos/artefactos
+Utils.dataframe_formatter --> Api.Models : formato/transformación de salida
+
+' Detalles opcionales:
+' - Config (constants/enumerations) es usado por Controladores y Plotters.
+' - Storage (Core/Parquet/PlotExport) es la capa de persistencia/exportación; accesible desde Utils y Plotters.
+' - Health controller expone endpoints de salud (health_controller.py).
+
+@enduml

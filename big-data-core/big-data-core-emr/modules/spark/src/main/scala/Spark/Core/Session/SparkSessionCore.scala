@@ -8,6 +8,18 @@ import Utils.Storage.JSON.JSONStorageBackend.writeJSON
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import ujson.read
 
+/**
+ * Wrapper that holds the active SparkSession and session-scoped resources.
+ *
+ * This case class groups together the live `SparkSession`, preloaded session
+ * DataFrames and the session storage helper used by the application's
+ * query and study components. It exposes helper methods to start/stop the
+ * Spark session and to persist DataFrames (Parquet/JSON).
+ *
+ * @param sparkSession the active SparkSession instance
+ * @param sessionDataframes container with preloaded DataFrames used across the session
+ * @param sessionStorage storage helper and resolved storage prefix for persistence
+ */
 case class SparkSessionCore(
   sparkSession: SparkSession,
   sessionDataframes: SessionDataframes,

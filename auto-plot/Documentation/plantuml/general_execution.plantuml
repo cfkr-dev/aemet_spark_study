@@ -1,0 +1,62 @@
+@startuml
+actor Client as CLIENT
+
+participant "Flask App (app.py)" as FLASK_APP
+participant "Namespace Router" as NAMESPACE_ROUTER
+participant "Controller ({ControllerName})" as CONTROLLER
+participant "DTO" as DTO
+participant "Storage (Storage)" as STORAGE
+participant "Model ({ModelName})" as MODEL
+participant "Validator" as VALIDATOR
+participant "ParquetStorageBackend" as PARQUET_BACKEND
+participant "Dataframe Formatter (App.Utils.dataframe_formatter)" as DF_FORMATTER
+participant "Plotly (plotly.graph_objects)" as PLOTLY_LIB
+participant "Plotter" as PLOTTER
+participant "PlotExportStorageBackend" as EXPORT_BACKEND
+participant "Response Formatter" as RES_FORMATTER
+
+== Application startup ==
+FLASK_APP -> FLASK_APP : Initialize Flask app and register namespaces (all endpoints except /health)
+FLASK_APP -> FLASK_APP : Configure logger
+
+== Client request ==
+CLIENT -> FLASK_APP : HTTP /{namespace} [method] { payload }
+FLASK_APP -> NAMESPACE_ROUTER : Dispatch to namespace
+NAMESPACE_ROUTER -> CONTROLLER : {ControllerName}.[post/get/...](payload)
+CONTROLLER -> DTO : Parse / expect payload (validate schema)
+
+CONTROLLER -> STORAGE : storage = Storage(STORAGE_PREFIX, AWS_S3_ENDPOINT)
+CONTROLLER -> MODEL : model = {ModelName}(storage)
+CONTROLLER -> MODEL : model.setup(payload)
+
+CONTROLLER -> MODEL : validation = model.validate()
+
+alt validation fails
+    MODEL -> CONTROLLER : validation.build_error_message()
+    CONTROLLER -> FLASK_APP : current_app.logger.warning(error_message)
+    CONTROLLER -> CLIENT : abort(400, message=error_message)
+else validation succeeds
+    CONTROLLER -> PLOTTER : plotter = Plotter(model)
+
+    PLOTTER -> PARQUET_BACKEND : raw_df = ParquetStorageBackend.read_parquet(src.path, storage)
+    PARQUET_BACKEND --> PLOTTER : raw_df (pandas.DataFrame)
+
+    PLOTTER -> DF_FORMATTER : dataframe = format_df(raw_df, formatters)
+    DF_FORMATTER --> PLOTTER : dataframe (pandas.DataFrame)
+
+    CONTROLLER -> PLOTTER : figure = plotter.create_plot()
+    PLOTTER -> PLOTLY_LIB : figure = go.Figure(...) / go.Scattergl(...)
+    PLOTLY_LIB --> PLOTTER : figure (Plotly Figure)
+
+    CONTROLLER -> PLOTTER : dest_path = plotter.save_plot(figure)
+    PLOTTER -> EXPORT_BACKEND : export_html(dest_path + filename.html, figure, storage)
+    alt export_png enabled
+        PLOTTER -> EXPORT_BACKEND : export_png(dest_path + filename.png, figure, storage)
+    end
+
+    EXPORT_BACKEND --> PLOTTER : written_paths (html[, png])
+    PLOTTER --> CONTROLLER : dest_path (response path)
+    CONTROLLER --> CLIENT : { "dest_path": dest_path }
+end
+
+@enduml

@@ -1,31 +1,40 @@
 @startuml
-participant "SparkQueries" as SQ
-participant "Stations" as ST
-participant "Helper" as H
-participant "Storage" as S
+participant "SparkQueriesCore" as SPARK_QUERIES_CORE
+participant "StationsQueriesCore" as STATIONS_QUERIES_CORE
+participant "SparkSessionCore" as SPARK_SESSION_CORE
+participant "Storage" as STORAGE
 
-SQ -> ST : execute()
-activate ST
+SPARK_QUERIES_CORE -> STATIONS_QUERIES_CORE : execute()
+activate STATIONS_QUERIES_CORE
 
 group Station count evolution
-    ST -> H : getStationCountByColumnInLapse()
-    H --> ST : DataFrame
-    ST -> S : saveDataframeAsParquet()
+    STATIONS_QUERIES_CORE -> SPARK_QUERIES_CORE : getStationCountByColumnInLapse(params)
+    SPARK_QUERIES_CORE --> STATIONS_QUERIES_CORE : DataFrame
+    STATIONS_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(resultsDF, path)
+    SPARK_SESSION_CORE -> STORAGE : write parquet
+    STORAGE --> SPARK_SESSION_CORE : saved
+    SPARK_SESSION_CORE --> STATIONS_QUERIES_CORE : saved
 end
 
 group Station count by state (2024)
-    ST -> H : getStationCountByColumnInLapse()
-    H --> ST : DataFrame
-    ST -> S : saveDataframeAsParquet()
+    STATIONS_QUERIES_CORE -> SPARK_QUERIES_CORE : getStationCountByColumnInLapse(params)
+    SPARK_QUERIES_CORE --> STATIONS_QUERIES_CORE : DataFrame
+    STATIONS_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(resultsDF, path)
+    SPARK_SESSION_CORE -> STORAGE : write parquet
+    STORAGE --> SPARK_SESSION_CORE : saved
+    SPARK_SESSION_CORE --> STATIONS_QUERIES_CORE : saved
 end
 
 group Station count by altitude (2024)
-    ST -> H : getStationsCountByParamIntervalsInALapse()
-    H --> ST : DataFrame
-    ST -> S : saveDataframeAsParquet()
+    STATIONS_QUERIES_CORE -> SPARK_QUERIES_CORE : getStationsCountByParamIntervalsInALapse(params)
+    SPARK_QUERIES_CORE --> STATIONS_QUERIES_CORE : DataFrame
+    STATIONS_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(resultsDF, path)
+    SPARK_SESSION_CORE -> STORAGE : write parquet
+    STORAGE --> SPARK_SESSION_CORE : saved
+    SPARK_SESSION_CORE --> STATIONS_QUERIES_CORE : saved
 end
 
-ST --> SQ : done
-deactivate ST
+STATIONS_QUERIES_CORE --> SPARK_QUERIES_CORE : done
+deactivate STATIONS_QUERIES_CORE
 
 @enduml

@@ -7,6 +7,15 @@ import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMe
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 
+/**
+ * Core queries implementation for station-focused studies.
+ *
+ * This case class executes queries that analyze station counts and distributions
+ * (for example counts by state or altitude intervals) and persists the results.
+ *
+ * @param sparkSessionCore helper containing the Spark session and context utilities
+ * @param sparkQueriesCore component that exposes reusable Spark query functions
+ */
 case class StationsQueriesCore(sparkSessionCore: SparkSessionCore, sparkQueriesCore: SparkQueriesCore)
   extends StudyQueriesCore(sparkSessionCore) {
 
@@ -17,6 +26,10 @@ case class StationsQueriesCore(sparkSessionCore: SparkSessionCore, sparkQueriesC
 
   /**
    * Execute the Stations study: run station-related queries and persist results.
+   *
+   * The method uses `simpleFetchAndSave` to orchestrate fetching, displaying
+   * and saving DataFrames produced by the `sparkQueriesCore` helpers. Errors
+   * returned by query helpers are logged as warnings and skipped.
    */
   def execute(): Unit = {
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startStudy.format(

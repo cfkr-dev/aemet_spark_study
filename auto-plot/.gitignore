@@ -16,10 +16,6 @@ hsperfdata*
 # Secrets
 .env
 
-# Documentation
-Documentation/
-docs/
-
 # Subprojects
 ../dashboard-web
 ../big-data-core

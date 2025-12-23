@@ -7,10 +7,35 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Column, DataFrame, SparkSession}
 import org.apache.spark.storage.StorageLevel
 
+/**
+ * Container for session-scoped DataFrames used across queries and studies.
+ *
+ * @param allStations DataFrame with station metadata
+ * @param allMeteoInfo DataFrame with merged meteorological observations
+ */
 case class SessionDataframes(allStations: DataFrame, allMeteoInfo: DataFrame)
 
+/**
+ * Represents storage configuration and backend for a session.
+ *
+ * @param dataStorage storage backend implementation used to read/write data
+ * @param storagePrefix resolved storage path prefix (e.g., s3a://bucket or local path)
+ */
 case class SessionStorage(dataStorage: Storage, storagePrefix: String)
 
+/**
+ * Manager responsible for creating and configuring Spark sessions and
+ * preparing session-scoped resources.
+ *
+ * Responsibilities:
+ * - Builds and configures a `SparkSession` according to environment and
+ *   configuration (supports EMR and local with optional S3 mock settings).
+ * - Resolves the storage prefix and prepares a `SessionStorage` instance.
+ * - Loads and formats the session DataFrames (`allStations` and `allMeteoInfo`) and
+ *   persists them in memory for fast access by queries and studies.
+ *
+ * Use `createSparkSessionCore()` to obtain a fully initialized `SparkSessionCore`.
+ */
 object SparkSessionManager {
   private val ctsGlobalInit = GlobalConf.Constants.init
   private val ctsGlobalUtils = GlobalConf.Constants.utils

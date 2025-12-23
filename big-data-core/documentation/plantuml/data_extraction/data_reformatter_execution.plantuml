@@ -7,9 +7,12 @@ participant "IfapaDataReformatter" as IFAPA_REFMT
 participant "Storage" as STORAGE
 participant "AvroParquetWriter" as PARQUET
 
+== DATA REFORMAT ==
+
 User -> DATA_REFORMAT : reformatData()
 activate DATA_REFORMAT
 
+' --- Reformat AEMET stations ---
 DATA_REFORMAT -> AEMET_REFMT : reformatStationsData()
 activate AEMET_REFMT
 AEMET_REFMT -> STORAGE : read stations JSON and metadata
@@ -21,6 +24,7 @@ end
 AEMET_REFMT --> DATA_REFORMAT : done
 deactivate AEMET_REFMT
 
+' --- Reformat AEMET meteo ---
 DATA_REFORMAT -> AEMET_REFMT : reformatMeteoData()
 activate AEMET_REFMT
 AEMET_REFMT -> STORAGE : list meteo JSON files
@@ -38,6 +42,7 @@ end
 AEMET_REFMT --> DATA_REFORMAT : done
 deactivate AEMET_REFMT
 
+' --- Reformat IFAPA stations ---
 DATA_REFORMAT -> IFAPA_REFMT : reformatStationsData()
 activate IFAPA_REFMT
 IFAPA_REFMT -> STORAGE : read IFAPA station JSON and metadata
@@ -47,6 +52,7 @@ PARQUET --> IFAPA_REFMT : written
 IFAPA_REFMT --> DATA_REFORMAT : done
 deactivate IFAPA_REFMT
 
+' --- Reformat IFAPA meteo ---
 DATA_REFORMAT -> IFAPA_REFMT : reformatMeteoData()
 activate IFAPA_REFMT
 IFAPA_REFMT -> STORAGE : read IFAPA meteo JSON
@@ -60,6 +66,5 @@ deactivate IFAPA_REFMT
 
 DATA_REFORMAT --> User : end reformatData()
 deactivate DATA_REFORMAT
-
 
 @enduml

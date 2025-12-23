@@ -1,0 +1,55 @@
+@startuml
+actor Controller as CONTROLLER
+
+participant "HeatMapPlotter.create_plot()" as HEATMAP_PLOTTER
+participant "GeoPandas (shapefile)" as GEOPANDAS
+participant "Source DataFrame" as SOURCE_DF
+participant "KNN (cKDTree)" as KNN
+participant "OrdinaryKriging" as KRIGING
+participant "Raster Mask (rasterio)" as RASTERIO
+participant "Image Generator (cv2/np)" as IMAGE_GEN
+participant "Plotly (go)" as PLOTLY
+
+CONTROLLER -> HEATMAP_PLOTTER : call create_plot()
+
+' Set coordinates / bounds and grid size
+HEATMAP_PLOTTER -> HEATMAP_PLOTTER : set coordinate bounds (long_lb, long_ub, lat_lb, lat_ub)
+HEATMAP_PLOTTER -> HEATMAP_PLOTTER : set interpolation grid size
+HEATMAP_PLOTTER --> CONTROLLER : bounds, grid_size
+
+' Load country shapefile and derive Spain geometry
+HEATMAP_PLOTTER -> GEOPANDAS : read shapefile
+GEOPANDAS --> HEATMAP_PLOTTER : spain_geometry
+
+' Load points from dataframe (longitude, latitude, value)
+HEATMAP_PLOTTER -> SOURCE_DF : extract coordinates and values
+SOURCE_DF --> HEATMAP_PLOTTER : points (lon, lat, value)
+
+' Filter nearby points using KNN
+HEATMAP_PLOTTER -> KNN : filter nearby points (knn_max_dist)
+KNN --> HEATMAP_PLOTTER : filtered_points
+
+' Create interpolation grid and interpolate with Ordinary Kriging
+HEATMAP_PLOTTER -> KRIGING : build grid and interpolate (Ordinary Kriging)
+KRIGING --> HEATMAP_PLOTTER : interpolated_grid
+
+' Apply Spain frontier mask using shapefile geometry
+HEATMAP_PLOTTER -> RASTERIO : compute mask from spain_geometry and grid transform
+RASTERIO --> HEATMAP_PLOTTER : mask
+HEATMAP_PLOTTER -> HEATMAP_PLOTTER : apply mask -> masked_grid
+
+' Generate heatmap image from interpolated values
+HEATMAP_PLOTTER -> IMAGE_GEN : create image bytes from masked_grid (colormap, contours, flip)
+IMAGE_GEN --> HEATMAP_PLOTTER : img_bytes (PNG)
+HEATMAP_PLOTTER -> IMAGE_GEN : encode to base64
+IMAGE_GEN --> HEATMAP_PLOTTER : img_base64
+
+' Build Plotly figure using filtered points and overlay image
+HEATMAP_PLOTTER -> PLOTLY : fig = go.Figure(); add scatter traces using filtered_points
+PLOTLY --> HEATMAP_PLOTTER : fig
+HEATMAP_PLOTTER -> PLOTLY : add layout image using img_base64; update axes and layout
+PLOTLY --> HEATMAP_PLOTTER : final_figure
+
+HEATMAP_PLOTTER --> CONTROLLER : return final_figure
+
+@enduml

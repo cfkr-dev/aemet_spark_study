@@ -6,6 +6,17 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.{Column, DataFrame}
 
+/**
+ * Collection of reusable query functions that operate on the project's
+ * standardized session DataFrames.
+ *
+ * This case class groups query-oriented helpers used by the different study
+ * implementations. Each helper returns an Either[Exception, DataFrame] to
+ * allow callers to log and skip failing queries without throwing directly.
+ *
+ * @param sparkSessionCore helper providing access to the SparkSession and
+ *                         preloaded session DataFrames and persistence helpers
+ */
 case class SparkQueriesCore(sparkSessionCore: SparkSessionCore) {
   import sparkSessionCore.sparkSession.implicits._
 

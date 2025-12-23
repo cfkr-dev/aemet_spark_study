@@ -1,55 +1,55 @@
 @startuml
-participant "PlotGenerator" as PG
-participant "SingleParamStudies" as SP
-participant "JSONUtils" as JSON
-participant "Plot API" as API
+participant "PlotGenerator" as PLOT_GENERATOR
+participant "SingleParamStudies" as SINGLE_PARAM_STUDIES
+participant "JSONUtils" as JSON_UTILS
+participant "Plot API" as PLOT_API
 
-PG -> SP : generate()
-activate SP
+PLOT_GENERATOR -> SINGLE_PARAM_STUDIES : generate()
+activate SINGLE_PARAM_STUDIES
 
 loop each meteoParam
-    SP -> SP : foreach meteoParam
+    SINGLE_PARAM_STUDIES -> SINGLE_PARAM_STUDIES : foreach meteoParam
 
     group TOP 10
         loop each order
             loop each temporal
-                SP -> API : generatePlot(top10)
-                API --> SP : ok
+                SINGLE_PARAM_STUDIES -> PLOT_API : generatePlot(top10)
+                PLOT_API --> SINGLE_PARAM_STUDIES : ok
             end
         end
     end
 
     group TOP 5 INC
         loop each order
-            SP -> API : generatePlot(top5Inc)
-            API --> SP : ok
+            SINGLE_PARAM_STUDIES -> PLOT_API : generatePlot(top5Inc)
+            PLOT_API --> SINGLE_PARAM_STUDIES : ok
         end
     end
 
     group EVOLUTION
         loop each state
-            SP -> JSON : readJSON(station2024)
-            JSON --> SP : station JSON
-            SP -> API : generatePlot(evol2024)
-            API --> SP : ok
+            SINGLE_PARAM_STUDIES -> JSON_UTILS : readJSON(station2024)
+            JSON_UTILS --> SINGLE_PARAM_STUDIES : station JSON
+            SINGLE_PARAM_STUDIES -> PLOT_API : generatePlot(evol2024)
+            PLOT_API --> SINGLE_PARAM_STUDIES : ok
 
-            SP -> JSON : readJSON(stationGlobal)
-            JSON --> SP : station JSON
-            SP -> API : generatePlot(evolYearlyGroup)
-            API --> SP : ok
+            SINGLE_PARAM_STUDIES -> JSON_UTILS : readJSON(stationGlobal)
+            JSON_UTILS --> SINGLE_PARAM_STUDIES : station JSON
+            SINGLE_PARAM_STUDIES -> PLOT_API : generatePlot(evolYearlyGroup)
+            PLOT_API --> SINGLE_PARAM_STUDIES : ok
         end
     end
 
     group HEATMAP 2024
         loop each location
-            SP -> API : generatePlot(heatMap2024)
-            API --> SP : ok
+            SINGLE_PARAM_STUDIES -> PLOT_API : generatePlot(heatMap2024)
+            PLOT_API --> SINGLE_PARAM_STUDIES : ok
         end
     end
 
 end
 
-SP --> PG : done
-deactivate SP
+SINGLE_PARAM_STUDIES --> PLOT_GENERATOR : done
+deactivate SINGLE_PARAM_STUDIES
 
 @enduml

@@ -3,70 +3,76 @@ autonumber
 
 actor Client
 
-Client -> JSONStorageBackend : readJSON(path)
-activate JSONStorageBackend
+participant "JSONStorageBackend" as JSON_STORAGE_BACKEND
+participant "Storage" as STORAGE
+participant "S3StorageBackend" as S3_STORAGE_BACKEND
+participant "LocalStorageBackend" as LOCAL_STORAGE_BACKEND
+participant "ujson" as UJSON
 
-JSONStorageBackend -> Storage : read(path)
-activate Storage
+Client -> JSON_STORAGE_BACKEND : readJSON(path)
+activate JSON_STORAGE_BACKEND
 
-Storage -> Storage : selectS3orLocal(prefix + path)
+JSON_STORAGE_BACKEND -> STORAGE : read(path)
+activate STORAGE
+
+STORAGE -> STORAGE : selectS3orLocal(prefix + path)
 
 alt Path is S3
-    Storage -> S3StorageBackend : read(bucket, key, endpoint)
-    activate S3StorageBackend
-    S3StorageBackend --> Storage : tmpFile(Path)
-    deactivate S3StorageBackend
+    STORAGE -> S3_STORAGE_BACKEND : read(bucket, key, endpoint)
+    activate S3_STORAGE_BACKEND
+    S3_STORAGE_BACKEND --> STORAGE : tmpFile(Path)
+    deactivate S3_STORAGE_BACKEND
 else Path is Local
-    Storage -> LocalStorageBackend : read(key)
-    activate LocalStorageBackend
-    LocalStorageBackend --> Storage : tmpFile(Path)
-    deactivate LocalStorageBackend
+    STORAGE -> LOCAL_STORAGE_BACKEND : read(key)
+    activate LOCAL_STORAGE_BACKEND
+    LOCAL_STORAGE_BACKEND --> STORAGE : tmpFile(Path)
+    deactivate LOCAL_STORAGE_BACKEND
 end
 
-Storage --> JSONStorageBackend : tmpFile(Path)
-deactivate Storage
+STORAGE --> JSON_STORAGE_BACKEND : tmpFile(Path)
+deactivate STORAGE
 
-JSONStorageBackend -> ujson : read(content)
-activate ujson
-ujson --> JSONStorageBackend : json(Value)
-deactivate ujson
+JSON_STORAGE_BACKEND -> UJSON : read(content)
+activate UJSON
+UJSON --> JSON_STORAGE_BACKEND : json(Value)
+deactivate UJSON
 
-JSONStorageBackend --> Client : Either.Right(json)
-deactivate JSONStorageBackend
+JSON_STORAGE_BACKEND --> Client : Either.Right(json)
+deactivate JSON_STORAGE_BACKEND
 
 
 == WRITE JSON ==
 
-Client -> JSONStorageBackend : writeJSON(path, json)
-activate JSONStorageBackend
+Client -> JSON_STORAGE_BACKEND : writeJSON(path, json)
+activate JSON_STORAGE_BACKEND
 
-JSONStorageBackend -> JSONStorageBackend : create temp file
-JSONStorageBackend -> ujson : write(json)
-activate ujson
-ujson --> JSONStorageBackend : jsonString
-deactivate ujson
+JSON_STORAGE_BACKEND -> JSON_STORAGE_BACKEND : create temp file
+JSON_STORAGE_BACKEND -> UJSON : write(json)
+activate UJSON
+UJSON --> JSON_STORAGE_BACKEND : jsonString
+deactivate UJSON
 
-JSONStorageBackend -> Storage : write(path, tmpFile)
-activate Storage
+JSON_STORAGE_BACKEND -> STORAGE : write(path, tmpFile)
+activate STORAGE
 
-Storage -> Storage : selectS3orLocal(prefix + path)
+STORAGE -> STORAGE : selectS3orLocal(prefix + path)
 
 alt Path is S3
-    Storage -> S3StorageBackend : write(bucket, key, tmpFile)
-    activate S3StorageBackend
-    S3StorageBackend --> Storage : success
-    deactivate S3StorageBackend
+    STORAGE -> S3_STORAGE_BACKEND : write(bucket, key, tmpFile)
+    activate S3_STORAGE_BACKEND
+    S3_STORAGE_BACKEND --> STORAGE : success
+    deactivate S3_STORAGE_BACKEND
 else Path is Local
-    Storage -> LocalStorageBackend : write(key, tmpFile)
-    activate LocalStorageBackend
-    LocalStorageBackend --> Storage : success
-    deactivate LocalStorageBackend
+    STORAGE -> LOCAL_STORAGE_BACKEND : write(key, tmpFile)
+    activate LOCAL_STORAGE_BACKEND
+    LOCAL_STORAGE_BACKEND --> STORAGE : success
+    deactivate LOCAL_STORAGE_BACKEND
 end
 
-Storage --> JSONStorageBackend : success
-deactivate Storage
+STORAGE --> JSON_STORAGE_BACKEND : success
+deactivate STORAGE
 
-JSONStorageBackend --> Client : Either.Right(path)
-deactivate JSONStorageBackend
+JSON_STORAGE_BACKEND --> Client : Either.Right(path)
+deactivate JSON_STORAGE_BACKEND
 
 @enduml

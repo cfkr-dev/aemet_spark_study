@@ -3,12 +3,13 @@ package Spark
 import Spark.Core.SparkManager
 
 /**
- * Main application entry point.
+ * Application entry point for the project.
  *
- * This object extends `App` and invokes `Spark.Core.SparkManager.SparkQueries.execute()`
- * to start the full set of query-driven studies (stations, climographs,
- * single-parameter studies and interesting studies). It serves as a minimal
- * runner used when launching the Spark module.
+ * This object extends `App`, so the body is executed on JVM startup. It delegates
+ * execution to the `SparkManager` which coordinates the Spark session and configured
+ * studies/queries.
+ *
+ * Side effects: starts Spark jobs and performs configured data processing tasks.
  */
 object Main extends App {
   SparkManager.execute()

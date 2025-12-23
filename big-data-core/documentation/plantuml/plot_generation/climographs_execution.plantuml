@@ -1,29 +1,29 @@
 @startuml
-participant "PlotGenerator" as PG
-participant "Climograph" as CG
-participant "JSONUtils" as JSON
-participant "Plot API" as API
+participant "PlotGenerator" as PLOT_GENERATOR
+participant "Climograph" as CLIMOGRAPH
+participant "JSONUtils" as JSON_UTILS
+participant "Plot API" as PLOT_API
 
-PG -> CG : generate()
-activate CG
+PLOT_GENERATOR -> CLIMOGRAPH : generate()
+activate CLIMOGRAPH
 
 loop each climateGroup
-    CG -> CG : foreach climateGroup
+    CLIMOGRAPH -> CLIMOGRAPH : foreach climateGroup
 
     loop each climateRecord
-        CG -> CG : foreach climateRecord
+        CLIMOGRAPH -> CLIMOGRAPH : foreach climateRecord
 
         loop each location
-            CG -> JSON : readJSON(stationInfo)
-            JSON --> CG : station JSON
+            CLIMOGRAPH -> JSON_UTILS : readJSON(stationInfo)
+            JSON_UTILS --> CLIMOGRAPH : station JSON
 
-            CG -> API : generatePlot(climograph)
-            API --> CG : ok
+            CLIMOGRAPH -> PLOT_API : generatePlot(climograph)
+            PLOT_API --> CLIMOGRAPH : ok
         end
     end
 end
 
-CG --> PG : done
-deactivate CG
+CLIMOGRAPH --> PLOT_GENERATOR : done
+deactivate CLIMOGRAPH
 
 @enduml

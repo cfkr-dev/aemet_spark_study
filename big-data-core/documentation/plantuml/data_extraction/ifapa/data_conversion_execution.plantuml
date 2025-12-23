@@ -1,53 +1,53 @@
 @startuml
 actor User
 
-participant "IfapaToAemetConverter" as Converter
-participant "SingleStationInfo" as StationInfo
-participant "SingleStationMeteoInfo" as MeteoInfo
-participant "FileUtils" as Storage
-participant "JSONUtils" as JSON
+participant "IfapaToAemetConverter" as IFAPA_TO_AEMET_CONVERTER
+participant "SingleStationInfo" as SINGLE_STATION_INFO
+participant "SingleStationMeteoInfo" as SINGLE_STATION_METEO_INFO
+participant "FileUtils" as FILE_UTILS
+participant "JSONUtils" as JSON_UTILS
 
-User -> Converter : ifapaToAemetConversion()
-activate Converter
+User -> IFAPA_TO_AEMET_CONVERTER : ifapaToAemetConversion()
+activate IFAPA_TO_AEMET_CONVERTER
 
 '--- Convert Station Info ---
-Converter -> StationInfo : saveSingleStationInfoAemetFormat()
-activate StationInfo
-StationInfo -> JSON : readJSON(ifapa station info)
-JSON --> StationInfo : JSON response
-StationInfo -> JSON : readJSON(aemet metadata)
-JSON --> StationInfo : metadata JSON
-StationInfo -> JSON : buildJSONFromSchemaAndData()
-JSON --> StationInfo : structured JSON
-StationInfo -> JSON : transformJSONValues(formatters)
-JSON --> StationInfo : transformed JSON
-StationInfo -> Storage : saveContentToPath(data)
-Storage --> StationInfo : success
-StationInfo -> Storage : copyFile(metadata)
-Storage --> StationInfo : success
-StationInfo --> Converter : done
-deactivate StationInfo
+IFAPA_TO_AEMET_CONVERTER -> SINGLE_STATION_INFO : saveSingleStationInfoAemetFormat()
+activate SINGLE_STATION_INFO
+SINGLE_STATION_INFO -> JSON_UTILS : readJSON(ifapa station info)
+JSON_UTILS --> SINGLE_STATION_INFO : JSON response
+SINGLE_STATION_INFO -> JSON_UTILS : readJSON(aemet metadata)
+JSON_UTILS --> SINGLE_STATION_INFO : metadata JSON
+SINGLE_STATION_INFO -> JSON_UTILS : buildJSONFromSchemaAndData()
+JSON_UTILS --> SINGLE_STATION_INFO : structured JSON
+SINGLE_STATION_INFO -> JSON_UTILS : transformJSONValues(formatters)
+JSON_UTILS --> SINGLE_STATION_INFO : transformed JSON
+SINGLE_STATION_INFO -> FILE_UTILS : saveContentToPath(data)
+FILE_UTILS --> SINGLE_STATION_INFO : success
+SINGLE_STATION_INFO -> FILE_UTILS : copyFile(metadata)
+FILE_UTILS --> SINGLE_STATION_INFO : success
+SINGLE_STATION_INFO --> IFAPA_TO_AEMET_CONVERTER : done
+deactivate SINGLE_STATION_INFO
 
 '--- Convert Meteo Info ---
-Converter -> MeteoInfo : saveSingleStationMeteoInfoAemetFormat()
-activate MeteoInfo
-MeteoInfo -> JSON : readJSON(ifapa meteo info)
-JSON --> MeteoInfo : JSON response
-MeteoInfo -> JSON : readJSON(station info)
-JSON --> MeteoInfo : JSON response
-MeteoInfo -> JSON : readJSON(aemet metadata)
-JSON --> MeteoInfo : metadata JSON
-MeteoInfo -> JSON : buildJSONFromSchemaAndData()
-JSON --> MeteoInfo : structured JSON
-MeteoInfo -> JSON : transformJSONValues(formatters)
-JSON --> MeteoInfo : transformed JSON
-MeteoInfo -> Storage : saveContentToPath(data)
-Storage --> MeteoInfo : success
-MeteoInfo -> Storage : copyFile(metadata)
-Storage --> MeteoInfo : success
-MeteoInfo --> Converter : done
-deactivate MeteoInfo
+IFAPA_TO_AEMET_CONVERTER -> SINGLE_STATION_METEO_INFO : saveSingleStationMeteoInfoAemetFormat()
+activate SINGLE_STATION_METEO_INFO
+SINGLE_STATION_METEO_INFO -> JSON_UTILS : readJSON(ifapa meteo info)
+JSON_UTILS --> SINGLE_STATION_METEO_INFO : JSON response
+SINGLE_STATION_METEO_INFO -> JSON_UTILS : readJSON(station info)
+JSON_UTILS --> SINGLE_STATION_METEO_INFO : JSON response
+SINGLE_STATION_METEO_INFO -> JSON_UTILS : readJSON(aemet metadata)
+JSON_UTILS --> SINGLE_STATION_METEO_INFO : metadata JSON
+SINGLE_STATION_METEO_INFO -> JSON_UTILS : buildJSONFromSchemaAndData()
+JSON_UTILS --> SINGLE_STATION_METEO_INFO : structured JSON
+SINGLE_STATION_METEO_INFO -> JSON_UTILS : transformJSONValues(formatters)
+JSON_UTILS --> SINGLE_STATION_METEO_INFO : transformed JSON
+SINGLE_STATION_METEO_INFO -> FILE_UTILS : saveContentToPath(data)
+FILE_UTILS --> SINGLE_STATION_METEO_INFO : success
+SINGLE_STATION_METEO_INFO -> FILE_UTILS : copyFile(metadata)
+FILE_UTILS --> SINGLE_STATION_METEO_INFO : success
+SINGLE_STATION_METEO_INFO --> IFAPA_TO_AEMET_CONVERTER : done
+deactivate SINGLE_STATION_METEO_INFO
 
-Converter --> User : finished
-deactivate Converter
+IFAPA_TO_AEMET_CONVERTER --> User : finished
+deactivate IFAPA_TO_AEMET_CONVERTER
 @enduml

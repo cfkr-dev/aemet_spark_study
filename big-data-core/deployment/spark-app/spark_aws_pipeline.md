@@ -13,18 +13,26 @@
 * Create a bucket to store your data and model artifacts:
 
 ```bash
-aws s3 mb s3://aperezpe2018-meteo-study-bucket
+aws s3 mb s3://[unique-bucket-name]
 ```
 
 ### 1.3 Upload Files to S3
 
+Before running the commands in this step, make sure you are in the project's root directory.
+
+* Configure the AWS CLI with the credentials provided by your AWS Academy lab session by running:
+
+```bash
+aws configure
+```
+
 * Upload the JAR file, config files, and data from the `data-extraction` process:
 
 ```bash
-aws s3 cp ./big-data-core/deployment/spark-app/spark-app-cluster-1.0.0.jar s3://aperezpe2018-meteo-study-bucket/
-aws s3 cp --recursive ./data/config s3://aperezpe2018-meteo-study-bucket/data/config/
-aws s3 cp --recursive ./data/data_extraction/aemet_spark_format s3://aperezpe2018-meteo-study-bucket/data/data_extraction/aemet_spark_format/
-aws s3 cp --recursive ./data/data_extraction/ifapa_spark_format s3://aperezpe2018-meteo-study-bucket/data/data_extraction/ifapa_spark_format/
+aws s3 cp ./big-data-core/deployment/spark-app/spark-app-cluster-1.0.0.jar s3://[unique-bucket-name]/
+aws s3 cp --recursive ./data/config s3://[unique-bucket-name]/data/config/
+aws s3 cp --recursive ./data/data_extraction/aemet_spark_format s3://[unique-bucket-name]/data/data_extraction/aemet_spark_format/
+aws s3 cp --recursive ./data/data_extraction/ifapa_spark_format s3://[unique-bucket-name]/data/data_extraction/ifapa_spark_format/
 ```
 
 ---
@@ -47,30 +55,9 @@ aws s3 cp --recursive ./data/data_extraction/ifapa_spark_format s3://aperezpe201
 
         * Service Role: `EMR_DefaultRole`
         * EC2 Role: `EMR_EC2_DefaultRole`
-    * **Log Storage:** `s3://aperezpe2018-meteo-study-bucket/logs/`
+    * **Log Storage:** `s3://[unique-bucket-name]/logs/`
 
-3. Set **Software Settings**:
-
-```json
-[
-  {
-    "Classification": "spark-env",
-    "Properties": {},
-    "Configurations": [
-      {
-        "Classification": "export",
-        "Properties": {
-          "STORAGE_PREFIX": "s3://aperezpe2018-meteo-study-bucket",
-          "STORAGE_BASE": "/data"
-        }
-      }
-    ]
-  }
-]
-
-```
-
-4. Click **Create cluster** and wait until the cluster state is **Waiting**.
+3. Click **Create cluster** and wait until the cluster state is **Waiting**.
 
 ---
 
@@ -81,11 +68,11 @@ aws s3 cp --recursive ./data/data_extraction/ifapa_spark_format s3://aperezpe201
     * **Step Type:** Spark application
     * **Name:** `meteo-spark-step`
     * **Deploy Mode:** cluster
-    * **Application Location:** `s3://aperezpe2018-meteo-study-bucket/spark-app-cluster-1.0.0.jar`
+    * **Application Location:** `s3://[unique-bucket-name]/spark-app-cluster-1.0.0.jar`
     * **Spark-Submit Arguments:**
 
 ```bash
---master yarn --class Spark.Main
+--master yarn --class Spark.Main --conf spark.yarn.appMasterEnv.STORAGE_PREFIX=s3://[unique-bucket-name] --conf spark.yarn.appMasterEnv.STORAGE_BASE=/data --conf spark.executorEnv.STORAGE_PREFIX=s3://[unique-bucket-name] --conf spark.executorEnv.STORAGE_BASE=/data
 ```
 
 * **Action on Failure:** Continue

@@ -3,14 +3,18 @@ package Spark.Core.Queries
 import Spark.Core.Session.SparkSessionCore
 
 /**
- * SparkQueries groups query-oriented workflows that produce final datasets
- * (studies, plots, and aggregations) based on the preformatted DataFrames in
- * `SparkCore.dataframes`.
+ * Factory object for creating `SparkQueriesCore` instances.
  *
- * Use `execute()` to run the full set of queries in sequence (it starts and
- * stops the Spark session around the set of studies).
+ * This small helper centralizes instantiation of the queries core and makes
+ * calling code concise (avoids repeating the case class constructor call).
  */
 object SparkQueriesManager {
+  /**
+   * Create a `SparkQueriesCore` instance bound to the provided Spark session core.
+   *
+   * @param sparkSessionCore the helper that contains the Spark session and context
+   * @return a new `SparkQueriesCore` instance that uses the provided session
+   */
   def createSparkQueriesCore(sparkSessionCore: SparkSessionCore): SparkQueriesCore = {
     SparkQueriesCore(sparkSessionCore)
   }

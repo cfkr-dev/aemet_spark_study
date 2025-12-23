@@ -5,6 +5,15 @@ import Spark.Core.Session.SparkSessionCore
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
 import org.apache.spark.sql.DataFrame
 
+/**
+ * Base class that exposes common helpers for study-specific query cores.
+ *
+ * Implementations of study queries should extend this class to reuse
+ * the `simpleFetchAndSave` helper which standardizes logging, printing
+ * and persistence of query results.
+ *
+ * @param sparkSessionCore helper providing Spark session, dataframes and storage helpers
+ */
 class StudyQueriesCore(sparkSessionCore: SparkSessionCore) {
   private val ctsGlobalLogs = SparkConf.Constants.queries.log.globalConf
 

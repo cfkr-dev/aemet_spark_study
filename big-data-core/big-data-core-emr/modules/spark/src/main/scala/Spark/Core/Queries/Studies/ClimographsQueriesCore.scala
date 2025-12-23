@@ -6,6 +6,16 @@ import Spark.Core.Session.SparkSessionCore
 import Utils.ConsoleLogUtils.Message.{NotificationType, printlnConsoleEnclosedMessage, printlnConsoleMessage}
 import org.apache.spark.sql.DataFrame
 
+/**
+ * Core queries implementation for the Climograph study.
+ *
+ * This case class bundles the dependencies required to run the climograph-related
+ * queries and persist their outputs. It extends `StudyQueriesCore` to reuse
+ * common fetching and saving utility behaviour.
+ *
+ * @param sparkSessionCore helper containing the Spark session and context utilities
+ * @param sparkQueriesCore component that exposes reusable Spark query functions
+ */
 case class ClimographsQueriesCore(sparkSessionCore: SparkSessionCore, sparkQueriesCore: SparkQueriesCore)
   extends StudyQueriesCore(sparkSessionCore) {
 
@@ -17,6 +27,15 @@ case class ClimographsQueriesCore(sparkSessionCore: SparkSessionCore, sparkQueri
   /**
    * Execute the Climograph study: produce station-level and monthly aggregates
    * used for climographs and persist the outputs.
+   *
+   * Behaviour:
+   * - Iterates over configured climate groups and their climates.
+   * - For each climate location, it fetches station info and computes monthly
+   *   temperature averages and precipitation sums for the configured observation year.
+   * - Saves results to configured storage paths (JSON and/or tables) and logs progress.
+   *
+   * Notes on error handling: when a query method returns `Left(exception)`, a warning
+   * is logged and the current fetch/save operation is skipped for that record.
    */
   def execute(): Unit = {
     printlnConsoleEnclosedMessage(NotificationType.Information, ctsGlobalLogs.startStudy.format(

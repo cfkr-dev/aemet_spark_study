@@ -82,57 +82,99 @@ deactivate DATA_REFORMAT
 
 == SPARK PROCESSING ==
 
-participant "SparkCore" as SPARK_CORE
-participant "StationsDf" as STATIONS_DF
-participant "MeteoDf" as METEO_DF
-participant "SparkQueries" as SPARK_QUERIES
-participant "StationStudies" as STATION_STUDIES
-participant "ClimographStudies" as CLIMOGRAPH_STUDIES
-participant "SingleParamStudies" as SINGLE_PARAM_STUDIES
-participant "InterestingStudies" as INTERESTING_STUDIES
+participant "SparkManager" as SPARK_MANAGER
+participant "SparkSessionManager" as SPARK_SESSION_MANAGER
+participant "SparkSessionCore" as SPARK_SESSION_CORE
+participant "SparkQueriesManager" as SPARK_QUERIES_MANAGER
+participant "SparkQueriesCore" as SPARK_QUERIES_CORE
+participant "StudyQueriesManager" as STUDY_QUERIES_MANAGER
+participant "StationsQueriesCore" as STATIONS_QUERIES_CORE
+participant "ClimographsQueriesCore" as CLIMOGRAPHS_QUERIES_CORE
+participant "SingleParamStudiesQueriesCore" as SINGLE_PARAM_STUDIES_QUERIES_CORE
+participant "InterestingStudiesQueriesCore" as INTERESTING_STUDIES_QUERIES_CORE
 
 APP -> STORAGE : get constants
 STORAGE --> APP : constants
 
-APP -> SPARK_CORE : start Spark session
-activate SPARK_CORE
+APP -> SPARK_MANAGER : start Spark processing
+activate SPARK_MANAGER
 
-SPARK_CORE -> STORAGE : load stations data
-STORAGE --> SPARK_CORE : stations DF
-SPARK_CORE -> STATIONS_DF : create DataFrame
-STATIONS_DF --> SPARK_CORE : created DataFrame
+SPARK_MANAGER -> SPARK_SESSION_MANAGER : createSparkSessionCore()
+activate SPARK_SESSION_MANAGER
 
-SPARK_CORE -> STORAGE : load meteo data
-STORAGE --> SPARK_CORE : meteo DF
-SPARK_CORE -> METEO_DF : create DataFrame
-METEO_DF --> SPARK_CORE : created DataFrame
+SPARK_SESSION_MANAGER -> STORAGE : read AEMET allStationInfo Parquet (raw)
+STORAGE --> SPARK_SESSION_MANAGER : stations raw DF
+SPARK_SESSION_MANAGER -> SPARK_SESSION_MANAGER : formatAllStationsDataframe(stations raw DF)
 
-SPARK_CORE -> SPARK_QUERIES : execute queries
-activate SPARK_QUERIES
+SPARK_SESSION_MANAGER -> STORAGE : read AEMET allMeteoInfo Parquet (raw)
+STORAGE --> SPARK_SESSION_MANAGER : meteo raw DF
+SPARK_SESSION_MANAGER -> SPARK_SESSION_MANAGER : formatAllMeteoInfoDataframe(meteo raw DF)
+SPARK_SESSION_MANAGER --> SPARK_MANAGER : SparkSessionCore
+deactivate SPARK_SESSION_MANAGER
 
-SPARK_QUERIES -> STATION_STUDIES : StationStudies.execute()
-STATION_STUDIES --> STORAGE : save results
-STORAGE --> STATION_STUDIES : saved
+SPARK_MANAGER -> SPARK_SESSION_CORE : startSparkSession()
+activate SPARK_SESSION_CORE
+SPARK_SESSION_CORE --> SPARK_MANAGER : session started
 
-SPARK_QUERIES -> CLIMOGRAPH_STUDIES : ClimographStudies.execute()
-CLIMOGRAPH_STUDIES --> STORAGE : save results
-STORAGE --> CLIMOGRAPH_STUDIES : saved
+SPARK_MANAGER -> SPARK_QUERIES_MANAGER : createSparkQueriesCore(sparkSessionCore)
+SPARK_QUERIES_MANAGER --> SPARK_MANAGER : SparkQueriesCore
 
-SPARK_QUERIES -> SINGLE_PARAM_STUDIES : SingleParamStudies.execute()
-SINGLE_PARAM_STUDIES --> STORAGE : save results
-STORAGE --> SINGLE_PARAM_STUDIES : saved
+SPARK_MANAGER -> STUDY_QUERIES_MANAGER : createStudyQueriesCore(sparkSessionCore, sparkQueriesCore) (StationsQueriesCore)
+STUDY_QUERIES_MANAGER --> SPARK_MANAGER : StationsQueriesCore
+SPARK_MANAGER -> STATIONS_QUERIES_CORE : execute()
+activate STATIONS_QUERIES_CORE
+STATIONS_QUERIES_CORE -> SPARK_QUERIES_CORE : run queries (uses SparkQueriesCore)
+SPARK_QUERIES_CORE --> STATIONS_QUERIES_CORE : results DF
+STATIONS_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(results DF, path)
+SPARK_SESSION_CORE -> STORAGE : write parquet
+STORAGE --> SPARK_SESSION_CORE : saved
+SPARK_SESSION_CORE --> STATIONS_QUERIES_CORE : saved
+deactivate STATIONS_QUERIES_CORE
 
-SPARK_QUERIES -> INTERESTING_STUDIES : InterestingStudies.execute()
-INTERESTING_STUDIES --> STORAGE : save results
-STORAGE --> INTERESTING_STUDIES : saved
+SPARK_MANAGER -> STUDY_QUERIES_MANAGER : createStudyQueriesCore(sparkSessionCore, sparkQueriesCore) (ClimographsQueriesCore)
+STUDY_QUERIES_MANAGER --> SPARK_MANAGER : ClimographsQueriesCore
+SPARK_MANAGER -> CLIMOGRAPHS_QUERIES_CORE : execute()
+activate CLIMOGRAPHS_QUERIES_CORE
+CLIMOGRAPHS_QUERIES_CORE -> SPARK_QUERIES_CORE : run queries (uses SparkQueriesCore)
+SPARK_QUERIES_CORE --> CLIMOGRAPHS_QUERIES_CORE : results DF
+CLIMOGRAPHS_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(results DF, path)
+SPARK_SESSION_CORE -> STORAGE : write parquet
+STORAGE --> SPARK_SESSION_CORE : saved
+SPARK_SESSION_CORE --> CLIMOGRAPHS_QUERIES_CORE : saved
+deactivate CLIMOGRAPHS_QUERIES_CORE
 
-SPARK_QUERIES --> SPARK_CORE : end queries
+SPARK_MANAGER -> STUDY_QUERIES_MANAGER : createStudyQueriesCore(sparkSessionCore, sparkQueriesCore) (SingleParamStudiesQueriesCore)
+STUDY_QUERIES_MANAGER --> SPARK_MANAGER : SingleParamStudiesQueriesCore
+SPARK_MANAGER -> SINGLE_PARAM_STUDIES_QUERIES_CORE : execute()
+activate SINGLE_PARAM_STUDIES_QUERIES_CORE
+SINGLE_PARAM_STUDIES_QUERIES_CORE -> SPARK_QUERIES_CORE : run queries (uses SparkQueriesCore)
+SPARK_QUERIES_CORE --> SINGLE_PARAM_STUDIES_QUERIES_CORE : results DF
+SINGLE_PARAM_STUDIES_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(results DF, path)
+SPARK_SESSION_CORE -> STORAGE : write parquet
+STORAGE --> SPARK_SESSION_CORE : saved
+SPARK_SESSION_CORE --> SINGLE_PARAM_STUDIES_QUERIES_CORE : saved
+deactivate SINGLE_PARAM_STUDIES_QUERIES_CORE
 
-deactivate SPARK_QUERIES
+SPARK_MANAGER -> STUDY_QUERIES_MANAGER : createStudyQueriesCore(sparkSessionCore, sparkQueriesCore) (InterestingStudiesQueriesCore)
+STUDY_QUERIES_MANAGER --> SPARK_MANAGER : InterestingStudiesQueriesCore
+SPARK_MANAGER -> INTERESTING_STUDIES_QUERIES_CORE : execute()
+activate INTERESTING_STUDIES_QUERIES_CORE
+INTERESTING_STUDIES_QUERIES_CORE -> SPARK_QUERIES_CORE : run queries (uses SparkQueriesCore)
+SPARK_QUERIES_CORE --> INTERESTING_STUDIES_QUERIES_CORE : results DF
+INTERESTING_STUDIES_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(results DF, path)
+SPARK_SESSION_CORE -> STORAGE : write parquet
+STORAGE --> SPARK_SESSION_CORE : saved
+SPARK_SESSION_CORE --> INTERESTING_STUDIES_QUERIES_CORE : saved
+deactivate INTERESTING_STUDIES_QUERIES_CORE
 
-SPARK_CORE --> APP : end Spark session
+SPARK_MANAGER -> SPARK_SESSION_CORE : endSparkSession()
+SPARK_SESSION_CORE -> SPARK_SESSION_CORE : stop SparkSession
+SPARK_SESSION_CORE --> SPARK_MANAGER : ended
+deactivate SPARK_SESSION_CORE
 
-deactivate SPARK_CORE
+SPARK_MANAGER --> APP : end Spark processing
+
+deactivate SPARK_MANAGER
 
 == PLOT GENERATION ==
 

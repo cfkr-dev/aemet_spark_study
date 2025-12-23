@@ -127,13 +127,6 @@ object S3StorageBackend {
       }
     }.toSet
 
-    /**
-     * Recursive helper that lists objects using `ListObjectsV2` and downloads
-     * each matching object into the temporary directory.
-     *
-     * @param continuationToken optional continuation token for paged listing
-     *
-     */
     def listAndDownload(continuationToken: Option[String]): Unit = {
       val reqBuilder = ListObjectsV2Request.builder()
         .bucket(bucket)
