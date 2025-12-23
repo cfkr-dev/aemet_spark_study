@@ -1,0 +1,266 @@
+{
+	"info": {
+		"_postman_id": "1347efbb-4eb3-467a-97b5-fe76601a61d9",
+		"name": "Auto-Plot Request Collection",
+		"description": "# Auto-Plot API – Postman Collection\n\nThis document describes the **Postman collection** for the **Auto-Plot** application.\n\nAuto-Plot is a Flask-based application that builds interactive charts using **Plotly**.\n\n---\n\n## Prerequisites\n\nBefore using the Postman collection, make sure the local environment is properly set up.\n\n### 1\\. Docker\n\n- Docker **must be installed and running locally**.\n    \n- The application is designed to be executed via Docker in a local environment.\n    \n\n### 2\\. Local Docker Setup\n\nAll scripts required to build and run the application are located at `../Deployment/docker/local`\n\nTypical workflow:\n\n1. Start the container using the run/start script.\n    \n2. Ensure the Flask application is reachable (by default on a local port such as `localhost:8000`).\n    \n\n---\n\n## Base URL\n\nWhen running locally, the API is typically available at `http://localhost:8000`\n\nIn Postman, you **must set the collection variable** `AUTO_PLOT_URL_BASE` with the address where Auto-Plot is running (for example `http://localhost:8000`).\n\nAll endpoints in the Postman collection are defined relative to this variable.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23512409"
+	},
+	"item": [
+		{
+			"name": "health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{AUTO_PLOT_URL_BASE}}/health",
+					"host": [
+						"{{AUTO_PLOT_URL_BASE}}"
+					],
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "linear",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"src\" : {\r\n    \"path\" : \"/spark/stations/count_evol\",\r\n    \"axis\" : {\r\n      \"x\" : {\r\n        \"name\" : \"year\",\r\n        \"format\" : \"timestamp_year\"\r\n      },\r\n      \"y\" : {\r\n        \"name\" : \"count\"\r\n      }\r\n    }\r\n  },\r\n  \"dest\" : {\r\n    \"path\" : \"/stations/count_evol\",\r\n    \"filename\" : \"plot\",\r\n    \"export_png\" : true\r\n  },\r\n  \"style\" : {\r\n    \"lettering\" : {\r\n      \"title\" : \"Evolution of the meteorological stations count in spanish territory\",\r\n      \"subtitle\" : \"From 1973 to 2024\",\r\n      \"x_label\" : \"Year\",\r\n      \"y_label\" : \"Count\"\r\n    },\r\n    \"figure\" : {\r\n      \"name\" : \"Station count\",\r\n      \"color\" : \"#4169E1\"\r\n    },\r\n    \"margin\" : {\r\n      \"left\" : 80,\r\n      \"right\" : 80,\r\n      \"top\" : 80,\r\n      \"bottom\" : 80\r\n    },\r\n    \"legend\" : {\r\n      \"y_offset\" : -0.3\r\n    }\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{AUTO_PLOT_URL_BASE}}/linear",
+					"host": [
+						"{{AUTO_PLOT_URL_BASE}}"
+					],
+					"path": [
+						"linear"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "double linear",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"src\" : {\r\n    \"path\" : \"/spark/interesting_studies/prec_and_press_evol/a_coruna/evol_2024\",\r\n    \"axis\" : {\r\n      \"x\" : {\r\n        \"name\" : \"date\",\r\n        \"format\" : \"timestamp\"\r\n      },\r\n      \"y_1\" : {\r\n        \"name\" : \"prec_daily_sum\"\r\n      },\r\n      \"y_2\" : {\r\n        \"name\" : \"press_daily_avg\"\r\n      }\r\n    }\r\n  },\r\n  \"dest\" : {\r\n    \"path\" : \"/interesting_studies/prec_and_press_evol/a_coruna/evol_2024\",\r\n    \"filename\" : \"plot\",\r\n    \"export_png\" : true\r\n  },\r\n  \"style\" : {\r\n    \"lettering\" : {\r\n      \"title\" : \"A CORUÑA - 1387 (A CORUÑA) precipitation and pressure evolution (2024)\",\r\n      \"subtitle\" : \"Lat: 432157N. Long: 082517W. Alt: 57\",\r\n      \"x_label\" : \"Date\",\r\n      \"y_1_label\" : \"Precipitation (mm)\",\r\n      \"y_2_label\" : \"Pressure (hPa)\"\r\n    },\r\n    \"figure_1\" : {\r\n      \"name\" : \"Precipitation evolution\",\r\n      \"color\" : \"#4169e1\"\r\n    },\r\n    \"figure_2\" : {\r\n      \"name\" : \"Pressure evolution\",\r\n      \"color\" : \"#ff0000\"\r\n    },\r\n    \"margin\" : {\r\n      \"left\" : 80,\r\n      \"right\" : 80,\r\n      \"top\" : 80,\r\n      \"bottom\" : 80\r\n    },\r\n    \"legend\" : {\r\n      \"y_offset\" : -0.3\r\n    }\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{AUTO_PLOT_URL_BASE}}/double-linear",
+					"host": [
+						"{{AUTO_PLOT_URL_BASE}}"
+					],
+					"path": [
+						"double-linear"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "linear regression",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"src\" : {\r\n    \"main\" : {\r\n      \"path\" : \"/spark/single_param_studies/temp/evol/a_coruna/evol_yearly_group\",\r\n      \"axis\" : {\r\n        \"x\" : {\r\n          \"name\" : \"year\",\r\n          \"format\" : \"timestamp_year\"\r\n        },\r\n        \"y\" : {\r\n          \"name\" : \"temp_yearly_avg\"\r\n        }\r\n      }\r\n    },\r\n    \"regression\" : {\r\n      \"path\" : \"/spark/single_param_studies/temp/evol/a_coruna/regression\",\r\n      \"names\" : {\r\n        \"slope\" : \"beta_1\",\r\n        \"intercept\" : \"beta_0\"\r\n      }\r\n    }\r\n  },\r\n  \"dest\" : {\r\n    \"path\" : \"/single_param_studies/temp/evol/a_coruna/evol_yearly_group\",\r\n    \"filename\" : \"plot\",\r\n    \"export_png\" : true\r\n  },\r\n  \"style\" : {\r\n    \"lettering\" : {\r\n      \"title\" : \"A CORUÑA - 1387 (A CORUÑA) temperature evolution (from the beginning of the records)\",\r\n      \"subtitle\" : \"Lat: 432157N. Long: 082517W. Alt: 57\",\r\n      \"x_label\" : \"Date\",\r\n      \"y_1_label\" : \"Temperature (ºC)\",\r\n      \"y_2_label\" : \"Temperature (ºC)\"\r\n    },\r\n    \"figure_1\" : {\r\n      \"name\" : \"Temperature evolution\",\r\n      \"color\" : \"#4169e1\"\r\n    },\r\n    \"figure_2\" : {\r\n      \"name\" : \"Temperature regression\",\r\n      \"color\" : \"#ff0000\"\r\n    },\r\n    \"margin\" : {\r\n      \"left\" : 120,\r\n      \"right\" : 120,\r\n      \"top\" : 100,\r\n      \"bottom\" : 100\r\n    },\r\n    \"legend\" : {\r\n      \"y_offset\" : -0.15\r\n    }\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{AUTO_PLOT_URL_BASE}}/linear-regression",
+					"host": [
+						"{{AUTO_PLOT_URL_BASE}}"
+					],
+					"path": [
+						"linear-regression"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "pie",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"src\" : {\r\n    \"path\" : \"/spark/stations/count_by_altitude_2024\",\r\n    \"names\" : {\r\n      \"lower_bound\" : \"min_value\",\r\n      \"upper_bound\" : \"max_value\",\r\n      \"value\" : \"count\"\r\n    }\r\n  },\r\n  \"dest\" : {\r\n    \"path\" : \"/stations/count_by_altitude_2024\",\r\n    \"filename\" : \"plot\",\r\n    \"export_png\" : true\r\n  },\r\n  \"style\" : {\r\n    \"lettering\" : {\r\n      \"title\" : \"Distribution of the station count by altitude\",\r\n      \"subtitle\" : \"Year 2024\"\r\n    },\r\n    \"margin\" : {\r\n      \"left\" : 120,\r\n      \"right\" : 120,\r\n      \"top\" : 100,\r\n      \"bottom\" : 100\r\n    },\r\n    \"show_legend\" : true\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{AUTO_PLOT_URL_BASE}}/pie",
+					"host": [
+						"{{AUTO_PLOT_URL_BASE}}"
+					],
+					"path": [
+						"pie"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "bar",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"src\" : {\r\n    \"path\" : \"/spark/single_param_studies/temp/top_10/highest/2024\",\r\n    \"axis\" : {\r\n      \"x\" : {\r\n        \"name\" : \"top\"\r\n      },\r\n      \"y\" : {\r\n        \"name\" : \"temp_avg\"\r\n      }\r\n    }\r\n  },\r\n  \"dest\" : {\r\n    \"path\" : \"/single_param_studies/temp/top_10/highest/2024\",\r\n    \"filename\" : \"plot\",\r\n    \"export_png\" : true\r\n  },\r\n  \"style\" : {\r\n    \"lettering\" : {\r\n      \"title\" : \"Top 10 stations with highest temperature\",\r\n      \"subtitle\" : \"Year 2024\",\r\n      \"x_label\" : \"Top\",\r\n      \"y_label\" : \"Temperature (ºC)\",\r\n      \"inside_info\" : [ {\r\n        \"label\" : \"Station\",\r\n        \"build\" : [ {\r\n          \"text_before\" : \"\",\r\n          \"name\" : \"station_id\",\r\n          \"text_after\" : \" \"\r\n        }, {\r\n          \"text_before\" : \"\",\r\n          \"name\" : \"station_name\",\r\n          \"text_after\" : \" \"\r\n        }, {\r\n          \"text_before\" : \"(\",\r\n          \"name\" : \"state\",\r\n          \"text_after\" : \").\"\r\n        } ]\r\n      }, {\r\n        \"label\" : \"Location\",\r\n        \"build\" : [ {\r\n          \"text_before\" : \"\",\r\n          \"name\" : \"lat_dms\",\r\n          \"text_after\" : \" \"\r\n        }, {\r\n          \"text_before\" : \"\",\r\n          \"name\" : \"long_dms\",\r\n          \"text_after\" : \" \"\r\n        }, {\r\n          \"text_before\" : \"(\",\r\n          \"name\" : \"altitude\",\r\n          \"text_after\" : \" m).\"\r\n        } ]\r\n      } ]\r\n    },\r\n    \"figure\" : {\r\n      \"inverted_horizontal_axis\" : false,\r\n      \"threshold_limit_max_min\" : 0.5,\r\n      \"threshold_perc_limit_outside_text\" : 0.3,\r\n      \"range_margin_perc\" : 0.05,\r\n      \"color\" : \"#4169e1\"\r\n    },\r\n    \"margin\" : {\r\n      \"left\" : 120,\r\n      \"right\" : 120,\r\n      \"top\" : 100,\r\n      \"bottom\" : 100\r\n    }\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{AUTO_PLOT_URL_BASE}}/bar",
+					"host": [
+						"{{AUTO_PLOT_URL_BASE}}"
+					],
+					"path": [
+						"bar"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "table",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"src\" : {\r\n    \"path\" : \"/spark/stations/count_by_state_2024\",\r\n    \"col_names\" : [ \"state\", \"count\" ]\r\n  },\r\n  \"dest\" : {\r\n    \"path\" : \"/stations/count_by_state_2024\",\r\n    \"filename\" : \"plot\",\r\n    \"export_png\" : false\r\n  },\r\n  \"style\" : {\r\n    \"lettering\" : {\r\n      \"title\" : \"Meteorological stations count for each spanish state\",\r\n      \"subtitle\" : \"Year 2024\",\r\n      \"headers\" : [ \"State\", \"Station count\" ]\r\n    },\r\n    \"figure\" : {\r\n      \"headers\" : {\r\n        \"align\" : \"center\",\r\n        \"color\" : \"#C8D4E3\"\r\n      },\r\n      \"cells\" : {\r\n        \"align\" : \"center\",\r\n        \"color\" : \"#F5F8FF\"\r\n      }\r\n    }\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{AUTO_PLOT_URL_BASE}}/table",
+					"host": [
+						"{{AUTO_PLOT_URL_BASE}}"
+					],
+					"path": [
+						"table"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "climograph",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"src\" : {\r\n    \"path\" : \"/spark/climograph/arid/BWh/peninsula/temp_and_prec\",\r\n    \"axis\" : {\r\n      \"x\" : {\r\n        \"name\" : \"month\"\r\n      },\r\n      \"y_temp\" : {\r\n        \"name\" : \"temp_monthly_avg\"\r\n      },\r\n      \"y_prec\" : {\r\n        \"name\" : \"prec_monthly_sum\"\r\n      }\r\n    }\r\n  },\r\n  \"dest\" : {\r\n    \"path\" : \"/climograph/arid/BWh/peninsula\",\r\n    \"filename\" : \"plot\",\r\n    \"export_png\" : true\r\n  },\r\n  \"style\" : {\r\n    \"lettering\" : {\r\n      \"title\" : \"ÁGUILAS - 7002Y (MURCIA) climograph (2024)\",\r\n      \"subtitle\" : \"Class: arid - BWh. Lat: 372502N. Long: 013513W. Alt: 32\",\r\n      \"x_label\" : \"Month\",\r\n      \"y_temp_label\" : \"Temperature (ºC)\",\r\n      \"y_prec_label\" : \"Precipitation (mm)\"\r\n    },\r\n    \"figure_temp\" : {\r\n      \"name\" : \"Temperature\",\r\n      \"color\" : \"#FF0000\"\r\n    },\r\n    \"figure_prec\" : {\r\n      \"name\" : \"Precipitation\",\r\n      \"color\" : \"#4169e1\"\r\n    },\r\n    \"margin\" : {\r\n      \"left\" : 80,\r\n      \"right\" : 80,\r\n      \"top\" : 80,\r\n      \"bottom\" : 80\r\n    },\r\n    \"legend\" : {\r\n      \"y_offset\" : -0.15\r\n    }\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{AUTO_PLOT_URL_BASE}}/climograph",
+					"host": [
+						"{{AUTO_PLOT_URL_BASE}}"
+					],
+					"path": [
+						"climograph"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "heat map",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"src\" : {\r\n    \"path\" : \"/spark/single_param_studies/temp/station_records_2024/continental\",\r\n    \"names\" : {\r\n      \"longitude\" : \"long_dec\",\r\n      \"latitude\" : \"lat_dec\",\r\n      \"value\" : \"temp_avg\"\r\n    },\r\n    \"location\" : \"continental\"\r\n  },\r\n  \"dest\" : {\r\n    \"path\" : \"/single_param_studies/temp/heat_map_2024/continental\",\r\n    \"filename\" : \"plot\",\r\n    \"export_png\" : true\r\n  },\r\n  \"style\" : {\r\n    \"lettering\" : {\r\n      \"title\" : \"Temperature heat map\",\r\n      \"subtitle\" : \"Spain continental territory. 2024\",\r\n      \"long_label\" : \"Longitude\",\r\n      \"lat_label\" : \"Latitude\",\r\n      \"legend_label\" : \"Temperature (ºC)\",\r\n      \"point_info\" : [ {\r\n        \"label\" : \"Station\",\r\n        \"build\" : [ {\r\n          \"text_before\" : \"\",\r\n          \"name\" : \"station_id\",\r\n          \"text_after\" : \" \"\r\n        }, {\r\n          \"text_before\" : \"\",\r\n          \"name\" : \"station_name\",\r\n          \"text_after\" : \" \"\r\n        }, {\r\n          \"text_before\" : \"(\",\r\n          \"name\" : \"state\",\r\n          \"text_after\" : \").\"\r\n        } ]\r\n      }, {\r\n        \"label\" : \"Location\",\r\n        \"build\" : [ {\r\n          \"text_before\" : \"\",\r\n          \"name\" : \"lat_dms\",\r\n          \"text_after\" : \" \"\r\n        }, {\r\n          \"text_before\" : \"\",\r\n          \"name\" : \"long_dms\",\r\n          \"text_after\" : \" \"\r\n        }, {\r\n          \"text_before\" : \"(\",\r\n          \"name\" : \"altitude\",\r\n          \"text_after\" : \" m).\"\r\n        } ]\r\n      } ]\r\n    },\r\n    \"figure\" : {\r\n      \"name\" : \"temperature heat map\",\r\n      \"color\" : \"#000000\",\r\n      \"color_opacity\" : 0.5,\r\n      \"point_size\" : 3\r\n    },\r\n    \"margin\" : {\r\n      \"left\" : 120,\r\n      \"right\" : 120,\r\n      \"top\" : 100,\r\n      \"bottom\" : 100\r\n    }\r\n  }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{AUTO_PLOT_URL_BASE}}/heat-map",
+					"host": [
+						"{{AUTO_PLOT_URL_BASE}}"
+					],
+					"path": [
+						"heat-map"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "AUTO_PLOT_URL_BASE",
+			"value": ""
+		}
+	]
+}
