@@ -9,3 +9,6 @@ data/
 
 # Deployment
 *.jar
+
+# Secrets
+*.env

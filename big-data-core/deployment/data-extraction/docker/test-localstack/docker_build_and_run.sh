@@ -9,7 +9,7 @@ C_RST="${ESC}[0m"
 
 # ===== EXECUTION ARGS =====
 BUILD_ONLY=false
-if [[ "$1" == "--build-only" ]]; then
+if [ $# -ge 1 ] && [ "$1" == "--build-only" ]; then
     BUILD_ONLY=true
 fi
 
@@ -20,7 +20,7 @@ COMPOSE_FILE="./docker-compose.yaml"
 ENV_FILE="./.env"
 ENTRYPOINT_SCRIPT="./entrypoint.sh"
 JAR_PATH="../../data-extraction-1.0.0.jar"
-IMAGE_NAME="data-extraction-localstack:v1.0"
+export IMAGE_NAME="data-extraction-localstack:v1.0"
 
 # ===== EXIT FLAG =====
 SCRIPT_FAILED=0
@@ -95,9 +95,9 @@ load_env_file() {
 }
 
 run_compose() {
-    gnome-terminal -- bash -c "docker-compose -f \"$COMPOSE_FILE\" up --remove-orphans --force-recreate localstack; exec bash" &
-    docker-compose -f "$COMPOSE_FILE" up --no-deps --remove-orphans --abort-on-container-exit data-extraction
-    docker-compose -f "$COMPOSE_FILE" down --volumes --remove-orphans
+    gnome-terminal -- bash -c "docker compose -f \"$COMPOSE_FILE\" up --remove-orphans --force-recreate localstack" &
+    docker compose -f "$COMPOSE_FILE" up --no-deps --remove-orphans --abort-on-container-exit data-extraction
+    docker compose -f "$COMPOSE_FILE" down --volumes --remove-orphans
 
     return $?
 }
@@ -126,7 +126,7 @@ if docker_exists "$IMAGE_NAME"; then
         exit 0
     fi
 
-    run_container || { SCRIPT_FAILED=1; exit $SCRIPT_FAILED; }
+    run_compose || { SCRIPT_FAILED=1; exit $SCRIPT_FAILED; }
     exit 0
 else
     info "Docker image does not exist, will build it"

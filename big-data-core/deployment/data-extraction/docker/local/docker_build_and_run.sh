@@ -9,7 +9,7 @@ C_RST="\033[0m"
 
 # ===== EXECUTION ARGS =====
 BUILD_ONLY=false
-if [[ "$1" == "--build-only" ]]; then
+if [ $# -ge 1 ] && [ "$1" == "--build-only" ]; then
     BUILD_ONLY=true
 fi
 

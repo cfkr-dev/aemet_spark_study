@@ -9,7 +9,7 @@ C_RST="\033[0m"
 
 # ===== EXECUTION ARGS =====
 BUILD_ONLY=false
-if [[ "$1" == "--build-only" ]]; then
+if [ $# -ge 1 ] && [ "$1" == "--build-only" ]; then
     BUILD_ONLY=true
 fi
 
@@ -168,11 +168,11 @@ copy_file "$REQUIREMENTS_PATH" "$CWD/requirements.txt" || { SCRIPT_FAILED=1; exi
 
 echo
 info "Copying resources"
-copy_file "$RESOURCES_DIR" "$CWD/Resources" || { SCRIPT_FAILED=1; exit $SCRIPT_FAILED; }
+copy_dir "$RESOURCES_DIR" "$CWD/Resources" || { SCRIPT_FAILED=1; exit $SCRIPT_FAILED; }
 
 echo
 info "Copying app"
-copy_file "$APP_DIR" "$CWD/App" || { SCRIPT_FAILED=1; exit $SCRIPT_FAILED; }
+copy_dir "$APP_DIR" "$CWD/App" || { SCRIPT_FAILED=1; exit $SCRIPT_FAILED; }
 
 echo
 info "Building Docker image"
@@ -186,11 +186,11 @@ if ! docker build -t "$IMAGE_NAME" -f "$DOCKERFILE_FILE" .; then
 
     echo
     info "Cleaning copied resources"
-    remove_file "$CWD/Resources" || true
+    remove_dir "$CWD/Resources" || true
 
     echo
     info "Cleaning copied app"
-    remove_file "$CWD/App" || true
+    remove_dir "$CWD/App" || true
 
     exit $SCRIPT_FAILED
 fi
@@ -207,11 +207,11 @@ wait_for_docker_image "$IMAGE_NAME" 5 || {
 
     echo
     info "Cleaning copied resources"
-    remove_file "$CWD/Resources" || true
+    remove_dir "$CWD/Resources" || true
 
     echo
     info "Cleaning copied app"
-    remove_file "$CWD/App" || true
+    remove_dir "$CWD/App" || true
 
     exit $SCRIPT_FAILED
 }
@@ -224,11 +224,11 @@ remove_file "$CWD/requirements.txt" || { SCRIPT_FAILED=1; exit $SCRIPT_FAILED; }
 
 echo
 info "Cleaning copied resources"
-remove_file "$CWD/Resources" || { SCRIPT_FAILED=1; exit $SCRIPT_FAILED; }
+remove_dir "$CWD/Resources" || { SCRIPT_FAILED=1; exit $SCRIPT_FAILED; }
 
 echo
 info "Cleaning copied app"
-remove_file "$CWD/App" || { SCRIPT_FAILED=1; exit $SCRIPT_FAILED; }
+remove_dir "$CWD/App" || { SCRIPT_FAILED=1; exit $SCRIPT_FAILED; }
 
 if [[ "$BUILD_ONLY" == true ]]; then
     info "BUILD-ONLY active. Skipping execution"

@@ -17,10 +17,10 @@ PLOT_GENERATION_WD="../../../plot-generation/docker/local"
 BUILD_SCRIPT="./docker_build_and_run.bat"
 COMPOSE_FILE="./docker-compose.yaml"
 ENV_FILE="./.env"
-AUTO_PLOT_IMAGE_NAME="auto-plot:v1.0"
-DATA_EXTRACTION_IMAGE_NAME="data-extraction:v1.0"
-SPARK_APP_IMAGE_NAME="spark-app:v1.0"
-PLOT_GENERATION_IMAGE_NAME="plot-generation:v1.0"
+export AUTO_PLOT_IMAGE_NAME="auto-plot:v1.0"
+export DATA_EXTRACTION_IMAGE_NAME="data-extraction:v1.0"
+export SPARK_APP_IMAGE_NAME="spark-app:v1.0"
+export PLOT_GENERATION_IMAGE_NAME="plot-generation:v1.0"
 
 # ===== EXIT FLAG =====
 SCRIPT_FAILED=0
@@ -65,11 +65,11 @@ load_env_file() {
 }
 
 run_compose() {
-    docker-compose -f "$COMPOSE_FILE" up --no-deps --remove-orphans --abort-on-container-exit data-extraction
-    docker-compose -f "$COMPOSE_FILE" up --no-deps --remove-orphans --abort-on-container-exit spark-app
-    gnome-terminal -- bash -c "docker-compose -f \"$COMPOSE_FILE\" up --no-deps --remove-orphans --force-recreate auto-plot; exec bash" &
-    docker-compose -f "$COMPOSE_FILE" up --no-deps --remove-orphans --abort-on-container-exit plot-generation
-    docker-compose -f "$COMPOSE_FILE" down --volumes --remove-orphans
+    docker compose -f "$COMPOSE_FILE" up --no-deps --remove-orphans --abort-on-container-exit data-extraction
+    docker compose -f "$COMPOSE_FILE" up --no-deps --remove-orphans --abort-on-container-exit spark-app
+    gnome-terminal -- bash -c "docker compose -f \"$COMPOSE_FILE\" up --no-deps --remove-orphans --force-recreate auto-plot" &
+    docker compose -f "$COMPOSE_FILE" up --no-deps --remove-orphans --abort-on-container-exit plot-generation
+    docker compose -f "$COMPOSE_FILE" down --volumes --remove-orphans
 
     return $?
 }
