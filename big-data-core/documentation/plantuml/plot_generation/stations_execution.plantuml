@@ -1,19 +1,19 @@
 @startuml
 participant "PlotGenerator" as PLOT_GENERATOR
 participant "Stations" as STATIONS
-participant "Plot API" as PLOT_API
+participant "AUTO-PLOT API" as AUTO_PLOT_API
 
 PLOT_GENERATOR -> STATIONS : generate()
 activate STATIONS
 
-STATIONS -> PLOT_API : generatePlot(countEvolution)
-PLOT_API --> STATIONS : ok
+STATIONS -> AUTO_PLOT_API : generatePlot(countEvolution)
+AUTO_PLOT_API --> STATIONS : ok
 
-STATIONS -> PLOT_API : generatePlot(countByState2024)
-PLOT_API --> STATIONS : ok
+STATIONS -> AUTO_PLOT_API : generatePlot(countByState2024)
+AUTO_PLOT_API --> STATIONS : ok
 
-STATIONS -> PLOT_API : generatePlot(countByAltitude2024)
-PLOT_API --> STATIONS : ok
+STATIONS -> AUTO_PLOT_API : generatePlot(countByAltitude2024)
+AUTO_PLOT_API --> STATIONS : ok
 
 STATIONS --> PLOT_GENERATOR : done
 deactivate STATIONS

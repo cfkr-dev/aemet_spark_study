@@ -1,0 +1,47 @@
+@startuml
+actor User
+
+participant "App" as APP
+
+== PLOT GENERATION ==
+
+participant "PlotGenerator" as PLOT_GENERATOR
+participant "AUTO-PLOT API" as AUTO_PLOT_API
+participant "Storage" as STORAGE
+
+activate APP
+APP -> STORAGE : get constants
+STORAGE --> APP : constants
+
+APP -> PLOT_GENERATOR : start plot generation
+activate PLOT_GENERATOR
+
+PLOT_GENERATOR -> AUTO_PLOT_API : StationStudies.generate()
+AUTO_PLOT_API --> STORAGE : save plot
+STORAGE --> AUTO_PLOT_API : saved
+AUTO_PLOT_API --> PLOT_GENERATOR : ok
+
+PLOT_GENERATOR -> AUTO_PLOT_API : ClimographStudies.generate()
+AUTO_PLOT_API --> STORAGE : save plot
+STORAGE --> AUTO_PLOT_API : saved
+AUTO_PLOT_API --> PLOT_GENERATOR : ok
+
+PLOT_GENERATOR -> AUTO_PLOT_API : SingleParamStudies.generate()
+AUTO_PLOT_API --> STORAGE : save plot
+STORAGE --> AUTO_PLOT_API : saved
+AUTO_PLOT_API --> PLOT_GENERATOR : ok
+
+PLOT_GENERATOR -> AUTO_PLOT_API : InterestingStudies.generate()
+AUTO_PLOT_API --> STORAGE : save plot
+STORAGE --> AUTO_PLOT_API : saved
+AUTO_PLOT_API --> PLOT_GENERATOR : ok
+
+deactivate PLOT_GENERATOR
+
+PLOT_GENERATOR --> APP : end plot generation
+
+APP --> User : end app
+
+deactivate APP
+
+@enduml

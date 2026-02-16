@@ -5,7 +5,8 @@ participant "DataReformatter" as DATA_REFORMAT
 participant "AemetDataReformatter" as AEMET_REFMT
 participant "IfapaDataReformatter" as IFAPA_REFMT
 participant "Storage" as STORAGE
-participant "AvroParquetWriter" as PARQUET
+participant "JSONStorageBackend" as JSON_STORAGE_BACKEND
+participant "AvroParquetBackend" as PARQUET_STORAGE_BACKEND
 
 == DATA REFORMAT ==
 
@@ -15,11 +16,11 @@ activate DATA_REFORMAT
 ' --- Reformat AEMET stations ---
 DATA_REFORMAT -> AEMET_REFMT : reformatStationsData()
 activate AEMET_REFMT
-AEMET_REFMT -> STORAGE : read stations JSON and metadata
-STORAGE --> AEMET_REFMT : stations JSON and metadata
+AEMET_REFMT -> JSON_STORAGE_BACKEND : readJSON(stations metadata) and readJSON(stations data)
+JSON_STORAGE_BACKEND --> AEMET_REFMT : stations data and metadata JSONs
 loop for each station in stations JSON
-  AEMET_REFMT -> PARQUET : write station record
-  PARQUET --> AEMET_REFMT : written
+  AEMET_REFMT -> PARQUET_STORAGE_BACKEND: put(station record)
+  PARQUET_STORAGE_BACKEND --> AEMET_REFMT : written
 end
 AEMET_REFMT --> DATA_REFORMAT : done
 deactivate AEMET_REFMT
@@ -27,15 +28,16 @@ deactivate AEMET_REFMT
 ' --- Reformat AEMET meteo ---
 DATA_REFORMAT -> AEMET_REFMT : reformatMeteoData()
 activate AEMET_REFMT
-AEMET_REFMT -> STORAGE : list meteo JSON files
+AEMET_REFMT -> STORAGE : readDirectoryRecursive(meteo files dir)
 STORAGE --> AEMET_REFMT : meteo file list
+AEMET_REFMT -> AEMET_REFMT : buildChunks(meteo file list)
 loop for each chunk in chunks
   loop for each file in chunk
-    AEMET_REFMT -> STORAGE : read meteo JSON file
-    STORAGE --> AEMET_REFMT : meteo JSON array
+    AEMET_REFMT -> JSON_STORAGE_BACKEND : readJSON(meteo file)
+    JSON_STORAGE_BACKEND --> AEMET_REFMT : written
     loop for each record in file
-      AEMET_REFMT -> PARQUET : write meteo record
-      PARQUET --> AEMET_REFMT : written
+      AEMET_REFMT -> PARQUET_STORAGE_BACKEND : put(meteo record)
+      PARQUET_STORAGE_BACKEND --> AEMET_REFMT : written
     end
   end
 end
@@ -45,21 +47,21 @@ deactivate AEMET_REFMT
 ' --- Reformat IFAPA stations ---
 DATA_REFORMAT -> IFAPA_REFMT : reformatStationsData()
 activate IFAPA_REFMT
-IFAPA_REFMT -> STORAGE : read IFAPA station JSON and metadata
-STORAGE --> IFAPA_REFMT : station JSON and metadata
-IFAPA_REFMT -> PARQUET : write station record
-PARQUET --> IFAPA_REFMT : written
+IFAPA_REFMT -> JSON_STORAGE_BACKEND : readJSON(station metadata) and readJSON(station data)
+JSON_STORAGE_BACKEND --> IFAPA_REFMT : stations data and metadata JSONs
+IFAPA_REFMT -> PARQUET_STORAGE_BACKEND : put(station record)
+PARQUET_STORAGE_BACKEND --> IFAPA_REFMT : written
 IFAPA_REFMT --> DATA_REFORMAT : done
 deactivate IFAPA_REFMT
 
 ' --- Reformat IFAPA meteo ---
 DATA_REFORMAT -> IFAPA_REFMT : reformatMeteoData()
 activate IFAPA_REFMT
-IFAPA_REFMT -> STORAGE : read IFAPA meteo JSON
-STORAGE --> IFAPA_REFMT : meteo JSON array
+IFAPA_REFMT -> JSON_STORAGE_BACKEND : readJSON(meteo data)
+JSON_STORAGE_BACKEND --> IFAPA_REFMT : meteo data JSON
 loop for each record in meteo JSON
-  IFAPA_REFMT -> PARQUET : write meteo record
-  PARQUET --> IFAPA_REFMT : written
+  IFAPA_REFMT -> PARQUET_STORAGE_BACKEND : put(meteo record)
+  PARQUET_STORAGE_BACKEND --> IFAPA_REFMT : written
 end
 IFAPA_REFMT --> DATA_REFORMAT : done
 deactivate IFAPA_REFMT

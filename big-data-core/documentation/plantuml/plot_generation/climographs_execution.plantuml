@@ -1,8 +1,8 @@
 @startuml
 participant "PlotGenerator" as PLOT_GENERATOR
 participant "Climograph" as CLIMOGRAPH
-participant "JSONUtils" as JSON_UTILS
-participant "Plot API" as PLOT_API
+participant "JSONStorageBackend" as JSON_STORAGE_BACKEND
+participant "AUTO-PLOT API" as AUTO_PLOT_API
 
 PLOT_GENERATOR -> CLIMOGRAPH : generate()
 activate CLIMOGRAPH
@@ -14,11 +14,11 @@ loop each climateGroup
         CLIMOGRAPH -> CLIMOGRAPH : foreach climateRecord
 
         loop each location
-            CLIMOGRAPH -> JSON_UTILS : readJSON(stationInfo)
-            JSON_UTILS --> CLIMOGRAPH : station JSON
+            CLIMOGRAPH -> JSON_STORAGE_BACKEND : readJSON(stationInfo)
+            JSON_STORAGE_BACKEND --> CLIMOGRAPH : station JSON
 
-            CLIMOGRAPH -> PLOT_API : generatePlot(climograph)
-            PLOT_API --> CLIMOGRAPH : ok
+            CLIMOGRAPH -> AUTO_PLOT_API : generatePlot(climograph)
+            AUTO_PLOT_API --> CLIMOGRAPH : ok
         end
     end
 end

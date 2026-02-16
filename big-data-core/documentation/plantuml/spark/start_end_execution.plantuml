@@ -4,13 +4,6 @@ actor User
 participant "SparkManager" as SPARK_MANAGER
 participant "SparkSessionManager" as SPARK_SESSION_MANAGER
 participant "SparkSessionCore" as SPARK_SESSION_CORE
-participant "SparkQueriesManager" as SPARK_QUERIES_MANAGER
-participant "SparkQueriesCore" as SPARK_QUERIES_CORE
-participant "StudyQueriesManager" as STUDY_QUERIES_MANAGER
-participant "StationsQueriesCore" as STATIONS_QUERIES_CORE
-participant "ClimographsQueriesCore" as CLIMOGRAPHS_QUERIES_CORE
-participant "SingleParamStudiesQueriesCore" as SINGLE_PARAM_STUDIES_QUERIES_CORE
-participant "InterestingStudiesQueriesCore" as INTERESTING_STUDIES_QUERIES_CORE
 participant "Storage" as STORAGE
 
 User -> SPARK_MANAGER : execute()
@@ -40,59 +33,6 @@ SPARK_SESSION_CORE -> SPARK_SESSION_CORE : materialize sessionDataframes.allStat
 SPARK_SESSION_CORE -> SPARK_SESSION_CORE : materialize sessionDataframes.allMeteoInfo.count()
 SPARK_SESSION_CORE --> SPARK_MANAGER : session started
 deactivate SPARK_SESSION_CORE
-
-== Run Studies ==
-
-SPARK_MANAGER -> SPARK_QUERIES_MANAGER : createSparkQueriesCore(sparkSessionCore)
-SPARK_QUERIES_MANAGER --> SPARK_MANAGER : SparkQueriesCore
-
-SPARK_MANAGER -> STUDY_QUERIES_MANAGER : createStudyQueriesCore(sparkSessionCore, sparkQueriesCore) (StationsQueriesCore)
-STUDY_QUERIES_MANAGER --> SPARK_MANAGER : StationsQueriesCore
-SPARK_MANAGER -> STATIONS_QUERIES_CORE : execute()
-activate STATIONS_QUERIES_CORE
-STATIONS_QUERIES_CORE -> SPARK_QUERIES_CORE : run queries (uses SparkQueriesCore)
-SPARK_QUERIES_CORE --> STATIONS_QUERIES_CORE : results DF
-STATIONS_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(results DF, path)
-SPARK_SESSION_CORE -> STORAGE : write parquet
-STORAGE --> SPARK_SESSION_CORE : saved
-SPARK_SESSION_CORE --> STATIONS_QUERIES_CORE : saved
-deactivate STATIONS_QUERIES_CORE
-
-SPARK_MANAGER -> STUDY_QUERIES_MANAGER : createStudyQueriesCore(sparkSessionCore, sparkQueriesCore) (ClimographsQueriesCore)
-STUDY_QUERIES_MANAGER --> SPARK_MANAGER : ClimographsQueriesCore
-SPARK_MANAGER -> CLIMOGRAPHS_QUERIES_CORE : execute()
-activate CLIMOGRAPHS_QUERIES_CORE
-CLIMOGRAPHS_QUERIES_CORE -> SPARK_QUERIES_CORE : run queries (uses SparkQueriesCore)
-SPARK_QUERIES_CORE --> CLIMOGRAPHS_QUERIES_CORE : results DF
-CLIMOGRAPHS_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(results DF, path)
-SPARK_SESSION_CORE -> STORAGE : write parquet
-STORAGE --> SPARK_SESSION_CORE : saved
-SPARK_SESSION_CORE --> CLIMOGRAPHS_QUERIES_CORE : saved
-deactivate CLIMOGRAPHS_QUERIES_CORE
-
-SPARK_MANAGER -> STUDY_QUERIES_MANAGER : createStudyQueriesCore(sparkSessionCore, sparkQueriesCore) (SingleParamStudiesQueriesCore)
-STUDY_QUERIES_MANAGER --> SPARK_MANAGER : SingleParamStudiesQueriesCore
-SPARK_MANAGER -> SINGLE_PARAM_STUDIES_QUERIES_CORE : execute()
-activate SINGLE_PARAM_STUDIES_QUERIES_CORE
-SINGLE_PARAM_STUDIES_QUERIES_CORE -> SPARK_QUERIES_CORE : run queries (uses SparkQueriesCore)
-SPARK_QUERIES_CORE --> SINGLE_PARAM_STUDIES_QUERIES_CORE : results DF
-SINGLE_PARAM_STUDIES_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(results DF, path)
-SPARK_SESSION_CORE -> STORAGE : write parquet
-STORAGE --> SPARK_SESSION_CORE : saved
-SPARK_SESSION_CORE --> SINGLE_PARAM_STUDIES_QUERIES_CORE : saved
-deactivate SINGLE_PARAM_STUDIES_QUERIES_CORE
-
-SPARK_MANAGER -> STUDY_QUERIES_MANAGER : createStudyQueriesCore(sparkSessionCore, sparkQueriesCore) (InterestingStudiesQueriesCore)
-STUDY_QUERIES_MANAGER --> SPARK_MANAGER : InterestingStudiesQueriesCore
-SPARK_MANAGER -> INTERESTING_STUDIES_QUERIES_CORE : execute()
-activate INTERESTING_STUDIES_QUERIES_CORE
-INTERESTING_STUDIES_QUERIES_CORE -> SPARK_QUERIES_CORE : run queries (uses SparkQueriesCore)
-SPARK_QUERIES_CORE --> INTERESTING_STUDIES_QUERIES_CORE : results DF
-INTERESTING_STUDIES_QUERIES_CORE -> SPARK_SESSION_CORE : saveDataframeAsParquet(results DF, path)
-SPARK_SESSION_CORE -> STORAGE : write parquet
-STORAGE --> SPARK_SESSION_CORE : saved
-SPARK_SESSION_CORE --> INTERESTING_STUDIES_QUERIES_CORE : saved
-deactivate INTERESTING_STUDIES_QUERIES_CORE
 
 == End Spark ==
 

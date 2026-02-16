@@ -5,7 +5,7 @@ participant "AemetAPIClient" as AEMET_CLIENT
 participant "AllStationsData" as STATION_DATA
 participant "AllStationsMeteo" as METEO_DATA
 participant "HTTPUtils" as HTTP_UTILS
-participant "FileUtils" as FILE_UTILS
+participant "JSONStorageBackend" as JSON_STORAGE_BACKEND
 
 User -> AEMET_CLIENT : aemetDataExtraction()
 activate AEMET_CLIENT
@@ -18,8 +18,8 @@ alt retry until success
     STATION_DATA -> HTTP_UTILS : getAemetAPIResource(metadata=true)
     alt success
         HTTP_UTILS --> STATION_DATA : JSON response
-        STATION_DATA -> FILE_UTILS : saveContentToPath(metadata)
-        FILE_UTILS --> STATION_DATA : success
+        STATION_DATA -> JSON_STORAGE_BACKEND : writeJSON(metadata)
+        JSON_STORAGE_BACKEND --> STATION_DATA : written
     else failure
         HTTP_UTILS --> STATION_DATA : exception
         STATION_DATA -> STATION_DATA : retry doWhileWithGetAndSave()
@@ -36,8 +36,8 @@ alt retry until success
     METEO_DATA -> HTTP_UTILS : getAemetAPIResource(metadata=true)
     alt success
         HTTP_UTILS --> METEO_DATA : JSON response
-        METEO_DATA -> FILE_UTILS : saveContentToPath(metadata)
-        FILE_UTILS --> METEO_DATA : success
+        METEO_DATA -> JSON_STORAGE_BACKEND : writeJSON(metadata)
+        JSON_STORAGE_BACKEND --> METEO_DATA : written
     else failure
         HTTP_UTILS --> METEO_DATA : exception
         METEO_DATA -> METEO_DATA : retry doWhileWithGetAndSave()
@@ -54,8 +54,8 @@ alt retry until success
     STATION_DATA -> HTTP_UTILS : getAemetAPIResource(metadata=false)
     alt success
         HTTP_UTILS --> STATION_DATA : JSON response
-        STATION_DATA -> FILE_UTILS : saveContentToPath(data)
-        FILE_UTILS --> STATION_DATA : success
+        STATION_DATA -> JSON_STORAGE_BACKEND : writeJSON(data)
+        JSON_STORAGE_BACKEND --> STATION_DATA : written
     else failure
         HTTP_UTILS --> STATION_DATA : exception
         STATION_DATA -> STATION_DATA : retry doWhileWithGetAndSave()
@@ -72,10 +72,10 @@ alt retry until success
     METEO_DATA -> HTTP_UTILS : getAemetAPIResource(metadata=false)
     alt success
         HTTP_UTILS --> METEO_DATA : JSON response
-        METEO_DATA -> FILE_UTILS : saveContentToPath(data)
-        FILE_UTILS --> METEO_DATA : success
-        METEO_DATA -> FILE_UTILS : save last saved date
-        FILE_UTILS --> METEO_DATA : done
+        METEO_DATA -> JSON_STORAGE_BACKEND : writeJSON(data)
+        JSON_STORAGE_BACKEND --> METEO_DATA : written
+        METEO_DATA -> JSON_STORAGE_BACKEND : writeJSON(last saved date)
+        JSON_STORAGE_BACKEND --> METEO_DATA : written
     else failure
         HTTP_UTILS --> METEO_DATA : exception
         METEO_DATA -> METEO_DATA : retry doWhileWithGetAndSave()

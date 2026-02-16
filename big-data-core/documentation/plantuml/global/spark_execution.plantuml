@@ -3,83 +3,6 @@ actor User
 
 participant "App" as APP
 
-== DATA EXTRACTION ==
-
-participant "AemetAPIClient" as AEMET
-participant "AEMET API" as AEMET_API
-participant "IfapaAPIClient" as IFAPA
-participant "IFAPA API" as IFAPA_API
-participant "IfapaToAemetConverter" as IFAPA_TO_AEMET
-participant "Storage" as STORAGE
-participant "DataReformatter" as DATA_REFORMAT
-participant "AemetDataReformatter" as AEMET_REFMT
-participant "IfapaDataReformatter" as IFAPA_REFMT
-
-User -> APP : start app
-
-activate APP
-APP -> STORAGE : get constants
-STORAGE --> APP : constants
-
-APP -> AEMET : start AEMET data extraction
-activate AEMET
-AEMET -> AEMET_API : get AEMET data
-AEMET_API --> AEMET : ok
-AEMET -> STORAGE : save AEMET data
-STORAGE --> AEMET : saved
-AEMET --> APP : end AEMET data extraction
-deactivate AEMET
-
-APP -> IFAPA : start IFAPA data extraction
-activate IFAPA
-IFAPA -> IFAPA_API : get IFAPA data
-IFAPA_API --> IFAPA : ok
-IFAPA -> STORAGE : save IFAPA data
-STORAGE --> IFAPA : saved
-IFAPA --> APP : end IFAPA data extraction
-deactivate IFAPA
-
-APP -> IFAPA_TO_AEMET : start IFAPA to AEMET format
-activate IFAPA_TO_AEMET
-IFAPA_TO_AEMET -> STORAGE : save converted IFAPA to AEMET data
-STORAGE --> IFAPA_TO_AEMET : saved
-IFAPA_TO_AEMET --> APP : end IFAPA to AEMET format
-deactivate IFAPA_TO_AEMET
-
-APP -> DATA_REFORMAT : start reformat data
-activate DATA_REFORMAT
-
-DATA_REFORMAT -> AEMET_REFMT : reformatStationsData()
-activate AEMET_REFMT
-AEMET_REFMT -> STORAGE : write stations Parquet
-STORAGE --> AEMET_REFMT : saved
-AEMET_REFMT --> DATA_REFORMAT : done
-deactivate AEMET_REFMT
-
-DATA_REFORMAT -> AEMET_REFMT : reformatMeteoData()
-activate AEMET_REFMT
-AEMET_REFMT -> STORAGE : write meteo Parquet
-STORAGE --> AEMET_REFMT : saved
-AEMET_REFMT --> DATA_REFORMAT : done
-deactivate AEMET_REFMT
-
-DATA_REFORMAT -> IFAPA_REFMT : reformatStationsData()
-activate IFAPA_REFMT
-IFAPA_REFMT -> STORAGE : write IFAPA station Parquet
-STORAGE --> IFAPA_REFMT : saved
-IFAPA_REFMT --> DATA_REFORMAT : done
-deactivate IFAPA_REFMT
-
-DATA_REFORMAT -> IFAPA_REFMT : reformatMeteoData()
-activate IFAPA_REFMT
-IFAPA_REFMT -> STORAGE : write IFAPA meteo Parquet
-STORAGE --> IFAPA_REFMT : saved
-IFAPA_REFMT --> DATA_REFORMAT : done
-deactivate IFAPA_REFMT
-
-DATA_REFORMAT --> APP : end reformat data
-deactivate DATA_REFORMAT
-
 == SPARK PROCESSING ==
 
 participant "SparkManager" as SPARK_MANAGER
@@ -92,7 +15,9 @@ participant "StationsQueriesCore" as STATIONS_QUERIES_CORE
 participant "ClimographsQueriesCore" as CLIMOGRAPHS_QUERIES_CORE
 participant "SingleParamStudiesQueriesCore" as SINGLE_PARAM_STUDIES_QUERIES_CORE
 participant "InterestingStudiesQueriesCore" as INTERESTING_STUDIES_QUERIES_CORE
+participant "Storage" as STORAGE
 
+activate APP
 APP -> STORAGE : get constants
 STORAGE --> APP : constants
 
@@ -175,44 +100,5 @@ deactivate SPARK_SESSION_CORE
 SPARK_MANAGER --> APP : end Spark processing
 
 deactivate SPARK_MANAGER
-
-== PLOT GENERATION ==
-
-participant "PlotGenerator" as PLOT_GENERATOR
-participant "AUTOPLOT API" as AUTO_PLOT_API
-
-APP -> STORAGE : get constants
-STORAGE --> APP : constants
-
-APP -> PLOT_GENERATOR : start plot generation
-activate PLOT_GENERATOR
-
-PLOT_GENERATOR -> AUTO_PLOT_API : StationStudies.generate()
-AUTO_PLOT_API --> STORAGE : save plot
-STORAGE --> AUTO_PLOT_API : saved
-AUTO_PLOT_API --> PLOT_GENERATOR : ok
-
-PLOT_GENERATOR -> AUTO_PLOT_API : ClimographStudies.generate()
-AUTO_PLOT_API --> STORAGE : save plot
-STORAGE --> AUTO_PLOT_API : saved
-AUTO_PLOT_API --> PLOT_GENERATOR : ok
-
-PLOT_GENERATOR -> AUTO_PLOT_API : SingleParamStudies.generate()
-AUTO_PLOT_API --> STORAGE : save plot
-STORAGE --> AUTO_PLOT_API : saved
-AUTO_PLOT_API --> PLOT_GENERATOR : ok
-
-PLOT_GENERATOR -> AUTO_PLOT_API : InterestingStudies.generate()
-AUTO_PLOT_API --> STORAGE : save plot
-STORAGE --> AUTO_PLOT_API : saved
-AUTO_PLOT_API --> PLOT_GENERATOR : ok
-
-deactivate PLOT_GENERATOR
-
-PLOT_GENERATOR --> APP : end plot generation
-
-APP --> User : end app
-
-deactivate APP
 
 @enduml

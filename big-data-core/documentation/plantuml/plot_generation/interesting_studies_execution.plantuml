@@ -1,30 +1,30 @@
 @startuml
 participant "PlotGenerator" as PLOT_GENERATOR
 participant "InterestingStudies" as INTERESTING_STUDIES
-participant "JSONUtils" as JSON_UTILS
-participant "Plot API" as PLOT_API
+participant "JSONStorageBackend" as JSON_STORAGE_BACKEND
+participant "AUTO-PLOT API" as AUTO_PLOT_API
 
 PLOT_GENERATOR -> INTERESTING_STUDIES : generate()
 activate INTERESTING_STUDIES
 
 group EVOL PREC/PRESS
     loop each state
-        INTERESTING_STUDIES -> JSON_UTILS : readJSON(station2024)
-        JSON_UTILS --> INTERESTING_STUDIES : station JSON
-        INTERESTING_STUDIES -> PLOT_API : generatePlot(evolPrecPress2024)
-        PLOT_API --> INTERESTING_STUDIES : ok
+        INTERESTING_STUDIES -> JSON_STORAGE_BACKEND : readJSON(station2024)
+        JSON_STORAGE_BACKEND --> INTERESTING_STUDIES : station JSON
+        INTERESTING_STUDIES -> AUTO_PLOT_API : generatePlot(evolPrecPress2024)
+        AUTO_PLOT_API --> INTERESTING_STUDIES : ok
 
-        INTERESTING_STUDIES -> JSON_UTILS : readJSON(stationGlobal)
-        JSON_UTILS --> INTERESTING_STUDIES : station JSON
-        INTERESTING_STUDIES -> PLOT_API : generatePlot(evolPrecPressYearlyGroup)
-        PLOT_API --> INTERESTING_STUDIES : ok
+        INTERESTING_STUDIES -> JSON_STORAGE_BACKEND : readJSON(stationGlobal)
+        JSON_STORAGE_BACKEND --> INTERESTING_STUDIES : station JSON
+        INTERESTING_STUDIES -> AUTO_PLOT_API : generatePlot(evolPrecPressYearlyGroup)
+        AUTO_PLOT_API --> INTERESTING_STUDIES : ok
     end
 end
 
 group TOP 10 STATES
     loop each study
-        INTERESTING_STUDIES -> PLOT_API : generatePlot(top10States)
-        PLOT_API --> INTERESTING_STUDIES : ok
+        INTERESTING_STUDIES -> AUTO_PLOT_API : generatePlot(top10States)
+        AUTO_PLOT_API --> INTERESTING_STUDIES : ok
     end
 end
 

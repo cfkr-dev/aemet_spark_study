@@ -5,7 +5,7 @@ participant "IfapaAPIClient" as IFAPA_CLIENT
 participant "SingleStationInfo" as SINGLE_STATION_INFO
 participant "SingleStationMeteo" as SINGLE_STATION_METEO
 participant "HTTPUtils" as HTTP_UTILS
-participant "FileUtils" as FILE_UTILS
+participant "JSONStorageBackend" as JSON_STORAGE_BACKEND
 
 User -> IFAPA_CLIENT : ifapaDataExtraction()
 activate IFAPA_CLIENT
@@ -18,8 +18,8 @@ alt retry until success
     SINGLE_STATION_INFO -> HTTP_UTILS : getIfapaAPIResource()
     alt success
         HTTP_UTILS --> SINGLE_STATION_INFO : JSON response
-        SINGLE_STATION_INFO -> FILE_UTILS : saveContentToPath(metadata)
-        FILE_UTILS --> SINGLE_STATION_INFO : success
+        SINGLE_STATION_INFO -> JSON_STORAGE_BACKEND : writeJSON(metadata)
+        JSON_STORAGE_BACKEND --> SINGLE_STATION_INFO : written
     else failure
         HTTP_UTILS --> SINGLE_STATION_INFO : exception
         SINGLE_STATION_INFO -> SINGLE_STATION_INFO : retry doWhileWithGetAndSave()
@@ -36,8 +36,8 @@ alt retry until success
     SINGLE_STATION_METEO -> HTTP_UTILS : getIfapaAPIResource()
     alt success
         HTTP_UTILS --> SINGLE_STATION_METEO : JSON response
-        SINGLE_STATION_METEO -> FILE_UTILS : saveContentToPath(metadata)
-        FILE_UTILS --> SINGLE_STATION_METEO : success
+        SINGLE_STATION_METEO -> JSON_STORAGE_BACKEND : writeJSON(metadata)
+        JSON_STORAGE_BACKEND --> SINGLE_STATION_METEO : written
     else failure
         HTTP_UTILS --> SINGLE_STATION_METEO : exception
         SINGLE_STATION_METEO -> SINGLE_STATION_METEO : retry doWhileWithGetAndSave()
@@ -54,8 +54,8 @@ alt retry until success
     SINGLE_STATION_INFO -> HTTP_UTILS : getIfapaAPIResource()
     alt success
         HTTP_UTILS --> SINGLE_STATION_INFO : JSON response
-        SINGLE_STATION_INFO -> FILE_UTILS : saveContentToPath(data)
-        FILE_UTILS --> SINGLE_STATION_INFO : success
+        SINGLE_STATION_INFO -> JSON_STORAGE_BACKEND : writeJSON(data)
+        JSON_STORAGE_BACKEND --> SINGLE_STATION_INFO : written
     else failure
         HTTP_UTILS --> SINGLE_STATION_INFO : exception
         SINGLE_STATION_INFO -> SINGLE_STATION_INFO : retry doWhileWithGetAndSave()
@@ -72,8 +72,8 @@ alt retry until success
     SINGLE_STATION_METEO -> HTTP_UTILS : getIfapaAPIResource()
     alt success
         HTTP_UTILS --> SINGLE_STATION_METEO : JSON response
-        SINGLE_STATION_METEO -> FILE_UTILS : saveContentToPath(data)
-        FILE_UTILS --> SINGLE_STATION_METEO : success
+        SINGLE_STATION_METEO -> JSON_STORAGE_BACKEND : writeJSON(data)
+        JSON_STORAGE_BACKEND --> SINGLE_STATION_METEO : written
     else failure
         HTTP_UTILS --> SINGLE_STATION_METEO : exception
         SINGLE_STATION_METEO -> SINGLE_STATION_METEO : retry doWhileWithGetAndSave()
