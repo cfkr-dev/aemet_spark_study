@@ -1,0 +1,65 @@
+@startuml
+title Execution of getStationsCountByParamIntervalsInALapse()
+
+start
+
+:Input parameters
+paramIntervals : List((column: String, min: Double, max: Double))
+startDate : String
+endDate : Option(String);
+
+:Load allMeteoInfo DataFrame;
+
+:Extract parameter column from
+paramIntervals.head;
+
+if (endDate defined?) then (Yes)
+    :FILTER date BETWEEN startDate AND endDate;
+else (No)
+    :FILTER YEAR(date) == startDate;
+endif
+
+:SELECT indicativo, CAST(parameter AS DOUBLE);
+
+:Initialize interval results;
+
+while (Intervals remaining?) is (Yes)
+
+    :Read (columnName, min, max, index);
+
+    if (min = -inf ?) then (Yes)
+        :Compute MIN(column) FROM filteredDf;
+        :actualMin = result;
+    else (No)
+        :actualMin = min;
+    endif
+
+    if (max = +inf ?) then (Yes)
+        :Compute MAX(column) FROM filteredDf;
+        :actualMax = result;
+    else (No)
+        :actualMax = max;
+    endif
+
+    if (index == 0?) then (Yes)
+        :FILTER param >= actualMin AND param <= actualMax;
+    else (No)
+        :FILTER param > actualMin AND param <= actualMax;
+    endif
+
+    :COUNT(DISTINCT indicativo);
+    :Create interval DataFrame
+    (min_value, max_value, count);
+
+    :Append to results;
+
+endwhile (No)
+
+:UNION ALL interval DataFrames;
+
+:ORDER BY min_value;
+
+:Return Right(DataFrame);
+
+stop
+@enduml

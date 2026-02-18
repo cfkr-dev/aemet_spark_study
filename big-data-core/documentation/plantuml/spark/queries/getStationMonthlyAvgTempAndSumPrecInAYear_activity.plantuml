@@ -1,0 +1,30 @@
+@startuml
+title Execution of getStationMonthlyAvgTempAndSumPrecInAYear()
+
+start
+
+:Input parameters
+stationId: String
+studyParams: (tempColumnName: String, precColumnName: String)
+observationYear: Int;
+
+:Load allMeteoInfo DataFrame;
+
+:FILTER
+  t_med IS NOT NULL AND
+  prec IS NOT NULL AND
+  indicativo == stationId AND
+  YEAR(fecha) == observationYear;
+
+:GROUP BY MONTH(fecha) AS month;
+
+:AGGREGATE
+  ROUND(AVG(t_med), 1) AS temp_monthly_avg,
+  ROUND(SUM(prec), 1) AS prec_monthly_sum;
+
+:ORDER BY month;
+
+:Return Right(DataFrame);
+
+stop
+@enduml

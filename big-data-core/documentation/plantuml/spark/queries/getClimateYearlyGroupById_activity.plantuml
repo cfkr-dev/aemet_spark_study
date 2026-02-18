@@ -1,0 +1,50 @@
+@startuml
+title Execution of getClimateYearlyGroupById()
+
+start
+
+:Input parameters
+stationId: String
+climateParams: Seq((colName, alias))
+aggMethodNames: Seq(String)
+startDate: String
+endDate: Option(String);
+
+:Load allMeteoInfo DataFrame;
+
+if (endDate defined?) then (Yes)
+    :FILTER fecha BETWEEN startDate AND endDate;
+else (No)
+    :FILTER YEAR(fecha) == startDate;
+endif
+
+:FILTER indicativo == stationId;
+
+:WITH COLUMN year = YEAR(fecha);
+
+:Initialize filteredDf = meteoDf with year column;
+while (more climateParams?) is (Yes)
+    :currentParam = next climateParam;
+    :FILTER filteredDf WHERE currentParam IS NOT NULL;
+endwhile
+
+:Initialize empty aggColumns list;
+while (more climateParams?) is (Yes)
+    :currentParam, currentAgg = next climateParam and corresponding aggMethodName;
+    :SELECT baseCol = col(currentParam);
+    :APPLY aggregation function (AVG/SUM/MIN/MAX) according to currentAgg;
+    :ROUND result to 1 decimal;
+    :ALIAS result as yearly_param_method;
+    :ADD to aggColumns list;
+endwhile
+
+:GROUP filteredDf BY year;
+
+:APPLY aggregation using aggColumns;
+
+:ORDER BY year;
+
+:Return Right(DataFrame);
+
+stop
+@enduml

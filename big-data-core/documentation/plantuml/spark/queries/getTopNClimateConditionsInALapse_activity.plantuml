@@ -1,0 +1,71 @@
+@startuml
+title Execution of getTopNClimateConditionsInALapse()
+
+start
+
+:Input parameters
+climateParams: List((paramName: String, min: Double, max: Double))
+startDate: String
+endDate: Option(String)
+groupByState: Boolean
+topN: Int
+highest: Boolean;
+
+:Load allMeteoInfo DataFrame;
+:Load allStations DataFrame;
+
+if (endDate defined?) then (Yes)
+    :FILTER fecha BETWEEN startDate AND endDate;
+else (No)
+    :FILTER YEAR(fecha) == startDate;
+endif
+
+:INITIALIZE combinedCondition = TRUE;
+
+while (Remaining climateParams?) is (Yes)
+    :READ (paramName, min, max);
+    :condition = paramName IS NOT NULL AND paramName BETWEEN min AND max;
+    :combinedCondition = combinedCondition AND condition;
+endwhile (No)
+
+:APPLY FILTER combinedCondition;
+
+if (groupByState?) then (Yes)
+    :GROUP BY provincia;
+    :AGGREGATE COUNT(fecha) AS daysWithConds;
+    if (highest?) then (Yes)
+        :ORDER BY daysWithConds DESC;
+    else (No)
+        :ORDER BY daysWithConds ASC;
+    endif
+    :WITH COLUMN top = ROW_NUMBER();
+    :SELECT
+       provincia AS state,
+       top;
+else (No)
+    :GROUP BY indicativo;
+    :AGGREGATE COUNT(DISTINCT fecha) AS daysWithConds;
+    :JOIN allStations ON indicativo INNER;
+    if (highest?) then (Yes)
+        :ORDER BY daysWithConds DESC;
+    else (No)
+        :ORDER BY daysWithConds ASC;
+    endif
+    :WITH COLUMN top = ROW_NUMBER();
+    :SELECT
+      indicativo AS station_id,
+      nombre AS station_name,
+      provincia AS state,
+      latitud AS lat_dms,
+      longitud AS long_dms,
+      altitud AS altitude,
+      top;
+endif
+
+:ORDER BY top ASC;
+:LIMIT topN;
+
+:Return Right(DataFrame);
+
+stop
+@enduml

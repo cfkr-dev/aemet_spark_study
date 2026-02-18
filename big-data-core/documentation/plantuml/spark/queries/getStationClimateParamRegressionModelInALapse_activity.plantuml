@@ -1,0 +1,52 @@
+@startuml
+title Execution of getStationClimateParamRegressionModelInALapse()
+
+start
+
+:Input parameters
+stationId: String
+climateParam: String
+aggMethodName: String
+startYear: String
+endYear: Option(String);
+
+:Load allMeteoInfo DataFrame;
+
+:FILTER indicativo == stationId;
+
+if (endYear defined?) then (Yes)
+    :FILTER fecha BETWEEN startYear AND endYear;
+else (No)
+    :FILTER YEAR(fecha) == startYear;
+endif
+
+:FILTER climateParam IS NOT NULL;
+
+:WITH COLUMN year = YEAR(fecha);
+
+:GROUP BY year;
+
+:AGGREGATE climateParam USING aggMethodName AS grouped_value;
+
+:SELECT
+  year AS x,
+  grouped_value AS y;
+
+:COMPUTE meanX = AVG(x), meanY = AVG(y);
+
+:WITH COLUMN xDiff = x - meanX;
+:WITH COLUMN yDiff = y - meanY;
+
+:AGGREGATE
+  SUM(xDiff * yDiff) AS num,
+  SUM(xDiff * xDiff) AS den;
+
+:COMPUTE beta1 = num / den;
+:COMPUTE beta0 = meanY - beta1 * meanX;
+
+:CREATE DataFrame(station_id, beta_1, beta_0);
+
+:Return Right(DataFrame);
+
+stop
+@enduml

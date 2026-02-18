@@ -1,0 +1,63 @@
+@startuml
+title Execution of getTopNClimateParamIncrementInAYearLapse()
+
+start
+
+:Input parameters
+stationIds: Seq(String)
+regressionModels: DataFrame
+climateParam: String
+paramNameToShow: String
+aggMethodName: String
+startYear: Int
+endYear: Int
+highest: Boolean
+topN: Int;
+
+:Load allMeteoInfo DataFrame;
+:Load allStations DataFrame;
+
+:FILTER regressionModels WHERE station_id IN stationIds;
+
+:WITH COLUMN inc = (beta_1 * endYear + beta_0) - (beta_1 * startYear + beta_0);
+
+:SELECT station_id, inc;
+
+:JOIN meteoDf ON stationId INNER
+    FILTER climateParam IS NOT NULL
+    WITH COLUMN year = YEAR(fecha)
+    FILTER year BETWEEN startYear AND endYear
+    GROUP BY stationId, year
+    AGGREGATE climateParam USING aggMethodName AS param_yearly_method
+    GROUP BY stationId
+    AGGREGATE AVG(param_yearly_method) AS global_param_yearly_avg;
+
+:JOIN stationDf ON stationId INNER;
+
+:WITH COLUMN incPerc = inc / global_param_yearly_avg * 100;
+
+:SELECT
+    ROUND(inc, 1) AS inc,
+    ROUND(incPerc, 1) AS inc_perc,
+    ROUND(global_param_yearly_avg, 1) AS global_yearly_method,
+    station_id,
+    station_name,
+    state,
+    lat_dms,
+    long_dms,
+    altitude;
+
+if (highest?) then (Yes)
+    :ORDER BY inc DESC;
+else (No)
+    :ORDER BY inc ASC;
+endif
+
+:LIMIT topN;
+
+:WITH COLUMN top = ROW_NUMBER();
+
+:Return Right(DataFrame);
+
+stop
+@enduml

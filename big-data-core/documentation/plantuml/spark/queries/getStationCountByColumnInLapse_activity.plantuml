@@ -1,0 +1,30 @@
+@startuml
+title Execution of getStationCountByColumnInLapse()
+
+start
+
+:Input parameters
+column: (Column, alias: String)
+startDate: String
+endDate: Option(String);
+
+:Load allMeteoInfo DataFrame;
+
+if (endDate defined?) then (Yes)
+    :FILTER date BETWEEN startDate AND endDate;
+else (No)
+    :FILTER YEAR(date) == startDate;
+endif
+
+:GROUP BY column (using alias);
+
+:COUNT(DISTINCT indicativo) AS count;
+
+:SELECT alias, count;
+
+:ORDER BY alias;
+
+:Return Right(DataFrame);
+
+stop
+@enduml

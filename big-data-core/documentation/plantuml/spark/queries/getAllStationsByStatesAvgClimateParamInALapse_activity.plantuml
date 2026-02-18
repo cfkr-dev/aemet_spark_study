@@ -1,0 +1,52 @@
+@startuml
+title Execution of getAllStationsByStatesAvgClimateParamInALapse()
+
+start
+
+:Input parameters
+climateParam: String
+aggMethodName: String
+paramNameToShow: String
+startDate: String
+endDate: Option(String)
+states: Option(Seq(String));
+
+:Load allMeteoInfo DataFrame;
+:Load allStations DataFrame;
+
+if (endDate defined?) then (Yes)
+    :FILTER fecha BETWEEN startDate AND endDate;
+else (No)
+    :FILTER YEAR(fecha) == startDate;
+endif
+
+if (states defined?) then (Yes)
+    :FILTER provincia IN states;
+else (No)
+    :FILTER ALL states;
+endif
+
+:FILTER climateParam IS NOT NULL;
+
+:GROUP BY indicativo;
+
+:AGGREGATE
+  climateParam USING aggMethodName AS param_method;
+
+:JOIN allStations ON indicativo INNER;
+
+:SELECT
+  indicativo AS station_id,
+  nombre AS station_name,
+  provincia AS state,
+  ROUND(grouped_value, 1) AS paramNameToShow,
+  latitud AS lat_dms,
+  longitud AS long_dms,
+  latDec AS lat_dec,
+  longDec AS long_dec,
+  altitud AS altitude;
+
+:Return Right(DataFrame);
+
+stop
+@enduml

@@ -1,0 +1,24 @@
+@startuml
+title Execution of getStationInfoById()
+
+start
+
+:Input parameter
+stationId: String;
+
+:Load allStations DataFrame;
+
+:FILTER indicativo == stationId;
+
+:SELECT
+  indicativo AS station_id,
+  nombre AS station_name,
+  provincia AS state,
+  latitud AS lat_dms,
+  longitud AS long_dms,
+  altitud AS altitude;
+
+:Return Right(DataFrame);
+
+stop
+@enduml

@@ -1,0 +1,39 @@
+@startuml
+title Execution of getClimateParamInALapseById()
+
+start
+
+:Input parameters
+stationId: String
+climateParams: Seq((columnName: String, alias: String))
+aggMethodNames: Seq(String)
+startDate: String
+endDate: Option(String);
+
+:Load allMeteoInfo DataFrame;
+
+if (endDate defined?) then (Yes)
+    :FILTER fecha BETWEEN startDate AND endDate;
+else (No)
+    :FILTER YEAR(fecha) == startDate;
+endif
+
+while (climateParams remaining?) is (Yes)
+    :FILTER current climateParam IS NOT NULL;
+endwhile (No)
+
+:FILTER indicativo == stationId;
+
+:SELECT
+  fecha AS date,
+  ROUND(param1, 1) AS alias1,
+  ROUND(param2, 1) AS alias2,
+  ... for all climateParams with corresponding aggMethodNames;
+
+:ORDER BY date;
+
+:Return Right(DataFrame);
+
+stop
+@enduml
+
